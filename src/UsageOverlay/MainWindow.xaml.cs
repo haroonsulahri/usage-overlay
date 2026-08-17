@@ -197,11 +197,16 @@ public partial class MainWindow : Window
 
     private void UpdateWindowPosition()
     {
-        if (_settingsWindow is { IsVisible: true })
+        if (_settingsWindow is { IsHiddenByUser: false })
         {
             if (!IsVisible)
             {
                 Show();
+            }
+
+            if (!_settingsWindow.IsVisible)
+            {
+                _settingsWindow.Show();
             }
 
             return;
@@ -888,12 +893,7 @@ public partial class MainWindow : Window
                 Show();
             }
 
-            if (!_settingsWindow.IsVisible)
-            {
-                _settingsWindow.Show();
-            }
-
-            _settingsWindow.Activate();
+            _settingsWindow.ShowFromLauncher();
             return;
         }
 
@@ -927,9 +927,8 @@ public partial class MainWindow : Window
             }
         };
         _settingsWindow = window;
-        window.Show();
+        window.ShowFromLauncher();
         _logger.Info("Settings window opened.");
-        window.Activate();
     }
 
     private void ApplySettingsFromWindow(OverlaySettings settings, bool startAutomatically)

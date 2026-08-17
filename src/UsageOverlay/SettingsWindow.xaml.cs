@@ -24,6 +24,8 @@ public partial class SettingsWindow : Window
     private double _pendingHorizontalOffset;
     private double _pendingVerticalOffset;
 
+    public bool IsHiddenByUser { get; private set; }
+
     public SettingsWindow(
         OverlaySettings settings,
         bool startAutomatically,
@@ -101,7 +103,22 @@ public partial class SettingsWindow : Window
         }
     }
 
-    private void HideSettingsButton_OnClick(object sender, RoutedEventArgs eventArgs) => Hide();
+    public void ShowFromLauncher()
+    {
+        IsHiddenByUser = false;
+        if (!IsVisible)
+        {
+            Show();
+        }
+
+        Activate();
+    }
+
+    private void HideSettingsButton_OnClick(object sender, RoutedEventArgs eventArgs)
+    {
+        IsHiddenByUser = true;
+        Hide();
+    }
 
     private void CloseSettingsButton_OnClick(object sender, RoutedEventArgs eventArgs) => Close();
 
