@@ -7,10 +7,13 @@
         MinWidth="590"
         MinHeight="560"
         ResizeMode="NoResize"
+        WindowStyle="None"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         Background="#FF171717"
         Foreground="{StaticResource OverlayTextBrush}"
+        BorderBrush="{StaticResource OverlayBorderBrush}"
+        BorderThickness="1"
         Icon="Assets/UsageOverlay.ico"
         Loaded="Window_OnLoaded"
         SourceInitialized="Window_OnSourceInitialized"
@@ -127,6 +130,39 @@
             </Setter>
         </Style>
 
+        <Style x:Key="SettingsTitleBarButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="40" />
+            <Setter Property="Height" Value="31" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="TitleBarButtonSurface"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="TitleBarButtonSurface" Property="Background" Value="{StaticResource OverlayMenuHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="TitleBarButtonSurface" Property="Background" Value="{StaticResource OverlaySurfaceBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="TitleBarButtonSurface" Property="BorderBrush" Value="{StaticResource OverlayTextBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource OverlayTextBrush}" />
             <Setter Property="FontSize" Value="{StaticResource OverlayTextValue}" />
@@ -142,12 +178,59 @@
 
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="32" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Padding="24,20" BorderBrush="{StaticResource OverlayBorderBrush}" BorderThickness="0,0,0,1">
+        <Border Grid.Row="0"
+                Background="{StaticResource OverlaySurfaceRaisedBrush}"
+                BorderBrush="{StaticResource OverlayBorderBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid MouseLeftButtonDown="TitleBar_OnMouseLeftButtonDown">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Image Width="16" Height="16" Margin="10,0,8,0" Source="Assets/UsageOverlay.ico" />
+                <TextBlock Grid.Column="1"
+                           VerticalAlignment="Center"
+                           Text="Usage Overlay Settings"
+                           Foreground="{StaticResource OverlayTextBrush}"
+                           FontSize="{StaticResource OverlayTextSmall}" />
+                <Button Grid.Column="2"
+                        AutomationProperties.Name="Hide Settings"
+                        ToolTip="Hide Settings"
+                        Style="{StaticResource SettingsTitleBarButtonStyle}"
+                        Click="HideSettingsButton_OnClick">
+                    <Path Width="12"
+                          Height="12"
+                          Data="M 2,7 L 10,7"
+                          Stroke="{StaticResource OverlayMutedBrush}"
+                          StrokeThickness="1.25"
+                          StrokeStartLineCap="Round"
+                          StrokeEndLineCap="Round" />
+                </Button>
+                <Button Grid.Column="3"
+                        AutomationProperties.Name="Close Settings"
+                        ToolTip="Close Settings"
+                        Style="{StaticResource SettingsTitleBarButtonStyle}"
+                        Click="CloseSettingsButton_OnClick">
+                    <Path Width="12"
+                          Height="12"
+                          Data="M 2,2 L 10,10 M 10,2 L 2,10"
+                          Stroke="{StaticResource OverlayMutedBrush}"
+                          StrokeThickness="1.25"
+                          StrokeStartLineCap="Round"
+                          StrokeEndLineCap="Round" />
+                </Button>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" Padding="24,20" BorderBrush="{StaticResource OverlayBorderBrush}" BorderThickness="0,0,0,1">
             <StackPanel>
                 <TextBlock Text="Usage Overlay" FontSize="{StaticResource OverlayTextValue}" FontWeight="Medium" />
                 <TextBlock Margin="0,5,0,0"
@@ -165,7 +248,7 @@
         </Border>
 
         <ScrollViewer x:Name="SettingsScrollViewer"
-                      Grid.Row="1"
+                      Grid.Row="2"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
             <StackPanel Margin="20,16,20,20">
@@ -395,7 +478,7 @@
             </StackPanel>
         </ScrollViewer>
 
-        <Border Grid.Row="2" Padding="20,14" BorderBrush="{StaticResource OverlayBorderBrush}" BorderThickness="0,1,0,0">
+        <Border Grid.Row="3" Padding="20,14" BorderBrush="{StaticResource OverlayBorderBrush}" BorderThickness="0,1,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />

@@ -34,4 +34,4 @@ The project follows [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - Kept the primary Save action green on hover, with clear hover, pressed, focus, and disabled states
-- Removed unsupported Settings minimize and maximize states that left a floating title bar on the desktop
+- Replaced Settings minimization with a minus action that hides only the Settings window

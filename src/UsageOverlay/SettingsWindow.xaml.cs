@@ -84,6 +84,27 @@ public partial class SettingsWindow : Window
         NativeWindowStyle.ApplyDarkTitleBar(this);
     }
 
+    private void TitleBar_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs eventArgs)
+    {
+        if (eventArgs.LeftButton != MouseButtonState.Pressed)
+        {
+            return;
+        }
+
+        try
+        {
+            DragMove();
+        }
+        catch (InvalidOperationException)
+        {
+            // The pointer was released before the drag operation began.
+        }
+    }
+
+    private void HideSettingsButton_OnClick(object sender, RoutedEventArgs eventArgs) => Close();
+
+    private void CloseSettingsButton_OnClick(object sender, RoutedEventArgs eventArgs) => Close();
+
     private void SaveButton_OnClick(object sender, RoutedEventArgs eventArgs)
     {
         ValidationText.Text = string.Empty;

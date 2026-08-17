@@ -57,7 +57,7 @@ Recommended visual states:
 | Relaunch while hidden | Existing instance becomes eligible to show; no duplicate remains |
 | Windows Search launch | Existing or new instance opens Settings; no duplicate remains |
 | Automatic startup | Overlay starts without opening Settings |
-| Settings title bar | Close is available; minimize and maximize are unavailable |
+| Settings title bar | Minus hides Settings, Close closes Settings, and maximize is unavailable |
 | Visibility controls | Codex-only and fullscreen choices appear together near the top |
 | Connection details | Technical fields are collapsed by default and can be expanded |
 | Settings initial scroll | General and Visibility are shown when the window opens |

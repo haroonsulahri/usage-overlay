@@ -892,7 +892,13 @@ public partial class MainWindow : Window
             Owner = IsVisible ? this : null,
             Topmost = true
         };
-        window.Closed += (_, _) => _settingsWindow = null;
+        window.Closed += (_, _) =>
+        {
+            if (ReferenceEquals(_settingsWindow, window))
+            {
+                _settingsWindow = null;
+            }
+        };
         _settingsWindow = window;
         window.Show();
         window.Activate();
