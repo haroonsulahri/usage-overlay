@@ -11,7 +11,13 @@ public sealed class CodexWindowLocator
 
     public static bool TryGetActiveBounds(out WindowBounds bounds)
     {
+        return TryGetActiveBounds(out bounds, out _);
+    }
+
+    public static bool TryGetActiveBounds(out WindowBounds bounds, out bool? isLightTheme)
+    {
         bounds = default;
+        isLightTheme = null;
         var window = GetAncestor(GetForegroundWindow(), GetAncestorRoot);
 
         if (window == IntPtr.Zero || !IsWindowVisible(window) || IsIconic(window) || !IsCodexWindow(window))
@@ -30,6 +36,7 @@ public sealed class CodexWindowLocator
         }
 
         var isFullscreen = IsFullscreen(window, rectangle);
+        isLightTheme = TryDetectLightTheme(rectangle);
         var dpi = GetDpiForWindow(window);
         var scale = dpi > 0 ? dpi / 96d : 1d;
         bounds = new WindowBounds(
@@ -39,6 +46,60 @@ public sealed class CodexWindowLocator
             rectangle.Bottom / scale,
             isFullscreen);
         return true;
+    }
+
+    private static bool? TryDetectLightTheme(NativeRectangle rectangle)
+    {
+        var width = rectangle.Right - rectangle.Left;
+        var height = rectangle.Bottom - rectangle.Top;
+        if (width < 200 || height < 120)
+        {
+            return null;
+        }
+
+        var screen = GetDC(IntPtr.Zero);
+        if (screen == IntPtr.Zero)
+        {
+            return null;
+        }
+
+        try
+        {
+            var samplePoints = new (int X, int Y)[]
+            {
+                (rectangle.Left + width / 2, rectangle.Top + 18),
+                (rectangle.Left + width / 2, rectangle.Top + 55),
+                (rectangle.Left + width * 3 / 4, rectangle.Top + 55),
+                (rectangle.Left + width / 4, rectangle.Top + 55),
+                (rectangle.Left + width / 2, rectangle.Top + Math.Min(110, height / 4))
+            };
+            var luminanceSamples = new List<double>(samplePoints.Length);
+            foreach (var point in samplePoints)
+            {
+                var color = GetPixel(screen, point.X, point.Y);
+                if (color == uint.MaxValue)
+                {
+                    continue;
+                }
+
+                var red = color & 0xFF;
+                var green = (color >> 8) & 0xFF;
+                var blue = (color >> 16) & 0xFF;
+                luminanceSamples.Add(0.2126 * red + 0.7152 * green + 0.0722 * blue);
+            }
+
+            if (luminanceSamples.Count < 3)
+            {
+                return null;
+            }
+
+            luminanceSamples.Sort();
+            return luminanceSamples[luminanceSamples.Count / 2] >= 160;
+        }
+        finally
+        {
+            _ = ReleaseDC(IntPtr.Zero, screen);
+        }
     }
 
     private static bool IsFullscreen(IntPtr window, NativeRectangle windowRectangle)
@@ -136,6 +197,15 @@ public sealed class CodexWindowLocator
 
     [DllImport("user32.dll")]
     private static extern uint GetDpiForWindow(IntPtr window);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetDC(IntPtr window);
+
+    [DllImport("gdi32.dll")]
+    private static extern uint GetPixel(IntPtr deviceContext, int x, int y);
+
+    [DllImport("user32.dll")]
+    private static extern int ReleaseDC(IntPtr window, IntPtr deviceContext);
 
     [DllImport("user32.dll")]
     private static extern IntPtr MonitorFromWindow(IntPtr window, uint flags);

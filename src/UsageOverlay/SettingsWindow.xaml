@@ -378,7 +378,7 @@
                             <StackPanel Orientation="Horizontal">
                                 <RadioButton x:Name="SystemThemeRadio"
                                              GroupName="ThemeMode"
-                                             Content="System"
+                                             Content="Follow Codex"
                                              Style="{StaticResource SettingsRadioStyle}"
                                              Click="ThemeRadio_OnClick" />
                                 <RadioButton x:Name="DarkThemeRadio"
@@ -394,6 +394,10 @@
                                              Style="{StaticResource SettingsRadioStyle}"
                                              Click="ThemeRadio_OnClick" />
                             </StackPanel>
+                            <TextBlock Margin="0,5,0,0"
+                                       Text="Follow Codex matches the active Codex app and falls back to Windows when Codex is unavailable."
+                                       Foreground="{DynamicResource OverlayMutedBrush}"
+                                       FontSize="{StaticResource OverlayTextSmall}" />
                             <TextBlock Text="Main number" Style="{StaticResource FieldLabelStyle}" />
                             <StackPanel Orientation="Horizontal">
                                 <RadioButton x:Name="RemainingPrimaryRadio"

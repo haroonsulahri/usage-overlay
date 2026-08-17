@@ -14,6 +14,7 @@ public sealed class ThemeManager
 
     private AppTheme _currentTheme = AppTheme.System;
     private bool _systemEventsHooked;
+    private bool? _lastCodexIsLight;
 
     public event Action? ThemeApplied;
 
@@ -26,6 +27,7 @@ public sealed class ThemeManager
 
     public void ApplyTheme(AppTheme theme)
     {
+        var themeChanged = _currentTheme != theme;
         _currentTheme = theme;
         UpdateSystemEventsHook(theme == AppTheme.System);
 
@@ -33,8 +35,13 @@ public sealed class ThemeManager
         {
             AppTheme.Dark => true,
             AppTheme.Light => false,
-            _ => !IsSystemInLightTheme()
+            _ => !(_lastCodexIsLight ?? IsSystemInLightTheme())
         };
+
+        if (!themeChanged && IsEffectiveDark == isDark && Application.Current is not null)
+        {
+            return;
+        }
 
         IsEffectiveDark = isDark;
         ApplyPalette(isDark);
@@ -44,6 +51,15 @@ public sealed class ThemeManager
     public void RefreshSystemThemeIfApplicable()
     {
         if (_currentTheme == AppTheme.System)
+        {
+            ApplyTheme(AppTheme.System);
+        }
+    }
+
+    public void RefreshFromCodexTheme(bool isLight)
+    {
+        _lastCodexIsLight = isLight;
+        if (_currentTheme == AppTheme.System && IsEffectiveDark == isLight)
         {
             ApplyTheme(AppTheme.System);
         }

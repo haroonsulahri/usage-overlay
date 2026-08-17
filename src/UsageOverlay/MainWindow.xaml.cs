@@ -250,7 +250,11 @@ public partial class MainWindow : Window
             return;
         }
 
-        var hasActiveCodex = CodexWindowLocator.TryGetActiveBounds(out var bounds);
+        var hasActiveCodex = CodexWindowLocator.TryGetActiveBounds(out var bounds, out var codexIsLightTheme);
+        if (codexIsLightTheme is { } isLightTheme)
+        {
+            ThemeManager.Instance.RefreshFromCodexTheme(isLightTheme);
+        }
         if (!hasActiveCodex && _settings.ShowOnlyWhenCodexActive)
         {
             if (IsVisible)
@@ -778,16 +782,16 @@ public partial class MainWindow : Window
             Padding = new System.Windows.Forms.Padding(6),
             Renderer = new System.Windows.Forms.ToolStripProfessionalRenderer(new OverlayMenuColorTable())
         };
-        _trayVisibilityMenuItem = new System.Windows.Forms.ToolStripMenuItem("Hide");
+        _trayVisibilityMenuItem = new System.Windows.Forms.ToolStripMenuItem("Hide usage rail");
         _trayVisibilityMenuItem.Click += (_, _) => Dispatcher.Invoke(ToggleManualVisibility);
         menu.Items.Add(_trayVisibilityMenuItem);
-        menu.Items.Add("Settings…", null, (_, _) => Dispatcher.Invoke(ShowSettings));
+        menu.Items.Add("Open settings…", null, (_, _) => Dispatcher.Invoke(ShowSettings));
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
-        menu.Items.Add("Refresh", null, (_, _) => _ = _appServerClient.RefreshAsync());
+        menu.Items.Add("Refresh usage", null, (_, _) => _ = _appServerClient.RefreshAsync());
         menu.Items.Add("Open log file", null, (_, _) => OpenLog());
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         var exitItem = menu.Items.Add(
-            "Quit",
+            "Quit Usage Overlay",
             null,
             (_, _) => Dispatcher.Invoke(System.Windows.Application.Current.Shutdown));
         exitItem.ForeColor = System.Drawing.Color.FromArgb(229, 90, 90);
@@ -834,6 +838,7 @@ public partial class MainWindow : Window
 
     private void ThemeManager_OnThemeApplied()
     {
+        _logger.Info($"Theme applied: {(ThemeManager.Instance.IsEffectiveDark ? "Dark" : "Light")}.");
         UpdateTrayMenuTheme();
         if (_lastUsageSnapshot is not null)
         {
@@ -990,7 +995,7 @@ public partial class MainWindow : Window
 
     private void UpdateVisibilityMenuLabels()
     {
-        var label = _isManuallyHidden ? "Show" : "Hide";
+        var label = _isManuallyHidden ? "Show usage rail" : "Hide usage rail";
         _trayVisibilityMenuItem.Text = label;
         RailVisibilityMenuItem.Header = label;
     }

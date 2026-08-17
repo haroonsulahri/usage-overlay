@@ -134,19 +134,19 @@
             <Grid.ContextMenu>
                 <ContextMenu Style="{StaticResource OverlayContextMenuStyle}">
                     <MenuItem x:Name="RailVisibilityMenuItem"
-                              Header="Hide"
+                              Header="Hide usage rail"
                               Style="{StaticResource OverlayMenuItemStyle}"
                               Click="VisibilityMenuItem_OnClick" />
                     <Separator Style="{StaticResource OverlayMenuSeparatorStyle}" />
-                    <MenuItem Header="Settings…"
+                    <MenuItem Header="Open settings…"
                               Style="{StaticResource OverlayMenuItemStyle}"
                               Click="SettingsMenuItem_OnClick" />
                     <Separator Style="{StaticResource OverlayMenuSeparatorStyle}" />
-                    <MenuItem Header="Refresh"
+                    <MenuItem Header="Refresh usage"
                               Style="{StaticResource OverlayMenuItemStyle}"
                               Click="RefreshMenuItem_OnClick" />
                     <Separator Style="{StaticResource OverlayMenuSeparatorStyle}" />
-                    <MenuItem Header="Quit"
+                    <MenuItem Header="Quit Usage Overlay"
                               Tag="Destructive"
                               Style="{StaticResource OverlayMenuItemStyle}"
                               Click="ExitMenuItem_OnClick" />
