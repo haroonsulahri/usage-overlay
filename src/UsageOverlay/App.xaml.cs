@@ -13,9 +13,11 @@ public partial class App : System.Windows.Application
 {
     private const string SingleInstanceMutexName = "Local\\UsageOverlay";
     private const string ShowOverlayEventName = "Local\\UsageOverlay.Show";
+    private const string OpenSettingsEventName = "Local\\UsageOverlay.Settings";
 
     private Mutex? _singleInstanceMutex;
     private EventWaitHandle? _showOverlayEvent;
+    private EventWaitHandle? _openSettingsEvent;
     private Thread? _showSignalThread;
     private AppLogger? _logger;
     private volatile bool _isExiting;
@@ -24,11 +26,12 @@ public partial class App : System.Windows.Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        var options = OverlayOptions.Parse(e.Args);
 
         _singleInstanceMutex = new Mutex(true, SingleInstanceMutexName, out var createdNew);
         if (!createdNew)
         {
-            SignalExistingInstance();
+            SignalExistingInstance(options.StartSettings);
             _singleInstanceMutex.Dispose();
             _singleInstanceMutex = null;
             Shutdown();
@@ -37,12 +40,12 @@ public partial class App : System.Windows.Application
 
         _ownsMutex = true;
         _showOverlayEvent = new EventWaitHandle(false, EventResetMode.AutoReset, ShowOverlayEventName);
+        _openSettingsEvent = new EventWaitHandle(false, EventResetMode.AutoReset, OpenSettingsEventName);
         StartShowSignalListener();
 
         _logger = new AppLogger();
         _logger.Info("Starting Usage Overlay.");
 
-        var options = OverlayOptions.Parse(e.Args);
         var window = new MainWindow(options, _logger);
         MainWindow = window;
         window.Show();
@@ -52,8 +55,10 @@ public partial class App : System.Windows.Application
     {
         _isExiting = true;
         _showOverlayEvent?.Set();
+        _openSettingsEvent?.Set();
         _showSignalThread?.Join(TimeSpan.FromSeconds(1));
         _showOverlayEvent?.Dispose();
+        _openSettingsEvent?.Dispose();
         _logger?.Info("Stopping Usage Overlay.");
 
         if (_ownsMutex)
@@ -69,9 +74,10 @@ public partial class App : System.Windows.Application
     {
         _showSignalThread = new Thread(() =>
         {
+            var signals = new WaitHandle[] { _showOverlayEvent!, _openSettingsEvent! };
             while (!_isExiting)
             {
-                _showOverlayEvent!.WaitOne();
+                var signalIndex = WaitHandle.WaitAny(signals);
                 if (_isExiting)
                 {
                     return;
@@ -81,26 +87,34 @@ public partial class App : System.Windows.Application
                 {
                     if (MainWindow is UsageOverlay.MainWindow overlayWindow)
                     {
-                        overlayWindow.ShowFromExternalLaunch();
+                        if (signalIndex == 1)
+                        {
+                            overlayWindow.ShowSettingsFromExternalLaunch();
+                        }
+                        else
+                        {
+                            overlayWindow.ShowFromExternalLaunch();
+                        }
                     }
                 });
             }
         })
         {
             IsBackground = true,
-            Name = "UsageOverlay.ShowSignal"
+            Name = "UsageOverlay.SignalListener"
         };
         _showSignalThread.Start();
     }
 
-    private static void SignalExistingInstance()
+    private static void SignalExistingInstance(bool openSettings)
     {
+        var eventName = openSettings ? OpenSettingsEventName : ShowOverlayEventName;
         for (var attempt = 0; attempt < 5; attempt++)
         {
             try
             {
-                using var showEvent = EventWaitHandle.OpenExisting(ShowOverlayEventName);
-                showEvent.Set();
+                using var signalEvent = EventWaitHandle.OpenExisting(eventName);
+                signalEvent.Set();
                 return;
             }
             catch (WaitHandleCannotBeOpenedException)

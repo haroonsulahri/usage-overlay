@@ -58,7 +58,10 @@ Use the matching `uninstall-*.ps1` scripts to remove only those shortcuts.
 - Drag the rail and release it to save a custom position.
 - Right-click the rail to hide, refresh, or exit.
 - Select **Settings** from the rail or tray menu for General, Position, Appearance, and Advanced controls.
+- Open **Usage Overlay** from Windows Search to go straight to Settings.
 - Launch the application again to restore an already-running hidden instance.
+
+The automatic-startup shortcut remains background-only and does not open Settings at Windows sign-in.
 
 Display settings include left and right presets, custom placement, position nudges, offset reset, and fullscreen hiding.
 

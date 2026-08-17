@@ -27,6 +27,7 @@ The project follows [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - Reworked in-app labels, status messages, validation, and settings copy for clearer everyday language
+- Made Windows Search launches open Settings while keeping automatic startup background-only
 
 ### Fixed
 

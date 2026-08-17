@@ -40,7 +40,7 @@ Windows integration:
 - WPF rail, detail card, animation, menus, and drag behavior
 - Native Settings window and appearance application
 - Settings persistence and Windows shortcuts
-- Single-instance signaling
+- Single-instance signaling for overlay visibility and Settings requests
 
 ## Data flow
 

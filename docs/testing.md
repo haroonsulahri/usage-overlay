@@ -55,6 +55,8 @@ Recommended visual states:
 | Drag | Custom relative position is saved and restored |
 | Manual hide | Usage continues updating; tray shows Show overlay |
 | Relaunch while hidden | Existing instance becomes eligible to show; no duplicate remains |
+| Windows Search launch | Existing or new instance opens Settings; no duplicate remains |
+| Automatic startup | Overlay starts without opening Settings |
 | Pause | Overlay hides for 15 minutes, then resumes automatically |
 | Fullscreen exclusion | Overlay hides only while Codex is fullscreen |
 | Reduced motion | Values update without animated interpolation |

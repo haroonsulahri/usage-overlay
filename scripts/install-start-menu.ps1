@@ -24,8 +24,9 @@ $shell = New-Object -ComObject WScript.Shell
 try {
     $shortcut = $shell.CreateShortcut($shortcutPath)
     $shortcut.TargetPath = $executable
+    $shortcut.Arguments = '--settings'
     $shortcut.WorkingDirectory = Split-Path -Parent $executable
-    $shortcut.Description = 'Show your Codex usage overlay'
+    $shortcut.Description = 'Open Usage Overlay settings'
     $shortcut.IconLocation = "$executable,0"
     $shortcut.Save()
 }

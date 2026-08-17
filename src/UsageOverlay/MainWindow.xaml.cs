@@ -863,6 +863,12 @@ public partial class MainWindow : Window
         UpdateWindowPosition();
     }
 
+    public void ShowSettingsFromExternalLaunch()
+    {
+        _logger.Info("External launch requested Settings.");
+        ShowSettings();
+    }
+
     private void ShowSettings()
     {
         if (_settingsWindow is { IsVisible: true })
