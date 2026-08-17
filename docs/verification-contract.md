@@ -19,6 +19,8 @@ A Windows companion overlay for the packaged Codex desktop application.
 - Hovering expands a compact detail card; clicking pins or unpins it.
 - The overlay does not modify, inject into, or restart Codex.
 - The overlay does not read or store account credentials.
+- Sidebar-safe placement is the default and persisted display controls remain available from the tray.
+- Automatic startup keeps the companion waiting silently until Codex becomes active.
 
 ## State matrix
 
@@ -31,6 +33,9 @@ A Windows companion overlay for the packaged Codex desktop application.
 | Codex inactive | Hidden | Hidden | N/A | Never float over other applications |
 | Manually hidden | Hidden | Hidden | N/A | Continue usage updates and expose Show overlay in the tray |
 | Relaunched while hidden | Restored when Codex is active | Collapsed | Current threshold | Signal the existing process instead of starting a duplicate |
+| Right sidebar visible | Left of sidebar clearance | Normal | Current threshold | Avoid covering sidebar content and scrollbar |
+| Paused | Hidden | Hidden | N/A | Resume automatically after 15 minutes |
+| Fullscreen exclusion enabled | Hidden in fullscreen | Hidden | N/A | Resume outside fullscreen |
 | Reduced motion | Final value | Normal | Threshold colour | No looping or decorative motion |
 
 ## Must remain unchanged

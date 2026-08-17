@@ -13,6 +13,9 @@ An unofficial Windows companion that places a slim live quota meter beside the C
 - Shows the remaining percentage, used percentage, reset countdown, and one additional model bucket when available.
 - Changes from green to amber at 70% and red at 90%.
 - Hides whenever Codex is minimized or another application is active.
+- Avoids the Codex right sidebar by default and follows Codex across monitors.
+- Persists placement, position offsets, fullscreen behavior, and pause state.
+- Can start silently at Windows sign-in and wait until Codex becomes active.
 - Provides Refresh, Open log, and Exit actions from the system tray.
 
 ## Requirements
@@ -69,6 +72,18 @@ Launching **Codex Usage Overlay** from Windows Search also restores an already-r
 .\scripts\uninstall-start-menu.ps1
 ```
 
+Enable automatic startup so the overlay is already waiting whenever Codex opens:
+
+```powershell
+.\scripts\install-startup.ps1
+```
+
+To disable automatic startup:
+
+```powershell
+.\scripts\uninstall-startup.ps1
+```
+
 ## Verify live App Server access
 
 Run the authenticated smoke test without opening the overlay UI:
@@ -88,6 +103,9 @@ It exits successfully only after receiving a real Codex quota snapshot.
 - Launch **Codex Usage Overlay** again from Windows Search to restore a hidden rail.
 - Double-click the tray icon to restore a hidden rail or expand a visible one.
 - Use the tray icon when the rail is hidden.
+- Open **Display settings** from the tray to avoid the right sidebar, use either edge, nudge the position, reset offsets, or hide in fullscreen.
+- Choose **Pause for 15 minutes** to hide temporarily while usage continues updating.
+- Toggle **Start automatically with Codex** to control sign-in startup.
 
 ## Data and privacy
 
@@ -102,7 +120,7 @@ The overlay launches `codex app-server --stdio`, sends `account/rateLimits/read`
 - Usage is near-real-time and depends on when the Codex service updates the quota percentage.
 - The first release targets the Microsoft Store Codex package on Windows.
 - The overlay is a separate companion process because the current desktop app has no documented permanent chrome slot for plugins.
-- Automatic Windows startup is intentionally not installed by default.
+- Sidebar avoidance uses a safe 330px clearance because the companion does not inspect Codex's internal DOM. Position nudges provide adjustment for different sidebar widths.
 
 ## License and disclaimer
 

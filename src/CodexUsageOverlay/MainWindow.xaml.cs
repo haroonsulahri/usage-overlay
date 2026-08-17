@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using CodexUsage.Core;
 using CodexUsage.Core.Formatting;
 using CodexUsage.Core.Models;
+using CodexUsage.Core.Settings;
 using CodexUsageOverlay.Infrastructure;
 using CodexUsageOverlay.Services;
 
@@ -22,8 +23,11 @@ public partial class MainWindow : Window
     private const double CollapsedWidth = 34;
     private const double ExpandedWidth = 254;
     private const double RightInset = 18;
+    private const double SidebarClearance = 330;
     private const double BottomInset = 46;
     private const double RailUsableHeight = 134;
+    private const double PositionNudge = 20;
+    private const double WindowPadding = 8;
 
     public static readonly DependencyProperty AnimatedRemainingPercentProperty =
         DependencyProperty.Register(
@@ -34,12 +38,21 @@ public partial class MainWindow : Window
 
     private readonly OverlayOptions _options;
     private readonly AppLogger _logger;
+    private readonly OverlaySettingsStore _settingsStore;
+    private readonly StartupShortcutManager _startupShortcutManager;
     private readonly AppServerClient _appServerClient;
     private readonly DispatcherTimer _windowTrackingTimer;
     private readonly DispatcherTimer _collapseTimer;
     private readonly CancellationTokenSource _cancellation = new();
     private readonly System.Windows.Forms.NotifyIcon _notifyIcon;
     private System.Windows.Forms.ToolStripMenuItem _trayVisibilityMenuItem = null!;
+    private System.Windows.Forms.ToolStripMenuItem _pauseMenuItem = null!;
+    private System.Windows.Forms.ToolStripMenuItem _avoidSidebarPlacementItem = null!;
+    private System.Windows.Forms.ToolStripMenuItem _rightEdgePlacementItem = null!;
+    private System.Windows.Forms.ToolStripMenuItem _leftEdgePlacementItem = null!;
+    private System.Windows.Forms.ToolStripMenuItem _hideFullscreenMenuItem = null!;
+    private System.Windows.Forms.ToolStripMenuItem _automaticStartupMenuItem = null!;
+    private OverlaySettings _settings;
     private bool _isExpanded;
     private bool _isPinned;
     private bool _isManuallyHidden;
@@ -51,6 +64,9 @@ public partial class MainWindow : Window
         InitializeComponent();
         _options = options;
         _logger = logger;
+        _settingsStore = new OverlaySettingsStore(logger);
+        _settings = _settingsStore.Load();
+        _startupShortcutManager = new StartupShortcutManager(logger);
         _appServerClient = new AppServerClient(logger);
         _appServerClient.SnapshotChanged += AppServerClient_OnSnapshotChanged;
         _appServerClient.StatusChanged += AppServerClient_OnStatusChanged;
@@ -148,6 +164,23 @@ public partial class MainWindow : Window
             return;
         }
 
+        var now = DateTimeOffset.Now;
+        if (_settings.PausedUntil is { } pausedUntil && pausedUntil <= now)
+        {
+            _settings = _settings with { PausedUntil = null };
+            PersistSettings();
+        }
+
+        if (_settings.IsPaused(now))
+        {
+            if (IsVisible)
+            {
+                Hide();
+            }
+
+            return;
+        }
+
         if (_options.DemoPercent is not null)
         {
             PositionForDemo();
@@ -157,6 +190,17 @@ public partial class MainWindow : Window
         if (!CodexWindowLocator.TryGetActiveBounds(out var bounds))
         {
             _lastBounds = null;
+            if (IsVisible)
+            {
+                Hide();
+            }
+
+            return;
+        }
+
+        if (_settings.HideInFullscreen && bounds.IsFullscreen)
+        {
+            _lastBounds = bounds;
             if (IsVisible)
             {
                 Hide();
@@ -175,15 +219,32 @@ public partial class MainWindow : Window
 
     private void PositionWithin(WindowBounds bounds)
     {
-        Left = bounds.Right - RightInset - Width;
-        Top = bounds.Bottom - BottomInset - Height;
+        var baseLeft = _settings.Placement switch
+        {
+            HorizontalPlacement.LeftEdge => bounds.Left + RightInset,
+            HorizontalPlacement.RightEdge => bounds.Right - RightInset - Width,
+            _ => bounds.Right - SidebarClearance - Width
+        };
+        var maximumLeft = Math.Max(bounds.Left + WindowPadding, bounds.Right - Width - WindowPadding);
+        Left = Math.Clamp(
+            baseLeft + _settings.HorizontalOffset,
+            bounds.Left + WindowPadding,
+            maximumLeft);
+
+        var baseTop = bounds.Bottom - BottomInset - Height - _settings.VerticalOffset;
+        var maximumTop = Math.Max(bounds.Top + WindowPadding, bounds.Bottom - Height - WindowPadding);
+        Top = Math.Clamp(baseTop, bounds.Top + WindowPadding, maximumTop);
     }
 
     private void PositionForDemo()
     {
         var workArea = SystemParameters.WorkArea;
-        Left = workArea.Right - RightInset - Width;
-        Top = workArea.Bottom - BottomInset - Height;
+        PositionWithin(new WindowBounds(
+            workArea.Left,
+            workArea.Top,
+            workArea.Right,
+            workArea.Bottom,
+            false));
     }
 
     private void ApplyInitialExpansion()
@@ -433,6 +494,16 @@ public partial class MainWindow : Window
         _trayVisibilityMenuItem = new System.Windows.Forms.ToolStripMenuItem("Hide overlay");
         _trayVisibilityMenuItem.Click += (_, _) => Dispatcher.Invoke(ToggleManualVisibility);
         menu.Items.Add(_trayVisibilityMenuItem);
+        _pauseMenuItem = new System.Windows.Forms.ToolStripMenuItem("Pause for 15 minutes");
+        _pauseMenuItem.Click += (_, _) => Dispatcher.Invoke(TogglePause);
+        menu.Items.Add(_pauseMenuItem);
+        menu.Items.Add(CreateDisplaySettingsMenu());
+        _automaticStartupMenuItem = new System.Windows.Forms.ToolStripMenuItem("Start automatically with Codex")
+        {
+            Enabled = _startupShortcutManager.IsSupported
+        };
+        _automaticStartupMenuItem.Click += (_, _) => Dispatcher.Invoke(ToggleAutomaticStartup);
+        menu.Items.Add(_automaticStartupMenuItem);
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         menu.Items.Add("Refresh now", null, (_, _) => _ = _appServerClient.RefreshAsync());
         menu.Items.Add("Open log", null, (_, _) => OpenLog());
@@ -446,6 +517,7 @@ public partial class MainWindow : Window
             ContextMenuStrip = menu,
             Visible = true
         };
+        menu.Opening += (_, _) => Dispatcher.Invoke(UpdateSettingsMenuState);
         icon.DoubleClick += (_, _) => Dispatcher.Invoke(() =>
         {
             if (_isManuallyHidden)
@@ -457,7 +529,59 @@ public partial class MainWindow : Window
             _isPinned = true;
             ExpandDetails();
         });
+        UpdateSettingsMenuState();
         return icon;
+    }
+
+    private System.Windows.Forms.ToolStripMenuItem CreateDisplaySettingsMenu()
+    {
+        var displayMenu = new System.Windows.Forms.ToolStripMenuItem("Display settings");
+        var placementMenu = new System.Windows.Forms.ToolStripMenuItem("Position");
+
+        _avoidSidebarPlacementItem = CreatePlacementMenuItem(
+            "Avoid right sidebar",
+            HorizontalPlacement.AvoidRightSidebar);
+        _rightEdgePlacementItem = CreatePlacementMenuItem("Right edge", HorizontalPlacement.RightEdge);
+        _leftEdgePlacementItem = CreatePlacementMenuItem("Left edge", HorizontalPlacement.LeftEdge);
+        placementMenu.DropDownItems.Add(_avoidSidebarPlacementItem);
+        placementMenu.DropDownItems.Add(_rightEdgePlacementItem);
+        placementMenu.DropDownItems.Add(_leftEdgePlacementItem);
+        displayMenu.DropDownItems.Add(placementMenu);
+        displayMenu.DropDownItems.Add(new System.Windows.Forms.ToolStripSeparator());
+        displayMenu.DropDownItems.Add(
+            "Move left 20 px",
+            null,
+            (_, _) => Dispatcher.Invoke(() => NudgePosition(horizontal: -PositionNudge, vertical: 0)));
+        displayMenu.DropDownItems.Add(
+            "Move right 20 px",
+            null,
+            (_, _) => Dispatcher.Invoke(() => NudgePosition(horizontal: PositionNudge, vertical: 0)));
+        displayMenu.DropDownItems.Add(
+            "Move up 20 px",
+            null,
+            (_, _) => Dispatcher.Invoke(() => NudgePosition(horizontal: 0, vertical: PositionNudge)));
+        displayMenu.DropDownItems.Add(
+            "Move down 20 px",
+            null,
+            (_, _) => Dispatcher.Invoke(() => NudgePosition(horizontal: 0, vertical: -PositionNudge)));
+        displayMenu.DropDownItems.Add(
+            "Reset offsets",
+            null,
+            (_, _) => Dispatcher.Invoke(ResetPositionOffsets));
+        displayMenu.DropDownItems.Add(new System.Windows.Forms.ToolStripSeparator());
+        _hideFullscreenMenuItem = new System.Windows.Forms.ToolStripMenuItem("Hide in fullscreen");
+        _hideFullscreenMenuItem.Click += (_, _) => Dispatcher.Invoke(ToggleHideInFullscreen);
+        displayMenu.DropDownItems.Add(_hideFullscreenMenuItem);
+        return displayMenu;
+    }
+
+    private System.Windows.Forms.ToolStripMenuItem CreatePlacementMenuItem(
+        string label,
+        HorizontalPlacement placement)
+    {
+        var item = new System.Windows.Forms.ToolStripMenuItem(label);
+        item.Click += (_, _) => Dispatcher.Invoke(() => SetPlacement(placement));
+        return item;
     }
 
     private void ToggleManualVisibility()
@@ -473,6 +597,12 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (_settings.PausedUntil is not null)
+        {
+            _settings = _settings with { PausedUntil = null };
+            PersistSettings();
+        }
+
         _logger.Info("Overlay manually enabled. Waiting for the active Codex window.");
         UpdateWindowPosition();
     }
@@ -480,9 +610,79 @@ public partial class MainWindow : Window
     public void ShowFromExternalLaunch()
     {
         _isManuallyHidden = false;
+        _settings = _settings with { PausedUntil = null };
+        PersistSettings();
         UpdateVisibilityMenuLabels();
         _logger.Info("External launch requested overlay visibility.");
         UpdateWindowPosition();
+    }
+
+    private void TogglePause()
+    {
+        _settings = _settings.IsPaused(DateTimeOffset.Now)
+            ? _settings with { PausedUntil = null }
+            : _settings with { PausedUntil = DateTimeOffset.Now.AddMinutes(15) };
+        PersistSettings();
+        ResetToCollapsedState();
+        UpdateWindowPosition();
+    }
+
+    private void SetPlacement(HorizontalPlacement placement)
+    {
+        _settings = _settings with { Placement = placement };
+        PersistSettings();
+        UpdateWindowPosition();
+    }
+
+    private void NudgePosition(double horizontal, double vertical)
+    {
+        _settings = _settings with
+        {
+            HorizontalOffset = _settings.HorizontalOffset + horizontal,
+            VerticalOffset = _settings.VerticalOffset + vertical
+        };
+        PersistSettings();
+        UpdateWindowPosition();
+    }
+
+    private void ResetPositionOffsets()
+    {
+        _settings = _settings with { HorizontalOffset = 0, VerticalOffset = 0 };
+        PersistSettings();
+        UpdateWindowPosition();
+    }
+
+    private void ToggleHideInFullscreen()
+    {
+        _settings = _settings with { HideInFullscreen = !_settings.HideInFullscreen };
+        PersistSettings();
+        UpdateWindowPosition();
+    }
+
+    private void ToggleAutomaticStartup()
+    {
+        _ = _startupShortcutManager.SetEnabled(!_startupShortcutManager.IsEnabled);
+        UpdateSettingsMenuState();
+    }
+
+    private void PersistSettings()
+    {
+        _settings = _settings.Normalize();
+        _settingsStore.Save(_settings);
+        UpdateSettingsMenuState();
+    }
+
+    private void UpdateSettingsMenuState()
+    {
+        _avoidSidebarPlacementItem.Checked =
+            _settings.Placement == HorizontalPlacement.AvoidRightSidebar;
+        _rightEdgePlacementItem.Checked = _settings.Placement == HorizontalPlacement.RightEdge;
+        _leftEdgePlacementItem.Checked = _settings.Placement == HorizontalPlacement.LeftEdge;
+        _hideFullscreenMenuItem.Checked = _settings.HideInFullscreen;
+        _automaticStartupMenuItem.Checked = _startupShortcutManager.IsEnabled;
+        _pauseMenuItem.Text = _settings.IsPaused(DateTimeOffset.Now)
+            ? "Resume now"
+            : "Pause for 15 minutes";
     }
 
     private void UpdateVisibilityMenuLabels()

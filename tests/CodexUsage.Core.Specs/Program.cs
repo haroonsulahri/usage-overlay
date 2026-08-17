@@ -2,6 +2,7 @@ using CodexUsage.Core;
 using CodexUsage.Core.Formatting;
 using CodexUsage.Core.Models;
 using CodexUsage.Core.Protocol;
+using CodexUsage.Core.Settings;
 
 var specs = new (string Name, Action Run)[]
 {
@@ -11,7 +12,8 @@ var specs = new (string Name, Action Run)[]
     ("Merges partial bucket updates", MergesPartialUpdate),
     ("Formats reset countdowns", FormatsResetCountdown),
     ("Resolves warning thresholds", ResolvesUsageLevels),
-    ("Calculates remaining quota", CalculatesRemainingQuota)
+    ("Calculates remaining quota", CalculatesRemainingQuota),
+    ("Normalizes persistent display settings", NormalizesDisplaySettings)
 };
 
 var failures = new List<string>();
@@ -142,6 +144,24 @@ static void CalculatesRemainingQuota()
     AssertEqual(27d, UsageLevelResolver.RemainingFromUsed(73));
     AssertEqual(100d, UsageLevelResolver.RemainingFromUsed(-5));
     AssertEqual(0d, UsageLevelResolver.RemainingFromUsed(125));
+}
+
+static void NormalizesDisplaySettings()
+{
+    var now = DateTimeOffset.UtcNow;
+    var settings = new OverlaySettings
+    {
+        Placement = (HorizontalPlacement)999,
+        HorizontalOffset = 900,
+        VerticalOffset = -500,
+        PausedUntil = now.AddMinutes(15)
+    }.Normalize();
+
+    AssertEqual(HorizontalPlacement.AvoidRightSidebar, settings.Placement);
+    AssertEqual(600d, settings.HorizontalOffset);
+    AssertEqual(-300d, settings.VerticalOffset);
+    Assert(settings.IsPaused(now), "Expected the future pause to be active.");
+    Assert(!settings.IsPaused(now.AddMinutes(16)), "Expected the expired pause to be inactive.");
 }
 
 static RateLimitBucket Bucket(string id, double usedPercent)
