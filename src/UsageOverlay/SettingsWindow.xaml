@@ -271,11 +271,20 @@
                                        Text="Choose when the usage rail appears."
                                        Foreground="{StaticResource OverlayMutedBrush}"
                                        FontSize="{StaticResource OverlayTextSmall}" />
-                            <CheckBox x:Name="ShowOnlyCodexCheckBox"
-                                      Content="Only show while Codex is active"
-                                      Style="{StaticResource SettingsCheckStyle}" />
-                            <TextBlock Margin="22,3,0,0"
-                                       Text="Turn this off to keep the rail visible when you switch to another app."
+                            <TextBlock Text="Show the rail" Style="{StaticResource FieldLabelStyle}" />
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="CodexOnlyVisibilityRadio"
+                                             GroupName="VisibilityScope"
+                                             Content="Only in Codex"
+                                             Style="{StaticResource SettingsRadioStyle}" />
+                                <RadioButton x:Name="AcrossWindowsVisibilityRadio"
+                                             Margin="18,7,0,0"
+                                             GroupName="VisibilityScope"
+                                             Content="Across Windows"
+                                             Style="{StaticResource SettingsRadioStyle}" />
+                            </StackPanel>
+                            <TextBlock Margin="0,5,0,0"
+                                       Text="Across Windows keeps the rail in its last position when you switch apps."
                                        Foreground="{StaticResource OverlayMutedBrush}"
                                        FontSize="{StaticResource OverlayTextSmall}" />
                             <CheckBox x:Name="HideFullscreenCheckBox"

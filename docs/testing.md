@@ -59,6 +59,7 @@ Recommended visual states:
 | Automatic startup | Overlay starts without opening Settings |
 | Settings title bar | Minus hides Settings, Close closes Settings, and maximize is unavailable |
 | Visibility controls | Codex-only and fullscreen choices appear together near the top |
+| Visibility scope | Only in Codex and Across Windows map to the saved visibility setting |
 | Connection details | Technical fields are collapsed by default and can be expanded |
 | Settings initial scroll | General and Visibility are shown when the window opens |
 | Pause | Overlay hides for 15 minutes, then resumes automatically |

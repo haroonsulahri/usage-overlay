@@ -51,7 +51,8 @@ public partial class SettingsWindow : Window
     {
         StartAutomaticallyCheckBox.IsChecked = _startAutomatically;
         StartAutomaticallyCheckBox.IsEnabled = _startupSupported;
-        ShowOnlyCodexCheckBox.IsChecked = _settings.ShowOnlyWhenCodexActive;
+        CodexOnlyVisibilityRadio.IsChecked = _settings.ShowOnlyWhenCodexActive;
+        AcrossWindowsVisibilityRadio.IsChecked = !_settings.ShowOnlyWhenCodexActive;
         FollowMonitorsCheckBox.IsChecked = _settings.FollowCodexAcrossMonitors;
         HideFullscreenCheckBox.IsChecked = _settings.HideInFullscreen;
         AnimationsCheckBox.IsChecked = _settings.AnimationsEnabled;
@@ -175,7 +176,7 @@ public partial class SettingsWindow : Window
             HorizontalOffset = _pendingHorizontalOffset,
             VerticalOffset = _pendingVerticalOffset,
             HideInFullscreen = HideFullscreenCheckBox.IsChecked == true,
-            ShowOnlyWhenCodexActive = ShowOnlyCodexCheckBox.IsChecked == true,
+            ShowOnlyWhenCodexActive = CodexOnlyVisibilityRadio.IsChecked == true,
             FollowCodexAcrossMonitors = FollowMonitorsCheckBox.IsChecked == true,
             PrimaryDisplay = primaryDisplay,
             WarningThreshold = warningThreshold,

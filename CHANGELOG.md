@@ -30,6 +30,7 @@ The project follows [Semantic Versioning](https://semver.org/).
 - Made Windows Search launches open Settings while keeping automatic startup background-only
 - Added a dedicated Visibility section and collapsed connection diagnostics by default
 - Made Settings reliably open at the top instead of restoring a technical section near the bottom
+- Replaced the indirect visibility checkbox with explicit Only in Codex and Across Windows choices
 
 ### Fixed
 
