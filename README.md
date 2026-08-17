@@ -57,6 +57,18 @@ dotnet run --project .\src\CodexUsageOverlay\CodexUsageOverlay.csproj --configur
 
 The framework-dependent single-file build is written to `artifacts\win-x64`.
 
+Register a searchable Start-menu shortcut:
+
+```powershell
+.\scripts\install-start-menu.ps1
+```
+
+Launching **Codex Usage Overlay** from Windows Search also restores an already-running hidden overlay. To remove only the shortcut:
+
+```powershell
+.\scripts\uninstall-start-menu.ps1
+```
+
 ## Verify live App Server access
 
 Run the authenticated smoke test without opening the overlay UI:
@@ -73,6 +85,7 @@ It exits successfully only after receiving a real Codex quota snapshot.
 - Click the rail to pin or unpin the detail card.
 - Right-click the rail to hide it, refresh usage, or exit.
 - Right-click the tray icon and choose **Show overlay** to restore a manually hidden rail.
+- Launch **Codex Usage Overlay** again from Windows Search to restore a hidden rail.
 - Double-click the tray icon to restore a hidden rail or expand a visible one.
 - Use the tray icon when the rail is hidden.
 

@@ -68,6 +68,12 @@ public partial class MainWindow : Window
         _collapseTimer.Tick += CollapseTimer_OnTick;
 
         _notifyIcon = CreateNotifyIcon();
+
+        if (_options.StartHidden)
+        {
+            _isManuallyHidden = true;
+            UpdateVisibilityMenuLabels();
+        }
     }
 
     public double AnimatedRemainingPercent
@@ -85,12 +91,20 @@ public partial class MainWindow : Window
     {
         _windowTrackingTimer.Start();
 
+        if (_isManuallyHidden)
+        {
+            Hide();
+        }
+
         if (_options.DemoPercent is { } demoPercent)
         {
             ApplySnapshot(CreateDemoSnapshot(demoPercent));
             PositionForDemo();
             StatusText.Text = "Demo";
-            Show();
+            if (!_isManuallyHidden)
+            {
+                Show();
+            }
             ApplyInitialExpansion();
             return;
         }
@@ -449,8 +463,7 @@ public partial class MainWindow : Window
     private void ToggleManualVisibility()
     {
         _isManuallyHidden = !_isManuallyHidden;
-        _trayVisibilityMenuItem.Text = _isManuallyHidden ? "Show overlay" : "Hide overlay";
-        RailVisibilityMenuItem.Header = _trayVisibilityMenuItem.Text;
+        UpdateVisibilityMenuLabels();
 
         if (_isManuallyHidden)
         {
@@ -462,6 +475,21 @@ public partial class MainWindow : Window
 
         _logger.Info("Overlay manually enabled. Waiting for the active Codex window.");
         UpdateWindowPosition();
+    }
+
+    public void ShowFromExternalLaunch()
+    {
+        _isManuallyHidden = false;
+        UpdateVisibilityMenuLabels();
+        _logger.Info("External launch requested overlay visibility.");
+        UpdateWindowPosition();
+    }
+
+    private void UpdateVisibilityMenuLabels()
+    {
+        var label = _isManuallyHidden ? "Show overlay" : "Hide overlay";
+        _trayVisibilityMenuItem.Text = label;
+        RailVisibilityMenuItem.Header = label;
     }
 
     private void ResetToCollapsedState()

@@ -1,17 +1,24 @@
 namespace CodexUsageOverlay.Infrastructure;
 
-public sealed record OverlayOptions(double? DemoPercent, bool StartExpanded)
+public sealed record OverlayOptions(double? DemoPercent, bool StartExpanded, bool StartHidden)
 {
     public static OverlayOptions Parse(IReadOnlyList<string> arguments)
     {
         double? demoPercent = null;
         var startExpanded = false;
+        var startHidden = false;
 
         foreach (var argument in arguments)
         {
             if (string.Equals(argument, "--expanded", StringComparison.OrdinalIgnoreCase))
             {
                 startExpanded = true;
+                continue;
+            }
+
+            if (string.Equals(argument, "--start-hidden", StringComparison.OrdinalIgnoreCase))
+            {
+                startHidden = true;
                 continue;
             }
 
@@ -25,6 +32,6 @@ public sealed record OverlayOptions(double? DemoPercent, bool StartExpanded)
             }
         }
 
-        return new OverlayOptions(demoPercent, startExpanded);
+        return new OverlayOptions(demoPercent, startExpanded, startHidden);
     }
 }
