@@ -52,17 +52,21 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <Grid Grid.Row="0">
+                <Grid Grid.Row="0" Height="24">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="Codex usage"
+                               VerticalAlignment="Center"
                                Foreground="{StaticResource OverlayTextBrush}"
                                FontSize="{StaticResource OverlayTextBody}"
                                FontWeight="Medium" />
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel Grid.Column="1"
+                                Margin="0,0,10,0"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center">
                         <Ellipse x:Name="LiveDot" Width="6" Height="6" Margin="0,0,5,0" Fill="#FF55C878" />
                         <TextBlock x:Name="StatusText"
                                    Text="Connecting"
@@ -70,12 +74,16 @@
                                    FontSize="{StaticResource OverlayTextSmall}" />
                     </StackPanel>
                     <Button Grid.Column="2"
-                            Margin="8,0,0,0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
                             Style="{StaticResource OverlayIconButtonStyle}"
                             AutomationProperties.Name="Close usage details"
                             ToolTip="Close usage details"
                             Click="CloseUsageDetailsButton_OnClick">
-                        <Path Data="M 7,7 L 17,17 M 17,7 L 7,17"
+                        <Path Width="10"
+                              Height="10"
+                              Data="M 0,0 L 10,10 M 10,0 L 0,10"
+                              Stretch="Fill"
                               Stroke="{StaticResource OverlayMutedBrush}"
                               StrokeThickness="1.25"
                               StrokeStartLineCap="Round"
