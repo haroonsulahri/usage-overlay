@@ -374,6 +374,7 @@ public partial class MainWindow : Window
         var normalized = UsageLevelResolver.Normalize(percentage);
         window.UsageFillScale.ScaleY = normalized / 100d;
         window.UsagePercentText.Text = $"{Math.Round(normalized)}% left";
+        window.RailRemainingText.Text = $"{Math.Round(normalized)}%";
         window.LeadingCapTranslate.Y = -(RailUsableHeight * normalized / 100d);
     }
 

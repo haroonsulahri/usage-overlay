@@ -115,35 +115,45 @@
                 </ContextMenu>
             </Grid.ContextMenu>
 
-            <Grid Width="14" Height="138" Margin="0,0,0,12" VerticalAlignment="Bottom">
-                <Border Background="{StaticResource OverlayTrackBrush}"
-                        BorderBrush="{StaticResource OverlayBorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="7" />
-                <Border x:Name="UsageFill"
-                        Margin="2"
-                        CornerRadius="5"
-                        RenderTransformOrigin="0.5,1">
-                    <Border.Background>
-                        <SolidColorBrush x:Name="UsageFillBrush" Color="{StaticResource OverlayNormalColor}" />
-                    </Border.Background>
-                    <Border.RenderTransform>
-                        <ScaleTransform x:Name="UsageFillScale" ScaleY="0" />
-                    </Border.RenderTransform>
-                </Border>
-                <Border x:Name="LeadingCap"
-                        Width="8"
-                        Height="2"
-                        VerticalAlignment="Bottom"
-                        Background="#FFF2FFF5"
-                        CornerRadius="1"
-                        Opacity="0"
-                        RenderTransformOrigin="0.5,1">
-                    <Border.RenderTransform>
-                        <TranslateTransform x:Name="LeadingCapTranslate" Y="0" />
-                    </Border.RenderTransform>
-                </Border>
-            </Grid>
+            <StackPanel Width="34" Margin="0,0,0,5" VerticalAlignment="Bottom">
+                <Grid Width="14" Height="138" HorizontalAlignment="Center">
+                    <Border Background="{StaticResource OverlayTrackBrush}"
+                            BorderBrush="{StaticResource OverlayBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="7" />
+                    <Border x:Name="UsageFill"
+                            Margin="2"
+                            CornerRadius="5"
+                            RenderTransformOrigin="0.5,1">
+                        <Border.Background>
+                            <SolidColorBrush x:Name="UsageFillBrush" Color="{StaticResource OverlayNormalColor}" />
+                        </Border.Background>
+                        <Border.RenderTransform>
+                            <ScaleTransform x:Name="UsageFillScale" ScaleY="0" />
+                        </Border.RenderTransform>
+                    </Border>
+                    <Border x:Name="LeadingCap"
+                            Width="8"
+                            Height="2"
+                            VerticalAlignment="Bottom"
+                            Background="#FFF2FFF5"
+                            CornerRadius="1"
+                            Opacity="0"
+                            RenderTransformOrigin="0.5,1">
+                        <Border.RenderTransform>
+                            <TranslateTransform x:Name="LeadingCapTranslate" Y="0" />
+                        </Border.RenderTransform>
+                    </Border>
+                </Grid>
+                <TextBlock x:Name="RailRemainingText"
+                           Margin="0,4,0,0"
+                           HorizontalAlignment="Center"
+                           Text="--"
+                           TextAlignment="Center"
+                           Foreground="{StaticResource OverlayMutedBrush}"
+                           FontSize="{StaticResource OverlayTextSmall}"
+                           FontWeight="Medium" />
+            </StackPanel>
         </Grid>
     </Grid>
 </Window>

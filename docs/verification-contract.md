@@ -12,7 +12,7 @@ A Windows companion overlay for the packaged Codex desktop application.
 
 ## Expected outcome
 
-- A narrow vertical usage rail appears only while the Codex desktop window is active.
+- A narrow vertical usage rail with a compact remaining-percentage label appears only while the Codex desktop window is active.
 - The rail and primary label reflect how much Codex quota remains.
 - Used percentage remains available as secondary context.
 - Usage changes animate smoothly from the previous percentage.

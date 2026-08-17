@@ -6,6 +6,7 @@ An unofficial Windows companion that places a slim live quota meter beside the C
 
 - Anchors a 10px vertical usage rail to the active Codex desktop window.
 - Shows the remaining quota as the primary value.
+- Keeps the remaining percentage visible below the collapsed rail.
 - Drains smoothly from full to empty as the account quota is consumed.
 - Animates changes over 620ms with a calm ease-out transition.
 - Expands a detail card on hover and pins it on click.
