@@ -111,14 +111,20 @@
               MouseMove="RailHitTarget_OnMouseMove"
               LostMouseCapture="RailHitTarget_OnLostMouseCapture">
             <Grid.ContextMenu>
-                <ContextMenu>
+                <ContextMenu Style="{StaticResource OverlayContextMenuStyle}">
                     <MenuItem x:Name="RailVisibilityMenuItem"
                               Header="Hide overlay"
+                              Style="{StaticResource OverlayMenuItemStyle}"
                               Click="VisibilityMenuItem_OnClick" />
-                    <Separator />
-                    <MenuItem Header="Refresh now" Click="RefreshMenuItem_OnClick" />
-                    <Separator />
-                    <MenuItem Header="Exit" Click="ExitMenuItem_OnClick" />
+                    <Separator Style="{StaticResource OverlayMenuSeparatorStyle}" />
+                    <MenuItem Header="Refresh now"
+                              Style="{StaticResource OverlayMenuItemStyle}"
+                              Click="RefreshMenuItem_OnClick" />
+                    <Separator Style="{StaticResource OverlayMenuSeparatorStyle}" />
+                    <MenuItem Header="Exit"
+                              Tag="Destructive"
+                              Style="{StaticResource OverlayMenuItemStyle}"
+                              Click="ExitMenuItem_OnClick" />
                 </ContextMenu>
             </Grid.ContextMenu>
 

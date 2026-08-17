@@ -631,7 +631,15 @@ public partial class MainWindow : Window
 
     private System.Windows.Forms.NotifyIcon CreateNotifyIcon()
     {
-        var menu = new System.Windows.Forms.ContextMenuStrip();
+        var menu = new System.Windows.Forms.ContextMenuStrip
+        {
+            BackColor = System.Drawing.Color.FromArgb(36, 36, 36),
+            ForeColor = System.Drawing.Color.FromArgb(242, 242, 242),
+            DropShadowEnabled = false,
+            ShowImageMargin = false,
+            Padding = new System.Windows.Forms.Padding(6),
+            Renderer = new System.Windows.Forms.ToolStripProfessionalRenderer(new OverlayMenuColorTable())
+        };
         _trayVisibilityMenuItem = new System.Windows.Forms.ToolStripMenuItem("Hide overlay");
         _trayVisibilityMenuItem.Click += (_, _) => Dispatcher.Invoke(ToggleManualVisibility);
         menu.Items.Add(_trayVisibilityMenuItem);
@@ -649,7 +657,12 @@ public partial class MainWindow : Window
         menu.Items.Add("Refresh now", null, (_, _) => _ = _appServerClient.RefreshAsync());
         menu.Items.Add("Open log", null, (_, _) => OpenLog());
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
-        menu.Items.Add("Exit", null, (_, _) => Dispatcher.Invoke(System.Windows.Application.Current.Shutdown));
+        var exitItem = menu.Items.Add(
+            "Exit",
+            null,
+            (_, _) => Dispatcher.Invoke(System.Windows.Application.Current.Shutdown));
+        exitItem.ForeColor = System.Drawing.Color.FromArgb(229, 90, 90);
+        ApplyTrayMenuSpacing(menu.Items);
 
         var icon = new System.Windows.Forms.NotifyIcon
         {
@@ -672,6 +685,26 @@ public partial class MainWindow : Window
         });
         UpdateSettingsMenuState();
         return icon;
+    }
+
+    private static void ApplyTrayMenuSpacing(System.Windows.Forms.ToolStripItemCollection items)
+    {
+        foreach (System.Windows.Forms.ToolStripItem item in items)
+        {
+            if (item is System.Windows.Forms.ToolStripSeparator separator)
+            {
+                separator.Margin = new System.Windows.Forms.Padding(8, 4, 8, 4);
+                continue;
+            }
+
+            item.Padding = new System.Windows.Forms.Padding(10, 4, 10, 4);
+            item.Margin = new System.Windows.Forms.Padding(0, 1, 0, 1);
+
+            if (item is System.Windows.Forms.ToolStripMenuItem menuItem && menuItem.DropDownItems.Count > 0)
+            {
+                ApplyTrayMenuSpacing(menuItem.DropDownItems);
+            }
+        }
     }
 
     private System.Windows.Forms.ToolStripMenuItem CreateDisplaySettingsMenu()

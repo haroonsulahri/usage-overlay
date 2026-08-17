@@ -12,6 +12,8 @@
         <Color x:Key="OverlayNormalColor">#FF55C878</Color>
         <Color x:Key="OverlayWarningColor">#FFF0B45E</Color>
         <Color x:Key="OverlayCriticalColor">#FFE55A5A</Color>
+        <Color x:Key="OverlayMenuHoverColor">#FF333333</Color>
+        <Color x:Key="OverlayMenuCriticalHoverColor">#FF3B2929</Color>
 
         <SolidColorBrush x:Key="OverlaySurfaceBrush" Color="{StaticResource OverlaySurfaceColor}" />
         <SolidColorBrush x:Key="OverlaySurfaceRaisedBrush" Color="{StaticResource OverlaySurfaceRaisedColor}" />
@@ -19,10 +21,126 @@
         <SolidColorBrush x:Key="OverlayTextBrush" Color="{StaticResource OverlayTextColor}" />
         <SolidColorBrush x:Key="OverlayMutedBrush" Color="{StaticResource OverlayMutedColor}" />
         <SolidColorBrush x:Key="OverlayTrackBrush" Color="{StaticResource OverlayTrackColor}" />
+        <SolidColorBrush x:Key="OverlayMenuHoverBrush" Color="{StaticResource OverlayMenuHoverColor}" />
+        <SolidColorBrush x:Key="OverlayMenuCriticalHoverBrush" Color="{StaticResource OverlayMenuCriticalHoverColor}" />
+        <SolidColorBrush x:Key="OverlayCriticalBrush" Color="{StaticResource OverlayCriticalColor}" />
 
         <sys:Double x:Key="OverlayTextSmall">11</sys:Double>
         <sys:Double x:Key="OverlayTextBody">13</sys:Double>
         <sys:Double x:Key="OverlayTextValue">18</sys:Double>
+
+        <Style x:Key="OverlayContextMenuStyle" TargetType="ContextMenu">
+            <Setter Property="MinWidth" Value="174" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HasDropShadow" Value="False" />
+            <Setter Property="Opacity" Value="1" />
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <TranslateTransform Y="0" />
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border Background="{StaticResource OverlayBorderBrush}"
+                                CornerRadius="12"
+                                Padding="1"
+                                SnapsToDevicePixels="True">
+                            <Border Background="{StaticResource OverlaySurfaceBrush}"
+                                    CornerRadius="11"
+                                    Padding="5">
+                                <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle" />
+                            </Border>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <EventTrigger RoutedEvent="ContextMenu.Opened">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                             From="0"
+                                             To="1"
+                                             Duration="0:0:0.16">
+                                <DoubleAnimation.EasingFunction>
+                                    <CubicEase EasingMode="EaseOut" />
+                                </DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                             From="4"
+                                             To="0"
+                                             Duration="0:0:0.16">
+                                <DoubleAnimation.EasingFunction>
+                                    <CubicEase EasingMode="EaseOut" />
+                                </DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="OverlayMenuItemStyle" TargetType="MenuItem">
+            <Setter Property="Foreground" Value="{StaticResource OverlayTextBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="FontSize" Value="{StaticResource OverlayTextBody}" />
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="Padding" Value="11,8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border x:Name="ItemSurface"
+                                Padding="{TemplateBinding Padding}"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="7"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter ContentSource="Header"
+                                              RecognizesAccessKey="True"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="ItemSurface"
+                                        Property="Background"
+                                        Value="{StaticResource OverlayMenuHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="{StaticResource OverlayMutedBrush}" />
+                                <Setter Property="Opacity" Value="0.55" />
+                            </Trigger>
+                            <Trigger Property="Tag" Value="Destructive">
+                                <Setter Property="Foreground" Value="{StaticResource OverlayCriticalBrush}" />
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsHighlighted" Value="True" />
+                                    <Condition Property="Tag" Value="Destructive" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="ItemSurface"
+                                        Property="Background"
+                                        Value="{StaticResource OverlayMenuCriticalHoverBrush}" />
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="OverlayMenuSeparatorStyle" TargetType="Separator">
+            <Setter Property="Height" Value="1" />
+            <Setter Property="Margin" Value="8,4" />
+            <Setter Property="Background" Value="{StaticResource OverlayBorderBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Separator">
+                        <Border Height="1" Background="{TemplateBinding Background}" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Application.Resources>
 </Application>
-
