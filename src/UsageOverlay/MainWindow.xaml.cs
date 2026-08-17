@@ -197,6 +197,16 @@ public partial class MainWindow : Window
 
     private void UpdateWindowPosition()
     {
+        if (_settingsWindow is { IsVisible: true })
+        {
+            if (!IsVisible)
+            {
+                Show();
+            }
+
+            return;
+        }
+
         if (_isManuallyHidden)
         {
             if (IsVisible)
@@ -871,8 +881,18 @@ public partial class MainWindow : Window
 
     private void ShowSettings()
     {
-        if (_settingsWindow is { IsVisible: true })
+        if (_settingsWindow is not null)
         {
+            if (!IsVisible)
+            {
+                Show();
+            }
+
+            if (!_settingsWindow.IsVisible)
+            {
+                _settingsWindow.Show();
+            }
+
             _settingsWindow.Activate();
             return;
         }
@@ -881,6 +901,11 @@ public partial class MainWindow : Window
         var cliStatus = resolvedCliPath is null
             ? $"Codex CLI wasn’t found. Connection: {_appServerStatus}."
             : $"Codex CLI is ready. Connection: {_appServerStatus}.";
+        if (!IsVisible)
+        {
+            Show();
+        }
+
         var window = new SettingsWindow(
             _settings,
             _startupShortcutManager.IsEnabled,
@@ -889,18 +914,21 @@ public partial class MainWindow : Window
             ApplySettingsFromWindow,
             OpenLog)
         {
-            Owner = IsVisible ? this : null,
+            Owner = this,
             Topmost = true
         };
         window.Closed += (_, _) =>
         {
+            _logger.Info("Settings window closed.");
             if (ReferenceEquals(_settingsWindow, window))
             {
                 _settingsWindow = null;
+                UpdateWindowPosition();
             }
         };
         _settingsWindow = window;
         window.Show();
+        _logger.Info("Settings window opened.");
         window.Activate();
     }
 

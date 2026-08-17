@@ -101,7 +101,7 @@ public partial class SettingsWindow : Window
         }
     }
 
-    private void HideSettingsButton_OnClick(object sender, RoutedEventArgs eventArgs) => Close();
+    private void HideSettingsButton_OnClick(object sender, RoutedEventArgs eventArgs) => Hide();
 
     private void CloseSettingsButton_OnClick(object sender, RoutedEventArgs eventArgs) => Close();
 
