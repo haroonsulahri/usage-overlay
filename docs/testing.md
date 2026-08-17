@@ -58,6 +58,10 @@ Recommended visual states:
 | Windows Search launch | Existing or new instance opens Settings; no duplicate remains |
 | Automatic startup | Overlay starts without opening Settings |
 | Settings title bar | Close is available; minimize and maximize are unavailable |
+| Visibility controls | Codex-only and fullscreen choices appear together near the top |
+| Connection details | Technical fields are collapsed by default and can be expanded |
+| Settings initial scroll | General and Visibility are shown when the window opens |
+| Settings placement | Entire window remains inside the active screen work area |
 | Pause | Overlay hides for 15 minutes, then resumes automatically |
 | Fullscreen exclusion | Overlay hides only while Codex is fullscreen |
 | Reduced motion | Values update without animated interpolation |

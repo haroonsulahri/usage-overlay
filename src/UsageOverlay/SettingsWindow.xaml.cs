@@ -3,8 +3,10 @@ using System.IO;
 using System.Diagnostics;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Input;
 using System.Windows.Navigation;
+using System.Windows.Threading;
 using CodexUsage.Core.Settings;
 using UsageOverlay.Services;
 
@@ -68,8 +70,13 @@ public partial class SettingsWindow : Window
 
     private void Window_OnLoaded(object sender, RoutedEventArgs eventArgs)
     {
-        SettingsScrollViewer.ScrollToTop();
-        _ = StartAutomaticallyCheckBox.Focus();
+        _ = Dispatcher.BeginInvoke(
+            DispatcherPriority.ContextIdle,
+            new Action(() =>
+            {
+                SettingsScrollViewer.ScrollToTop();
+                _ = StartAutomaticallyCheckBox.Focus();
+            }));
     }
 
     private void Window_OnSourceInitialized(object? sender, EventArgs eventArgs)
@@ -101,6 +108,7 @@ public partial class SettingsWindow : Window
             interval is < 15 or > 3_600)
         {
             ValidationText.Text = "Choose a refresh time between 15 and 3600 seconds.";
+            SetConnectionSettingsExpanded(true);
             RefreshIntervalTextBox.Focus();
             return;
         }
@@ -109,6 +117,7 @@ public partial class SettingsWindow : Window
         if (cliPath.Length > 0 && !File.Exists(cliPath))
         {
             ValidationText.Text = "We couldn’t find the Codex CLI at that path.";
+            SetConnectionSettingsExpanded(true);
             CodexCliPathTextBox.Focus();
             return;
         }
@@ -206,6 +215,20 @@ public partial class SettingsWindow : Window
     }
 
     private void OpenLogsButton_OnClick(object sender, RoutedEventArgs eventArgs) => _openLogs();
+
+    private void ConnectionToggleButton_OnClick(object sender, RoutedEventArgs eventArgs)
+    {
+        SetConnectionSettingsExpanded(ConnectionSettingsPanel.Visibility != Visibility.Visible);
+    }
+
+    private void SetConnectionSettingsExpanded(bool expanded)
+    {
+        ConnectionSettingsPanel.Visibility = expanded ? Visibility.Visible : Visibility.Collapsed;
+        ConnectionToggleButton.Content = expanded ? "Hide details" : "Show details";
+        AutomationProperties.SetName(
+            ConnectionToggleButton,
+            expanded ? "Hide connection and diagnostics" : "Show connection and diagnostics");
+    }
 
     private void HarooneLink_OnRequestNavigate(object sender, RequestNavigateEventArgs eventArgs)
     {

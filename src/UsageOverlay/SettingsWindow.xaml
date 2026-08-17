@@ -7,7 +7,7 @@
         MinWidth="590"
         MinHeight="560"
         ResizeMode="NoResize"
-        WindowStartupLocation="CenterOwner"
+        WindowStartupLocation="CenterScreen"
         ShowInTaskbar="False"
         Background="#FF171717"
         Foreground="{StaticResource OverlayTextBrush}"
@@ -176,8 +176,27 @@
                             <CheckBox x:Name="StartAutomaticallyCheckBox"
                                       Content="Open when Windows starts"
                                       Style="{StaticResource SettingsCheckStyle}" />
+                        </StackPanel>
+                    </Border>
+                </Border>
+
+                <Border Margin="0,0,0,12" Padding="1" Background="{StaticResource OverlayBorderBrush}" CornerRadius="15">
+                    <Border Padding="18" Background="{StaticResource OverlaySurfaceBrush}" CornerRadius="14">
+                        <StackPanel>
+                            <TextBlock Text="Visibility" Style="{StaticResource SectionTitleStyle}" />
+                            <TextBlock Margin="0,6,0,2"
+                                       Text="Choose when the usage rail appears."
+                                       Foreground="{StaticResource OverlayMutedBrush}"
+                                       FontSize="{StaticResource OverlayTextSmall}" />
                             <CheckBox x:Name="ShowOnlyCodexCheckBox"
                                       Content="Only show while Codex is active"
+                                      Style="{StaticResource SettingsCheckStyle}" />
+                            <TextBlock Margin="22,3,0,0"
+                                       Text="Turn this off to keep the rail visible when you switch to another app."
+                                       Foreground="{StaticResource OverlayMutedBrush}"
+                                       FontSize="{StaticResource OverlayTextSmall}" />
+                            <CheckBox x:Name="HideFullscreenCheckBox"
+                                      Content="Hide while Codex is fullscreen"
                                       Style="{StaticResource SettingsCheckStyle}" />
                             <Grid Margin="0,12,0,0">
                                 <Grid.ColumnDefinitions>
@@ -262,9 +281,6 @@
                             <CheckBox x:Name="FollowMonitorsCheckBox"
                                       Content="Follow Codex between monitors"
                                       Style="{StaticResource SettingsCheckStyle}" />
-                            <CheckBox x:Name="HideFullscreenCheckBox"
-                                      Content="Hide in fullscreen"
-                                      Style="{StaticResource SettingsCheckStyle}" />
                         </StackPanel>
                     </Border>
                 </Border>
@@ -333,25 +349,45 @@
                 <Border Padding="1" Background="{StaticResource OverlayBorderBrush}" CornerRadius="15">
                     <Border Padding="18" Background="{StaticResource OverlaySurfaceBrush}" CornerRadius="14">
                         <StackPanel>
-                            <TextBlock Text="Advanced" Style="{StaticResource SectionTitleStyle}" />
-                            <TextBlock Text="Codex CLI path (optional)" Style="{StaticResource FieldLabelStyle}" />
-                            <TextBox x:Name="CodexCliPathTextBox"
-                                     AutomationProperties.Name="Codex CLI path"
-                                     Style="{StaticResource SettingsTextBoxStyle}" />
-                            <TextBlock x:Name="CodexCliStatusText"
-                                       Margin="0,5,0,0"
-                                       Foreground="{StaticResource OverlayMutedBrush}"
-                                       FontSize="{StaticResource OverlayTextSmall}" />
-                            <TextBlock Text="Refresh every (15–3600 seconds)" Style="{StaticResource FieldLabelStyle}" />
-                            <TextBox x:Name="RefreshIntervalTextBox"
-                                     AutomationProperties.Name="Refresh interval seconds"
-                                     Style="{StaticResource SettingsTextBoxStyle}" />
-                            <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
-                                <Button Content="Open logs" Style="{StaticResource SettingsButtonStyle}" Click="OpenLogsButton_OnClick" />
-                                <Button Margin="8,0,0,0"
-                                        Content="Restore defaults"
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,12,0">
+                                    <TextBlock Text="Connection &amp; diagnostics" Style="{StaticResource SectionTitleStyle}" />
+                                    <TextBlock Margin="0,6,0,0"
+                                               Text="Only needed if Usage Overlay cannot connect or update."
+                                               Foreground="{StaticResource OverlayMutedBrush}"
+                                               FontSize="{StaticResource OverlayTextSmall}" />
+                                </StackPanel>
+                                <Button x:Name="ConnectionToggleButton"
+                                        Grid.Column="1"
+                                        Content="Show details"
+                                        AutomationProperties.Name="Show connection and diagnostics"
                                         Style="{StaticResource SettingsButtonStyle}"
-                                        Click="ResetAllButton_OnClick" />
+                                        Click="ConnectionToggleButton_OnClick" />
+                            </Grid>
+                            <StackPanel x:Name="ConnectionSettingsPanel" Visibility="Collapsed">
+                                <TextBlock Text="Codex CLI path (optional)" Style="{StaticResource FieldLabelStyle}" />
+                                <TextBox x:Name="CodexCliPathTextBox"
+                                         AutomationProperties.Name="Codex CLI path"
+                                         Style="{StaticResource SettingsTextBoxStyle}" />
+                                <TextBlock x:Name="CodexCliStatusText"
+                                           Margin="0,5,0,0"
+                                           Foreground="{StaticResource OverlayMutedBrush}"
+                                           FontSize="{StaticResource OverlayTextSmall}" />
+                                <TextBlock Text="Refresh every (15–3600 seconds)" Style="{StaticResource FieldLabelStyle}" />
+                                <TextBox x:Name="RefreshIntervalTextBox"
+                                         AutomationProperties.Name="Refresh interval seconds"
+                                         Style="{StaticResource SettingsTextBoxStyle}" />
+                                <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
+                                    <Button Content="Open logs" Style="{StaticResource SettingsButtonStyle}" Click="OpenLogsButton_OnClick" />
+                                    <Button Margin="8,0,0,0"
+                                            Content="Restore defaults"
+                                            Style="{StaticResource SettingsButtonStyle}"
+                                            Click="ResetAllButton_OnClick" />
+                                </StackPanel>
                             </StackPanel>
                         </StackPanel>
                     </Border>

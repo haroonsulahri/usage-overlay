@@ -28,6 +28,9 @@ The project follows [Semantic Versioning](https://semver.org/).
 
 - Reworked in-app labels, status messages, validation, and settings copy for clearer everyday language
 - Made Windows Search launches open Settings while keeping automatic startup background-only
+- Added a dedicated Visibility section and collapsed connection diagnostics by default
+- Made Settings reliably open at the top instead of restoring a technical section near the bottom
+- Centered Settings on-screen instead of relative to the narrow edge rail
 
 ### Fixed
 
