@@ -889,6 +889,7 @@ public partial class MainWindow : Window
             ApplySettingsFromWindow,
             OpenLog)
         {
+            Owner = IsVisible ? this : null,
             Topmost = true
         };
         window.Closed += (_, _) => _settingsWindow = null;

@@ -6,7 +6,6 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Input;
 using System.Windows.Navigation;
-using System.Windows.Threading;
 using CodexUsage.Core.Settings;
 using UsageOverlay.Services;
 
@@ -68,15 +67,16 @@ public partial class SettingsWindow : Window
         UpdatePositionOffsetText();
     }
 
-    private void Window_OnLoaded(object sender, RoutedEventArgs eventArgs)
+    private async void Window_OnLoaded(object sender, RoutedEventArgs eventArgs)
     {
-        _ = Dispatcher.BeginInvoke(
-            DispatcherPriority.ContextIdle,
-            new Action(() =>
-            {
-                SettingsScrollViewer.ScrollToTop();
-                _ = StartAutomaticallyCheckBox.Focus();
-            }));
+        await Task.Delay(100);
+        if (!IsLoaded)
+        {
+            return;
+        }
+
+        SettingsScrollViewer.ScrollToTop();
+        _ = StartAutomaticallyCheckBox.Focus();
     }
 
     private void Window_OnSourceInitialized(object? sender, EventArgs eventArgs)
