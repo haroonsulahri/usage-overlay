@@ -5,4 +5,10 @@ artifacts/
 *.user
 *.suo
 *.log
-
+*.tmp
+TestResults/
+coverage/
+.idea/
+.vscode/
+Thumbs.db
+Desktop.ini

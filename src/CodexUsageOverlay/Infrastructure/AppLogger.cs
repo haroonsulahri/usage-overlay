@@ -1,3 +1,5 @@
+using CodexUsage.Core.Security;
+
 namespace CodexUsageOverlay.Infrastructure;
 
 public sealed class AppLogger
@@ -21,7 +23,7 @@ public sealed class AppLogger
 
     private void Write(string level, string message)
     {
-        var safeMessage = message.ReplaceLineEndings(" ");
+        var safeMessage = LogSanitizer.Sanitize(message);
         var line = $"{DateTimeOffset.Now:O} [{level}] {safeMessage}{Environment.NewLine}";
 
         lock (_gate)

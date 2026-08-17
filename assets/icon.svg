@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title description">
+  <title id="title">Codex Usage Overlay icon</title>
+  <desc id="description">A dark rounded square containing a slim vertical usage rail with green and amber fill.</desc>
+  <defs>
+    <linearGradient id="usage-fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#55c878" />
+      <stop offset="0.58" stop-color="#55c878" />
+      <stop offset="1" stop-color="#f0b45e" />
+    </linearGradient>
+    <clipPath id="rail-clip">
+      <rect x="107" y="49" width="42" height="158" rx="21" />
+    </clipPath>
+  </defs>
+  <rect x="12" y="12" width="232" height="232" rx="54" fill="#1b1b1d" />
+  <rect x="13" y="13" width="230" height="230" rx="53" fill="none" stroke="#3b3b3f" stroke-width="2" />
+  <rect x="102" y="44" width="52" height="168" rx="26" fill="#303034" />
+  <rect x="106" y="48" width="44" height="160" rx="22" fill="#232326" stroke="#55555a" stroke-width="2" />
+  <g clip-path="url(#rail-clip)">
+    <rect x="107" y="101" width="42" height="106" fill="url(#usage-fill)" />
+    <rect x="112" y="101" width="32" height="5" rx="2.5" fill="#f7fff9" opacity="0.62" />
+  </g>
+</svg>
+

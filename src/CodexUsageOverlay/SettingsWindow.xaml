@@ -1,0 +1,321 @@
+<Window x:Class="CodexUsageOverlay.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Codex Usage Overlay Settings"
+        Width="650"
+        Height="760"
+        MinWidth="590"
+        MinHeight="560"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Background="#FF171717"
+        Foreground="{StaticResource OverlayTextBrush}"
+        Icon="Assets/CodexUsageOverlay.ico"
+        Loaded="Window_OnLoaded"
+        SourceInitialized="Window_OnSourceInitialized"
+        KeyDown="Window_OnKeyDown">
+    <Window.Resources>
+        <Style x:Key="SettingsTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Foreground" Value="{StaticResource OverlayTextBrush}" />
+            <Setter Property="Background" Value="{StaticResource OverlaySurfaceRaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource OverlayBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="10,7" />
+            <Setter Property="FontSize" Value="{StaticResource OverlayTextBody}" />
+            <Setter Property="CaretBrush" Value="{StaticResource OverlayTextBrush}" />
+            <Style.Triggers>
+                <Trigger Property="IsKeyboardFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="#FF55C878" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="SettingsCheckStyle" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{StaticResource OverlayTextBrush}" />
+            <Setter Property="FontSize" Value="{StaticResource OverlayTextBody}" />
+            <Setter Property="Margin" Value="0,7,0,0" />
+            <Setter Property="Padding" Value="2" />
+        </Style>
+
+        <Style x:Key="SettingsRadioStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{StaticResource OverlayTextBrush}" />
+            <Setter Property="FontSize" Value="{StaticResource OverlayTextBody}" />
+            <Setter Property="Margin" Value="0,7,0,0" />
+            <Setter Property="Padding" Value="2" />
+        </Style>
+
+        <Style x:Key="SettingsButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource OverlayTextBrush}" />
+            <Setter Property="Background" Value="{StaticResource OverlaySurfaceRaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource OverlayBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="13,8" />
+            <Setter Property="FontSize" Value="{StaticResource OverlayTextBody}" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonSurface"
+                                Padding="{TemplateBinding Padding}"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonSurface" Property="Background" Value="#FF343434" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonSurface" Property="Background" Value="#FF2E2E2E" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="ButtonSurface" Property="BorderBrush" Value="#FF55C878" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SettingsPrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource SettingsButtonStyle}">
+            <Setter Property="Background" Value="#FF55C878" />
+            <Setter Property="Foreground" Value="#FF102419" />
+            <Setter Property="BorderBrush" Value="#FF55C878" />
+        </Style>
+
+        <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource OverlayTextBrush}" />
+            <Setter Property="FontSize" Value="{StaticResource OverlayTextValue}" />
+            <Setter Property="FontWeight" Value="Medium" />
+        </Style>
+
+        <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource OverlayMutedBrush}" />
+            <Setter Property="FontSize" Value="{StaticResource OverlayTextSmall}" />
+            <Setter Property="Margin" Value="0,10,0,5" />
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Padding="24,20" BorderBrush="{StaticResource OverlayBorderBrush}" BorderThickness="0,0,0,1">
+            <StackPanel>
+                <TextBlock Text="Settings" FontSize="{StaticResource OverlayTextValue}" FontWeight="Medium" />
+                <TextBlock Margin="0,5,0,0"
+                           Text="Configure visibility, placement, appearance, and the Codex connection."
+                           Foreground="{StaticResource OverlayMutedBrush}"
+                           FontSize="{StaticResource OverlayTextBody}" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer x:Name="SettingsScrollViewer"
+                      Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="20,16,20,20">
+                <Border Margin="0,0,0,12" Padding="1" Background="{StaticResource OverlayBorderBrush}" CornerRadius="15">
+                    <Border Padding="18" Background="{StaticResource OverlaySurfaceBrush}" CornerRadius="14">
+                        <StackPanel>
+                            <TextBlock Text="General" Style="{StaticResource SectionTitleStyle}" />
+                            <CheckBox x:Name="StartAutomaticallyCheckBox"
+                                      Content="Start automatically at Windows sign-in"
+                                      Style="{StaticResource SettingsCheckStyle}" />
+                            <CheckBox x:Name="ShowOnlyCodexCheckBox"
+                                      Content="Show only when Codex is active"
+                                      Style="{StaticResource SettingsCheckStyle}" />
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Temporary pause" FontSize="{StaticResource OverlayTextBody}" />
+                                    <TextBlock x:Name="PauseStatusText"
+                                               Margin="0,3,0,0"
+                                               Foreground="{StaticResource OverlayMutedBrush}"
+                                               FontSize="{StaticResource OverlayTextSmall}" />
+                                </StackPanel>
+                                <Button x:Name="PauseButton"
+                                        Grid.Column="1"
+                                        Style="{StaticResource SettingsButtonStyle}"
+                                        Click="PauseButton_OnClick" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Border>
+
+                <Border Margin="0,0,0,12" Padding="1" Background="{StaticResource OverlayBorderBrush}" CornerRadius="15">
+                    <Border Padding="18" Background="{StaticResource OverlaySurfaceBrush}" CornerRadius="14">
+                        <StackPanel>
+                            <TextBlock Text="Position" Style="{StaticResource SectionTitleStyle}" />
+                            <TextBlock Margin="0,6,0,2"
+                                       Text="Drag the usage rail for custom placement, or choose a preset."
+                                       Foreground="{StaticResource OverlayMutedBrush}"
+                                       FontSize="{StaticResource OverlayTextSmall}" />
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="RightEdgeRadio"
+                                             GroupName="Position"
+                                             Content="Right edge"
+                                             Style="{StaticResource SettingsRadioStyle}" />
+                                <RadioButton x:Name="LeftEdgeRadio"
+                                             Margin="18,7,0,0"
+                                             GroupName="Position"
+                                             Content="Left edge"
+                                             Style="{StaticResource SettingsRadioStyle}" />
+                                <RadioButton x:Name="CustomPositionRadio"
+                                             Margin="18,7,0,0"
+                                             GroupName="Position"
+                                             Content="Custom"
+                                             Style="{StaticResource SettingsRadioStyle}" />
+                            </StackPanel>
+                            <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+                                <Button Content="← X" Style="{StaticResource SettingsButtonStyle}" Click="MoveLeftButton_OnClick" />
+                                <Button Margin="6,0,0,0" Content="X →" Style="{StaticResource SettingsButtonStyle}" Click="MoveRightButton_OnClick" />
+                                <Button Margin="6,0,0,0" Content="↑ Y" Style="{StaticResource SettingsButtonStyle}" Click="MoveUpButton_OnClick" />
+                                <Button Margin="6,0,0,0" Content="Y ↓" Style="{StaticResource SettingsButtonStyle}" Click="MoveDownButton_OnClick" />
+                                <Button Margin="6,0,0,0" Content="Reset" Style="{StaticResource SettingsButtonStyle}" Click="ResetPositionButton_OnClick" />
+                            </StackPanel>
+                            <TextBlock x:Name="PositionOffsetText"
+                                       Margin="0,7,0,0"
+                                       Foreground="{StaticResource OverlayMutedBrush}"
+                                       FontSize="{StaticResource OverlayTextSmall}" />
+                            <CheckBox x:Name="FollowMonitorsCheckBox"
+                                      Content="Follow Codex across monitors"
+                                      Style="{StaticResource SettingsCheckStyle}" />
+                            <CheckBox x:Name="HideFullscreenCheckBox"
+                                      Content="Hide while Codex is fullscreen"
+                                      Style="{StaticResource SettingsCheckStyle}" />
+                        </StackPanel>
+                    </Border>
+                </Border>
+
+                <Border Margin="0,0,0,12" Padding="1" Background="{StaticResource OverlayBorderBrush}" CornerRadius="15">
+                    <Border Padding="18" Background="{StaticResource OverlaySurfaceBrush}" CornerRadius="14">
+                        <StackPanel>
+                            <TextBlock Text="Appearance" Style="{StaticResource SectionTitleStyle}" />
+                            <TextBlock Text="Primary value" Style="{StaticResource FieldLabelStyle}" />
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="RemainingPrimaryRadio"
+                                             GroupName="PrimaryValue"
+                                             Content="Remaining"
+                                             Style="{StaticResource SettingsRadioStyle}" />
+                                <RadioButton x:Name="UsedPrimaryRadio"
+                                             Margin="18,7,0,0"
+                                             GroupName="PrimaryValue"
+                                             Content="Used"
+                                             Style="{StaticResource SettingsRadioStyle}" />
+                            </StackPanel>
+                            <Grid Margin="0,8,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="16" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Amber threshold (% used)" Style="{StaticResource FieldLabelStyle}" />
+                                    <TextBox x:Name="WarningThresholdTextBox"
+                                             AutomationProperties.Name="Amber threshold percent used"
+                                             Style="{StaticResource SettingsTextBoxStyle}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Red threshold (% used)" Style="{StaticResource FieldLabelStyle}" />
+                                    <TextBox x:Name="CriticalThresholdTextBox"
+                                             AutomationProperties.Name="Red threshold percent used"
+                                             Style="{StaticResource SettingsTextBoxStyle}" />
+                                </StackPanel>
+                            </Grid>
+                            <Border Margin="0,12,0,2" Height="8" CornerRadius="4" Background="{StaticResource OverlayTrackBrush}">
+                                <Grid ClipToBounds="True">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="7*" />
+                                        <ColumnDefinition Width="2*" />
+                                        <ColumnDefinition Width="1*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Background="#FF55C878" />
+                                    <Border Grid.Column="1" Background="#FFF0B45E" />
+                                    <Border Grid.Column="2" Background="#FFE55A5A" />
+                                </Grid>
+                            </Border>
+                            <CheckBox x:Name="AnimationsCheckBox"
+                                      Content="Animate usage changes"
+                                      Style="{StaticResource SettingsCheckStyle}" />
+                            <TextBlock Margin="22,3,0,0"
+                                       Text="Windows reduced-motion settings always take priority."
+                                       Foreground="{StaticResource OverlayMutedBrush}"
+                                       FontSize="{StaticResource OverlayTextSmall}" />
+                            <CheckBox x:Name="CompactPercentageCheckBox"
+                                      Content="Show compact percentage below the rail"
+                                      Style="{StaticResource SettingsCheckStyle}" />
+                        </StackPanel>
+                    </Border>
+                </Border>
+
+                <Border Padding="1" Background="{StaticResource OverlayBorderBrush}" CornerRadius="15">
+                    <Border Padding="18" Background="{StaticResource OverlaySurfaceBrush}" CornerRadius="14">
+                        <StackPanel>
+                            <TextBlock Text="Advanced" Style="{StaticResource SectionTitleStyle}" />
+                            <TextBlock Text="Codex CLI path (leave empty to use PATH)" Style="{StaticResource FieldLabelStyle}" />
+                            <TextBox x:Name="CodexCliPathTextBox"
+                                     AutomationProperties.Name="Codex CLI path"
+                                     Style="{StaticResource SettingsTextBoxStyle}" />
+                            <TextBlock x:Name="CodexCliStatusText"
+                                       Margin="0,5,0,0"
+                                       Foreground="{StaticResource OverlayMutedBrush}"
+                                       FontSize="{StaticResource OverlayTextSmall}" />
+                            <TextBlock Text="Refresh interval in seconds (15–3600)" Style="{StaticResource FieldLabelStyle}" />
+                            <TextBox x:Name="RefreshIntervalTextBox"
+                                     AutomationProperties.Name="Refresh interval seconds"
+                                     Style="{StaticResource SettingsTextBoxStyle}" />
+                            <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
+                                <Button Content="Open logs" Style="{StaticResource SettingsButtonStyle}" Click="OpenLogsButton_OnClick" />
+                                <Button Margin="8,0,0,0"
+                                        Content="Reset all settings"
+                                        Style="{StaticResource SettingsButtonStyle}"
+                                        Click="ResetAllButton_OnClick" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="2" Padding="20,14" BorderBrush="{StaticResource OverlayBorderBrush}" BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="ValidationText"
+                               Foreground="{StaticResource OverlayCriticalBrush}"
+                               FontSize="{StaticResource OverlayTextSmall}" />
+                    <TextBlock x:Name="SavedStatusText"
+                               Foreground="#FF55C878"
+                               FontSize="{StaticResource OverlayTextSmall}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="Cancel"
+                            IsCancel="True"
+                            Style="{StaticResource SettingsButtonStyle}"
+                            Click="CancelButton_OnClick" />
+                    <Button Margin="8,0,0,0"
+                            Content="Save"
+                            IsDefault="True"
+                            Style="{StaticResource SettingsPrimaryButtonStyle}"
+                            Click="SaveButton_OnClick" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

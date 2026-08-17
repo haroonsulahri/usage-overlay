@@ -12,6 +12,8 @@ public sealed class AppServerClient : IAsyncDisposable
 {
     private readonly AppLogger _logger;
     private readonly SemaphoreSlim _writeGate = new(1, 1);
+    private readonly string? _configuredCodexPath;
+    private readonly TimeSpan _pollInterval;
     private Process? _process;
     private UsageSnapshot? _lastSnapshot;
     private int _nextRequestId;
@@ -19,9 +21,14 @@ public sealed class AppServerClient : IAsyncDisposable
     private bool _initialized;
     private CancellationTokenSource? _sessionCancellation;
 
-    public AppServerClient(AppLogger logger)
+    public AppServerClient(
+        AppLogger logger,
+        string? configuredCodexPath = null,
+        TimeSpan? pollInterval = null)
     {
         _logger = logger;
+        _configuredCodexPath = configuredCodexPath;
+        _pollInterval = pollInterval ?? TimeSpan.FromSeconds(60);
     }
 
     public event EventHandler<UsageSnapshot>? SnapshotChanged;
@@ -70,7 +77,7 @@ public sealed class AppServerClient : IAsyncDisposable
 
     private async Task RunSessionAsync(CancellationToken cancellationToken)
     {
-        var codexCommand = FindCodexCommand();
+        var codexCommand = ResolveCodexCommand(_configuredCodexPath);
         if (codexCommand is null)
         {
             StatusChanged?.Invoke(this, "Codex CLI not found");
@@ -192,7 +199,7 @@ public sealed class AppServerClient : IAsyncDisposable
 
     private async Task PollAsync(CancellationToken cancellationToken)
     {
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(60));
+        using var timer = new PeriodicTimer(_pollInterval);
 
         try
         {
@@ -266,8 +273,13 @@ public sealed class AppServerClient : IAsyncDisposable
                throw new InvalidOperationException("Failed to start Codex App Server.");
     }
 
-    private static string? FindCodexCommand()
+    public static string? ResolveCodexCommand(string? configuredPath = null)
     {
+        if (!string.IsNullOrWhiteSpace(configuredPath))
+        {
+            return File.Exists(configuredPath) ? Path.GetFullPath(configuredPath) : null;
+        }
+
         var configured = Environment.GetEnvironmentVariable("CODEX_USAGE_CODEX_PATH");
         if (!string.IsNullOrWhiteSpace(configured) && File.Exists(configured))
         {

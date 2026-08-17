@@ -9,6 +9,8 @@ public static class NativeWindowStyle
     private const int ExtendedStyleIndex = -20;
     private const long NoActivateStyle = 0x08000000L;
     private const long ToolWindowStyle = 0x00000080L;
+    private const int DwmUseImmersiveDarkMode = 20;
+    private const int DwmUseImmersiveDarkModeLegacy = 19;
 
     public static void ApplyNonActivatingToolWindow(Window window)
     {
@@ -18,6 +20,16 @@ public static class NativeWindowStyle
             handle,
             ExtendedStyleIndex,
             new IntPtr(current | NoActivateStyle | ToolWindowStyle));
+    }
+
+    public static void ApplyDarkTitleBar(Window window)
+    {
+        var handle = new WindowInteropHelper(window).Handle;
+        var enabled = 1;
+        if (DwmSetWindowAttribute(handle, DwmUseImmersiveDarkMode, ref enabled, sizeof(int)) != 0)
+        {
+            _ = DwmSetWindowAttribute(handle, DwmUseImmersiveDarkModeLegacy, ref enabled, sizeof(int));
+        }
     }
 
     private static IntPtr GetWindowLongPtr(IntPtr window, int index)
@@ -45,5 +57,11 @@ public static class NativeWindowStyle
 
     [DllImport("user32.dll", EntryPoint = "SetWindowLongPtr")]
     private static extern IntPtr SetWindowLongPtr64(IntPtr window, int index, IntPtr value);
-}
 
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(
+        IntPtr window,
+        int attribute,
+        ref int value,
+        int valueSize);
+}

@@ -56,6 +56,7 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="Codex usage"
                                Foreground="{StaticResource OverlayTextBrush}"
@@ -68,6 +69,18 @@
                                    Foreground="{StaticResource OverlayMutedBrush}"
                                    FontSize="{StaticResource OverlayTextSmall}" />
                     </StackPanel>
+                    <Button Grid.Column="2"
+                            Margin="8,0,0,0"
+                            Style="{StaticResource OverlayIconButtonStyle}"
+                            AutomationProperties.Name="Close usage details"
+                            ToolTip="Close usage details"
+                            Click="CloseUsageDetailsButton_OnClick">
+                        <Path Data="M 7,7 L 17,17 M 17,7 L 7,17"
+                              Stroke="{StaticResource OverlayMutedBrush}"
+                              StrokeThickness="1.25"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round" />
+                    </Button>
                 </Grid>
 
                 <StackPanel Grid.Row="1" Margin="0,13,0,0">
@@ -116,6 +129,10 @@
                               Header="Hide overlay"
                               Style="{StaticResource OverlayMenuItemStyle}"
                               Click="VisibilityMenuItem_OnClick" />
+                    <Separator Style="{StaticResource OverlayMenuSeparatorStyle}" />
+                    <MenuItem Header="Settings..."
+                              Style="{StaticResource OverlayMenuItemStyle}"
+                              Click="SettingsMenuItem_OnClick" />
                     <Separator Style="{StaticResource OverlayMenuSeparatorStyle}" />
                     <MenuItem Header="Refresh now"
                               Style="{StaticResource OverlayMenuItemStyle}"

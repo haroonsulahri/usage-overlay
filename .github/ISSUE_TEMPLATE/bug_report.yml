@@ -1,0 +1,92 @@
+name: Bug report
+description: Report reproducible behavior in the overlay
+title: '[Bug]: '
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not post credentials, private conversations, account identifiers, or unreviewed logs. Use a private security advisory for vulnerabilities.
+
+  - type: input
+    id: version
+    attributes:
+      label: Overlay version
+      description: Use the release version or commit hash.
+      placeholder: 0.1.0
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 24H2
+    validations:
+      required: true
+
+  - type: input
+    id: codex
+    attributes:
+      label: Codex CLI version
+      description: Output from `codex --version`.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: auth
+    attributes:
+      label: Authentication mode
+      options:
+        - ChatGPT-backed authentication
+        - Personal access token
+        - API key only
+        - Bedrock
+        - Unknown
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Provide the smallest reliable sequence.
+      placeholder: |
+        1. Start the overlay
+        2. Focus Codex
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Reviewed diagnostic excerpt
+      description: Optional. Remove machine paths, account details, and unrelated content before posting.
+      render: text
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Privacy check
+      options:
+        - label: I reviewed screenshots and logs for private information.
+          required: true
+        - label: This is not a security vulnerability.
+          required: true
+

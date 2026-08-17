@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using System.Windows.Interop;
 using System.Diagnostics.CodeAnalysis;
 using CodexUsage.Core;
 using CodexUsage.Core.Formatting;
@@ -25,8 +26,10 @@ public partial class MainWindow : Window
     private const double RightInset = 18;
     private const double BottomInset = 46;
     private const double RailUsableHeight = 134;
-    private const double PositionNudge = 20;
     private const double WindowPadding = 8;
+    private const int HotKeyMessage = 0x0312;
+    private const int EscapeHotKeyIdentifier = 0x0C0D;
+    private const int VirtualKeyEscape = 0x1B;
 
     public static readonly DependencyProperty AnimatedRemainingPercentProperty =
         DependencyProperty.Register(
@@ -43,21 +46,23 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _windowTrackingTimer;
     private readonly DispatcherTimer _collapseTimer;
     private readonly CancellationTokenSource _cancellation = new();
+    private readonly System.Drawing.Icon _applicationIcon;
     private readonly System.Windows.Forms.NotifyIcon _notifyIcon;
     private System.Windows.Forms.ToolStripMenuItem _trayVisibilityMenuItem = null!;
-    private System.Windows.Forms.ToolStripMenuItem _pauseMenuItem = null!;
-    private System.Windows.Forms.ToolStripMenuItem _rightEdgePlacementItem = null!;
-    private System.Windows.Forms.ToolStripMenuItem _leftEdgePlacementItem = null!;
-    private System.Windows.Forms.ToolStripMenuItem _customPlacementItem = null!;
-    private System.Windows.Forms.ToolStripMenuItem _hideFullscreenMenuItem = null!;
-    private System.Windows.Forms.ToolStripMenuItem _automaticStartupMenuItem = null!;
     private OverlaySettings _settings;
+    private SettingsWindow? _settingsWindow;
+    private UsageSnapshot? _lastUsageSnapshot;
+    private WindowBounds? _fixedPlacementBounds;
+    private HwndSource? _windowSource;
+    private IntPtr _windowHandle;
+    private string _appServerStatus = "Connecting";
     private bool _isExpanded;
     private bool _isPinned;
     private bool _isManuallyHidden;
     private bool _isClosing;
     private bool _isDragging;
     private bool _hasDragged;
+    private bool _escapeHotKeyRegistered;
     private System.Windows.Point _dragStartScreen;
     private double _dragStartLeft;
     private double _dragStartTop;
@@ -71,7 +76,10 @@ public partial class MainWindow : Window
         _settingsStore = new OverlaySettingsStore(logger);
         _settings = _settingsStore.Load();
         _startupShortcutManager = new StartupShortcutManager(logger);
-        _appServerClient = new AppServerClient(logger);
+        _appServerClient = new AppServerClient(
+            logger,
+            _settings.CodexCliPath,
+            TimeSpan.FromSeconds(_settings.RefreshIntervalSeconds));
         _appServerClient.SnapshotChanged += AppServerClient_OnSnapshotChanged;
         _appServerClient.StatusChanged += AppServerClient_OnStatusChanged;
 
@@ -87,6 +95,7 @@ public partial class MainWindow : Window
         };
         _collapseTimer.Tick += CollapseTimer_OnTick;
 
+        _applicationIcon = LoadApplicationIcon();
         _notifyIcon = CreateNotifyIcon();
 
         if (_options.StartHidden)
@@ -105,6 +114,9 @@ public partial class MainWindow : Window
     private void Window_OnSourceInitialized(object? sender, EventArgs eventArgs)
     {
         NativeWindowStyle.ApplyNonActivatingToolWindow(this);
+        _windowHandle = new WindowInteropHelper(this).Handle;
+        _windowSource = HwndSource.FromHwnd(_windowHandle);
+        _windowSource?.AddHook(WindowProcedure);
     }
 
     private void Window_OnLoaded(object sender, RoutedEventArgs eventArgs)
@@ -126,12 +138,14 @@ public partial class MainWindow : Window
                 Show();
             }
             ApplyInitialExpansion();
+            ApplyInitialSettings();
             return;
         }
 
         _ = _appServerClient.RunAsync(_cancellation.Token);
         UpdateWindowPosition();
         ApplyInitialExpansion();
+        ApplyInitialSettings();
     }
 
     private async void Window_OnClosed(object? sender, EventArgs eventArgs)
@@ -144,11 +158,31 @@ public partial class MainWindow : Window
         _isClosing = true;
         _windowTrackingTimer.Stop();
         _collapseTimer.Stop();
+        NativeHotKey.Unregister(_windowHandle, EscapeHotKeyIdentifier);
+        _windowSource?.RemoveHook(WindowProcedure);
+        _settingsWindow?.Close();
         _notifyIcon.Visible = false;
         _notifyIcon.Dispose();
+        _applicationIcon.Dispose();
         _cancellation.Cancel();
         await _appServerClient.DisposeAsync();
         _cancellation.Dispose();
+    }
+
+    private IntPtr WindowProcedure(
+        IntPtr window,
+        int message,
+        IntPtr wordParameter,
+        IntPtr longParameter,
+        ref bool handled)
+    {
+        if (message == HotKeyMessage && wordParameter.ToInt32() == EscapeHotKeyIdentifier)
+        {
+            CloseUsageDetails();
+            handled = true;
+        }
+
+        return IntPtr.Zero;
     }
 
     private void WindowTrackingTimer_OnTick(object? sender, EventArgs eventArgs)
@@ -196,9 +230,9 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (!CodexWindowLocator.TryGetActiveBounds(out var bounds))
+        var hasActiveCodex = CodexWindowLocator.TryGetActiveBounds(out var bounds);
+        if (!hasActiveCodex && _settings.ShowOnlyWhenCodexActive)
         {
-            _lastBounds = null;
             if (IsVisible)
             {
                 Hide();
@@ -207,7 +241,12 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (_settings.HideInFullscreen && bounds.IsFullscreen)
+        if (!hasActiveCodex)
+        {
+            bounds = _lastBounds ?? GetCurrentPlacementBounds();
+        }
+
+        if (hasActiveCodex && _settings.HideInFullscreen && bounds.IsFullscreen)
         {
             _lastBounds = bounds;
             if (IsVisible)
@@ -218,8 +257,23 @@ public partial class MainWindow : Window
             return;
         }
 
-        _lastBounds = bounds;
-        PositionWithin(bounds);
+        if (hasActiveCodex)
+        {
+            _lastBounds = bounds;
+        }
+
+        var placementBounds = bounds;
+        if (_settings.FollowCodexAcrossMonitors)
+        {
+            _fixedPlacementBounds = null;
+        }
+        else
+        {
+            _fixedPlacementBounds ??= bounds;
+            placementBounds = _fixedPlacementBounds.Value;
+        }
+
+        PositionWithin(placementBounds);
         if (!IsVisible)
         {
             Show();
@@ -270,6 +324,15 @@ public partial class MainWindow : Window
 
         _isPinned = true;
         ExpandDetails();
+        UpdateEscapeHotKey();
+    }
+
+    private void ApplyInitialSettings()
+    {
+        if (_options.StartSettings)
+        {
+            _ = Dispatcher.BeginInvoke(ShowSettings);
+        }
     }
 
     private void OverlayRoot_OnMouseEnter(object sender, System.Windows.Input.MouseEventArgs eventArgs)
@@ -394,7 +457,44 @@ public partial class MainWindow : Window
         {
             CollapseDetails();
         }
+        UpdateEscapeHotKey();
+    }
 
+    private void CloseUsageDetailsButton_OnClick(object sender, RoutedEventArgs eventArgs)
+    {
+        CloseUsageDetails();
+        eventArgs.Handled = true;
+    }
+
+    private void CloseUsageDetails()
+    {
+        _isPinned = false;
+        ResetToCollapsedState();
+        UpdateEscapeHotKey();
+    }
+
+    private void UpdateEscapeHotKey()
+    {
+        if (_isPinned && _isExpanded)
+        {
+            if (!_escapeHotKeyRegistered)
+            {
+                _escapeHotKeyRegistered =
+                    NativeHotKey.Register(_windowHandle, EscapeHotKeyIdentifier, VirtualKeyEscape);
+                if (!_escapeHotKeyRegistered)
+                {
+                    _logger.Error("Could not register Escape to close pinned usage details.");
+                }
+            }
+
+            return;
+        }
+
+        if (_escapeHotKeyRegistered)
+        {
+            NativeHotKey.Unregister(_windowHandle, EscapeHotKeyIdentifier);
+            _escapeHotKeyRegistered = false;
+        }
     }
 
     private WindowBounds GetCurrentPlacementBounds()
@@ -514,6 +614,7 @@ public partial class MainWindow : Window
 
     private void AppServerClient_OnSnapshotChanged(object? sender, UsageSnapshot snapshot)
     {
+        _lastUsageSnapshot = snapshot;
         _ = Dispatcher.InvokeAsync(() => ApplySnapshot(snapshot));
     }
 
@@ -521,6 +622,7 @@ public partial class MainWindow : Window
     {
         _ = Dispatcher.InvokeAsync(() =>
         {
+            _appServerStatus = status;
             StatusText.Text = status;
             LiveDot.Fill = status == "Live"
                 ? new SolidColorBrush((System.Windows.Media.Color)FindResource("OverlayNormalColor"))
@@ -533,35 +635,46 @@ public partial class MainWindow : Window
         var primary = snapshot.Primary;
         var usedPercent = UsageLevelResolver.Normalize(primary.Primary.UsedPercent);
         var remainingPercent = UsageLevelResolver.RemainingFromUsed(usedPercent);
-        BucketNameText.Text = $"{primary.DisplayName} remaining";
+        var showingUsed = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used;
+        var primaryPercent = showingUsed ? usedPercent : remainingPercent;
+        var secondaryPercent = showingUsed ? remainingPercent : usedPercent;
+        var primaryLabel = showingUsed ? "used" : "remaining";
+        var secondaryLabel = showingUsed ? "left" : "used";
+        BucketNameText.Text = $"{primary.DisplayName} {primaryLabel}";
         ResetText.Text =
-            $"{Math.Round(usedPercent)}% used  ·  " +
+            $"{Math.Round(secondaryPercent)}% {secondaryLabel}  ·  " +
             ResetTimeFormatter.Format(primary.Primary.ResetsAt, DateTimeOffset.Now);
         AdditionalBucketText.Text = snapshot.Additional.Count == 0
             ? "No additional limits"
             : FormatAdditional(snapshot.Additional[0]);
 
-        AnimateRemainingFromUsed(usedPercent);
+        RailRemainingText.Visibility = _settings.ShowCompactPercentage
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        AnimateUsageValue(primaryPercent, usedPercent);
         AutomationProperties.SetName(
             RailHitTarget,
-            $"Codex usage {Math.Round(remainingPercent)} percent remaining. {ResetText.Text}");
+            $"Codex usage {Math.Round(primaryPercent)} percent {primaryLabel}. {ResetText.Text}");
     }
 
-    private void AnimateRemainingFromUsed(double usedPercentage)
+    private void AnimateUsageValue(double displayPercentage, double usedPercentage)
     {
         var normalizedUsed = UsageLevelResolver.Normalize(usedPercentage);
-        var remaining = UsageLevelResolver.RemainingFromUsed(normalizedUsed);
-        var color = (System.Windows.Media.Color)FindResource(UsageLevelResolver.FromPercentage(normalizedUsed) switch
+        var normalizedDisplay = UsageLevelResolver.Normalize(displayPercentage);
+        var color = (System.Windows.Media.Color)FindResource(UsageLevelResolver.FromPercentage(
+            normalizedUsed,
+            _settings.WarningThreshold,
+            _settings.CriticalThreshold) switch
         {
             UsageLevel.Critical => "OverlayCriticalColor",
             UsageLevel.Warning => "OverlayWarningColor",
             _ => "OverlayNormalColor"
         });
 
-        if (!SystemParameters.ClientAreaAnimation)
+        if (!_settings.AnimationsEnabled || !SystemParameters.ClientAreaAnimation)
         {
             BeginAnimation(AnimatedRemainingPercentProperty, null);
-            AnimatedRemainingPercent = remaining;
+            AnimatedRemainingPercent = normalizedDisplay;
             UsageFillBrush.BeginAnimation(SolidColorBrush.ColorProperty, null);
             UsageFillBrush.Color = color;
             LeadingCap.Opacity = 0;
@@ -570,7 +683,7 @@ public partial class MainWindow : Window
 
         var animation = new DoubleAnimation(
             AnimatedRemainingPercent,
-            remaining,
+            normalizedDisplay,
             TimeSpan.FromMilliseconds(620))
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
@@ -578,7 +691,7 @@ public partial class MainWindow : Window
         animation.Completed += (_, _) =>
         {
             BeginAnimation(AnimatedRemainingPercentProperty, null);
-            AnimatedRemainingPercent = remaining;
+            AnimatedRemainingPercent = normalizedDisplay;
             LeadingCap.Opacity = 0;
         };
 
@@ -601,15 +714,20 @@ public partial class MainWindow : Window
 
         var normalized = UsageLevelResolver.Normalize(percentage);
         window.UsageFillScale.ScaleY = normalized / 100d;
-        window.UsagePercentText.Text = $"{Math.Round(normalized)}% left";
+        var suffix = window._settings.PrimaryDisplay == PrimaryUsageDisplay.Used ? "used" : "left";
+        window.UsagePercentText.Text = $"{Math.Round(normalized)}% {suffix}";
         window.RailRemainingText.Text = $"{Math.Round(normalized)}%";
         window.LeadingCapTranslate.Y = -(RailUsableHeight * normalized / 100d);
     }
 
-    private static string FormatAdditional(RateLimitBucket bucket)
+    private string FormatAdditional(RateLimitBucket bucket)
     {
-        var remaining = UsageLevelResolver.RemainingFromUsed(bucket.Primary.UsedPercent);
-        return $"{bucket.DisplayName}  {Math.Round(remaining)}% left";
+        var used = UsageLevelResolver.Normalize(bucket.Primary.UsedPercent);
+        var value = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used
+            ? used
+            : UsageLevelResolver.RemainingFromUsed(used);
+        var suffix = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used ? "used" : "left";
+        return $"{bucket.DisplayName}  {Math.Round(value)}% {suffix}";
     }
 
     private static UsageSnapshot CreateDemoSnapshot(double percentage)
@@ -643,16 +761,7 @@ public partial class MainWindow : Window
         _trayVisibilityMenuItem = new System.Windows.Forms.ToolStripMenuItem("Hide overlay");
         _trayVisibilityMenuItem.Click += (_, _) => Dispatcher.Invoke(ToggleManualVisibility);
         menu.Items.Add(_trayVisibilityMenuItem);
-        _pauseMenuItem = new System.Windows.Forms.ToolStripMenuItem("Pause for 15 minutes");
-        _pauseMenuItem.Click += (_, _) => Dispatcher.Invoke(TogglePause);
-        menu.Items.Add(_pauseMenuItem);
-        menu.Items.Add(CreateDisplaySettingsMenu());
-        _automaticStartupMenuItem = new System.Windows.Forms.ToolStripMenuItem("Start automatically with Codex")
-        {
-            Enabled = _startupShortcutManager.IsSupported
-        };
-        _automaticStartupMenuItem.Click += (_, _) => Dispatcher.Invoke(ToggleAutomaticStartup);
-        menu.Items.Add(_automaticStartupMenuItem);
+        menu.Items.Add("Settings...", null, (_, _) => Dispatcher.Invoke(ShowSettings));
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         menu.Items.Add("Refresh now", null, (_, _) => _ = _appServerClient.RefreshAsync());
         menu.Items.Add("Open log", null, (_, _) => OpenLog());
@@ -667,11 +776,10 @@ public partial class MainWindow : Window
         var icon = new System.Windows.Forms.NotifyIcon
         {
             Text = "Codex Usage Overlay",
-            Icon = System.Drawing.SystemIcons.Information,
+            Icon = _applicationIcon,
             ContextMenuStrip = menu,
             Visible = true
         };
-        menu.Opening += (_, _) => Dispatcher.Invoke(UpdateSettingsMenuState);
         icon.DoubleClick += (_, _) => Dispatcher.Invoke(() =>
         {
             if (_isManuallyHidden)
@@ -682,9 +790,24 @@ public partial class MainWindow : Window
 
             _isPinned = true;
             ExpandDetails();
+            UpdateEscapeHotKey();
         });
-        UpdateSettingsMenuState();
         return icon;
+    }
+
+    private static System.Drawing.Icon LoadApplicationIcon()
+    {
+        var executablePath = Environment.ProcessPath;
+        if (!string.IsNullOrWhiteSpace(executablePath))
+        {
+            using var extracted = System.Drawing.Icon.ExtractAssociatedIcon(executablePath);
+            if (extracted is not null)
+            {
+                return (System.Drawing.Icon)extracted.Clone();
+            }
+        }
+
+        return (System.Drawing.Icon)System.Drawing.SystemIcons.Application.Clone();
     }
 
     private static void ApplyTrayMenuSpacing(System.Windows.Forms.ToolStripItemCollection items)
@@ -705,58 +828,6 @@ public partial class MainWindow : Window
                 ApplyTrayMenuSpacing(menuItem.DropDownItems);
             }
         }
-    }
-
-    private System.Windows.Forms.ToolStripMenuItem CreateDisplaySettingsMenu()
-    {
-        var displayMenu = new System.Windows.Forms.ToolStripMenuItem("Display settings");
-        var placementMenu = new System.Windows.Forms.ToolStripMenuItem("Position");
-
-        _rightEdgePlacementItem = CreatePlacementMenuItem("Right edge", HorizontalPlacement.RightEdge);
-        _leftEdgePlacementItem = CreatePlacementMenuItem("Left edge", HorizontalPlacement.LeftEdge);
-        placementMenu.DropDownItems.Add(_rightEdgePlacementItem);
-        placementMenu.DropDownItems.Add(_leftEdgePlacementItem);
-        _customPlacementItem = new System.Windows.Forms.ToolStripMenuItem("Custom position (drag rail)")
-        {
-            Enabled = false
-        };
-        placementMenu.DropDownItems.Add(_customPlacementItem);
-        displayMenu.DropDownItems.Add(placementMenu);
-        displayMenu.DropDownItems.Add(new System.Windows.Forms.ToolStripSeparator());
-        displayMenu.DropDownItems.Add(
-            "Move left 20 px",
-            null,
-            (_, _) => Dispatcher.Invoke(() => NudgePosition(horizontal: -PositionNudge, vertical: 0)));
-        displayMenu.DropDownItems.Add(
-            "Move right 20 px",
-            null,
-            (_, _) => Dispatcher.Invoke(() => NudgePosition(horizontal: PositionNudge, vertical: 0)));
-        displayMenu.DropDownItems.Add(
-            "Move up 20 px",
-            null,
-            (_, _) => Dispatcher.Invoke(() => NudgePosition(horizontal: 0, vertical: PositionNudge)));
-        displayMenu.DropDownItems.Add(
-            "Move down 20 px",
-            null,
-            (_, _) => Dispatcher.Invoke(() => NudgePosition(horizontal: 0, vertical: -PositionNudge)));
-        displayMenu.DropDownItems.Add(
-            "Reset to right edge",
-            null,
-            (_, _) => Dispatcher.Invoke(ResetToRightEdge));
-        displayMenu.DropDownItems.Add(new System.Windows.Forms.ToolStripSeparator());
-        _hideFullscreenMenuItem = new System.Windows.Forms.ToolStripMenuItem("Hide in fullscreen");
-        _hideFullscreenMenuItem.Click += (_, _) => Dispatcher.Invoke(ToggleHideInFullscreen);
-        displayMenu.DropDownItems.Add(_hideFullscreenMenuItem);
-        return displayMenu;
-    }
-
-    private System.Windows.Forms.ToolStripMenuItem CreatePlacementMenuItem(
-        string label,
-        HorizontalPlacement placement)
-    {
-        var item = new System.Windows.Forms.ToolStripMenuItem(label);
-        item.Click += (_, _) => Dispatcher.Invoke(() => SetPlacement(placement));
-        return item;
     }
 
     private void ToggleManualVisibility()
@@ -792,81 +863,57 @@ public partial class MainWindow : Window
         UpdateWindowPosition();
     }
 
-    private void TogglePause()
+    private void ShowSettings()
     {
-        _settings = _settings.IsPaused(DateTimeOffset.Now)
-            ? _settings with { PausedUntil = null }
-            : _settings with { PausedUntil = DateTimeOffset.Now.AddMinutes(15) };
-        PersistSettings();
-        ResetToCollapsedState();
-        UpdateWindowPosition();
-    }
-
-    private void SetPlacement(HorizontalPlacement placement)
-    {
-        _settings = _settings with
+        if (_settingsWindow is { IsVisible: true })
         {
-            Placement = placement,
-            HorizontalOffset = 0,
-            VerticalOffset = 0
-        };
-        PersistSettings();
-        UpdateWindowPosition();
-    }
+            _settingsWindow.Activate();
+            return;
+        }
 
-    private void NudgePosition(double horizontal, double vertical)
-    {
-        _settings = _settings with
+        var resolvedCliPath = AppServerClient.ResolveCodexCommand(_settings.CodexCliPath);
+        var cliStatus = resolvedCliPath is null
+            ? $"Codex CLI not found. App Server status: {_appServerStatus}."
+            : $"Codex CLI found. App Server status: {_appServerStatus}.";
+        var window = new SettingsWindow(
+            _settings,
+            _startupShortcutManager.IsEnabled,
+            _startupShortcutManager.IsSupported,
+            cliStatus,
+            ApplySettingsFromWindow,
+            OpenLog)
         {
-            HorizontalOffset = _settings.HorizontalOffset + horizontal,
-            VerticalOffset = _settings.VerticalOffset + vertical
+            Owner = IsVisible ? this : null,
+            Topmost = true
         };
-        PersistSettings();
-        UpdateWindowPosition();
+        window.Closed += (_, _) => _settingsWindow = null;
+        _settingsWindow = window;
+        window.Show();
+        window.Activate();
     }
 
-    private void ResetToRightEdge()
+    private void ApplySettingsFromWindow(OverlaySettings settings, bool startAutomatically)
     {
-        _settings = _settings with
+        _settings = settings.Normalize();
+        _ = _startupShortcutManager.SetEnabled(startAutomatically);
+        _fixedPlacementBounds = _settings.FollowCodexAcrossMonitors ? null : _lastBounds;
+        PersistSettings();
+        RailRemainingText.Visibility = _settings.ShowCompactPercentage
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        if (_lastUsageSnapshot is not null)
         {
-            Placement = HorizontalPlacement.RightEdge,
-            HorizontalOffset = 0,
-            VerticalOffset = 0
-        };
-        PersistSettings();
-        UpdateWindowPosition();
-    }
+            ApplySnapshot(_lastUsageSnapshot);
+        }
 
-    private void ToggleHideInFullscreen()
-    {
-        _settings = _settings with { HideInFullscreen = !_settings.HideInFullscreen };
-        PersistSettings();
         UpdateWindowPosition();
-    }
-
-    private void ToggleAutomaticStartup()
-    {
-        _ = _startupShortcutManager.SetEnabled(!_startupShortcutManager.IsEnabled);
-        UpdateSettingsMenuState();
     }
 
     private void PersistSettings()
     {
         _settings = _settings.Normalize();
         _settingsStore.Save(_settings);
-        UpdateSettingsMenuState();
-    }
-
-    private void UpdateSettingsMenuState()
-    {
-        _rightEdgePlacementItem.Checked = _settings.Placement == HorizontalPlacement.RightEdge;
-        _leftEdgePlacementItem.Checked = _settings.Placement == HorizontalPlacement.LeftEdge;
-        _customPlacementItem.Checked = _settings.Placement == HorizontalPlacement.Custom;
-        _hideFullscreenMenuItem.Checked = _settings.HideInFullscreen;
-        _automaticStartupMenuItem.Checked = _startupShortcutManager.IsEnabled;
-        _pauseMenuItem.Text = _settings.IsPaused(DateTimeOffset.Now)
-            ? "Resume now"
-            : "Pause for 15 minutes";
     }
 
     private void UpdateVisibilityMenuLabels()
@@ -888,6 +935,7 @@ public partial class MainWindow : Window
         DetailsPanel.Visibility = Visibility.Collapsed;
         Width = CollapsedWidth;
         RepositionAfterWidthChange();
+        UpdateEscapeHotKey();
     }
 
     private void OpenLog()
@@ -916,6 +964,11 @@ public partial class MainWindow : Window
     private void VisibilityMenuItem_OnClick(object sender, RoutedEventArgs eventArgs)
     {
         ToggleManualVisibility();
+    }
+
+    private void SettingsMenuItem_OnClick(object sender, RoutedEventArgs eventArgs)
+    {
+        ShowSettings();
     }
 
     private void ExitMenuItem_OnClick(object sender, RoutedEventArgs eventArgs)

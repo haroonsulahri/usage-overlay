@@ -6,11 +6,19 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\CodexUsageOverlay.ico</ApplicationIcon>
     <AssemblyName>CodexUsageOverlay</AssemblyName>
     <RootNamespace>CodexUsageOverlay</RootNamespace>
+    <Product>Codex Usage Overlay</Product>
+    <Description>Unofficial Windows companion overlay for Codex quota visibility.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CodexUsage.Core\CodexUsage.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\CodexUsageOverlay.ico" />
   </ItemGroup>
 </Project>

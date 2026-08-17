@@ -5,6 +5,8 @@ $projectRoot = Split-Path -Parent $PSScriptRoot
 $overlayProject = Join-Path $projectRoot 'src\CodexUsageOverlay\CodexUsageOverlay.csproj'
 $specProject = Join-Path $projectRoot 'tests\CodexUsage.Core.Specs\CodexUsage.Core.Specs.csproj'
 
+& (Join-Path $PSScriptRoot 'generate-icon.ps1')
+& (Join-Path $PSScriptRoot 'verify-icon.ps1')
 dotnet restore $overlayProject
 dotnet restore $specProject
 dotnet build $overlayProject --configuration Release --no-restore

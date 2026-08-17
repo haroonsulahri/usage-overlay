@@ -3,6 +3,8 @@ using CodexUsage.Core.Formatting;
 using CodexUsage.Core.Models;
 using CodexUsage.Core.Protocol;
 using CodexUsage.Core.Settings;
+using CodexUsage.Core.Security;
+using System.Text.Json;
 
 var specs = new (string Name, Action Run)[]
 {
@@ -13,7 +15,9 @@ var specs = new (string Name, Action Run)[]
     ("Formats reset countdowns", FormatsResetCountdown),
     ("Resolves warning thresholds", ResolvesUsageLevels),
     ("Calculates remaining quota", CalculatesRemainingQuota),
-    ("Normalizes persistent display settings", NormalizesDisplaySettings)
+    ("Normalizes persistent display settings", NormalizesDisplaySettings),
+    ("Redacts secrets from diagnostic logs", RedactsDiagnosticSecrets),
+    ("Loads legacy settings with new safe defaults", LoadsLegacySettings)
 };
 
 var failures = new List<string>();
@@ -137,6 +141,8 @@ static void ResolvesUsageLevels()
     AssertEqual(UsageLevel.Normal, UsageLevelResolver.FromPercentage(69.9));
     AssertEqual(UsageLevel.Warning, UsageLevelResolver.FromPercentage(70));
     AssertEqual(UsageLevel.Critical, UsageLevelResolver.FromPercentage(90));
+    AssertEqual(UsageLevel.Warning, UsageLevelResolver.FromPercentage(65, 60, 85));
+    AssertEqual(UsageLevel.Critical, UsageLevelResolver.FromPercentage(85, 60, 85));
 }
 
 static void CalculatesRemainingQuota()
@@ -156,6 +162,11 @@ static void NormalizesDisplaySettings()
         VerticalOffset = -500,
         CustomXRatio = 2,
         CustomYRatio = -1,
+        PrimaryDisplay = (PrimaryUsageDisplay)999,
+        WarningThreshold = 95,
+        CriticalThreshold = 80,
+        CodexCliPath = "  C:\\Tools\\codex.cmd  ",
+        RefreshIntervalSeconds = 2,
         PausedUntil = now.AddMinutes(15)
     }.Normalize();
 
@@ -164,8 +175,50 @@ static void NormalizesDisplaySettings()
     AssertEqual(-300d, settings.VerticalOffset);
     AssertEqual(1d, settings.CustomXRatio);
     AssertEqual(0d, settings.CustomYRatio);
+    AssertEqual(PrimaryUsageDisplay.Remaining, settings.PrimaryDisplay);
+    AssertEqual(79d, settings.WarningThreshold);
+    AssertEqual(80d, settings.CriticalThreshold);
+    AssertEqual("C:\\Tools\\codex.cmd", settings.CodexCliPath);
+    AssertEqual(15, settings.RefreshIntervalSeconds);
     Assert(settings.IsPaused(now), "Expected the future pause to be active.");
     Assert(!settings.IsPaused(now.AddMinutes(16)), "Expected the expired pause to be inactive.");
+}
+
+static void RedactsDiagnosticSecrets()
+{
+    const string message =
+        "Authorization: Bearer abc.def.ghi access_token=token-value api_key=key-value sk-example123456789";
+    var sanitized = LogSanitizer.Sanitize(message);
+
+    Assert(!sanitized.Contains("abc.def.ghi", StringComparison.Ordinal), "Bearer token was not redacted.");
+    Assert(!sanitized.Contains("token-value", StringComparison.Ordinal), "Access token was not redacted.");
+    Assert(!sanitized.Contains("key-value", StringComparison.Ordinal), "API key was not redacted.");
+    Assert(!sanitized.Contains("sk-example123456789", StringComparison.Ordinal), "OpenAI key was not redacted.");
+    Assert(sanitized.Contains("[REDACTED]", StringComparison.Ordinal), "Redaction marker was missing.");
+}
+
+static void LoadsLegacySettings()
+{
+    const string legacyJson = """
+        {
+          "Placement": 2,
+          "HorizontalOffset": 0,
+          "VerticalOffset": 0,
+          "CustomXRatio": 0.8,
+          "CustomYRatio": 0.75,
+          "HideInFullscreen": false,
+          "PausedUntil": null
+        }
+        """;
+
+    var settings = JsonSerializer.Deserialize<OverlaySettings>(legacyJson)?.Normalize();
+    Assert(settings is not null, "Legacy settings failed to deserialize.");
+    Assert(settings!.ShowOnlyWhenCodexActive, "Codex-only visibility default was not preserved.");
+    Assert(settings.FollowCodexAcrossMonitors, "Monitor-following default was not preserved.");
+    AssertEqual(PrimaryUsageDisplay.Remaining, settings.PrimaryDisplay);
+    Assert(settings.AnimationsEnabled, "Animation default was not preserved.");
+    Assert(settings.ShowCompactPercentage, "Compact percentage default was not preserved.");
+    AssertEqual(60, settings.RefreshIntervalSeconds);
 }
 
 static RateLimitBucket Bucket(string id, double usedPercent)

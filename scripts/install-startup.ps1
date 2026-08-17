@@ -1,9 +1,16 @@
 $ErrorActionPreference = 'Stop'
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$executable = Join-Path $projectRoot 'artifacts\win-x64\CodexUsageOverlay.exe'
+$releaseExecutable = Join-Path $projectRoot 'CodexUsageOverlay.exe'
+$sourceExecutable = Join-Path $projectRoot 'artifacts\win-x64\CodexUsageOverlay.exe'
+$executable = if (Test-Path -LiteralPath $releaseExecutable) {
+    $releaseExecutable
+}
+else {
+    $sourceExecutable
+}
 if (-not (Test-Path -LiteralPath $executable)) {
-    throw 'Packaged executable not found. Run scripts\package.ps1 first.'
+    throw 'CodexUsageOverlay.exe was not found beside scripts or under artifacts\win-x64.'
 }
 
 $startupDirectory = [Environment]::GetFolderPath([Environment+SpecialFolder]::Startup)
@@ -26,4 +33,3 @@ finally {
 }
 
 Write-Host "Automatic startup enabled at $shortcutPath"
-

@@ -1,128 +1,154 @@
 # Codex Usage Overlay
 
-An unofficial Windows companion that places a slim live quota meter beside the Codex desktop chat. It uses the documented Codex App Server protocol and does not inject into or modify the Codex application.
+<p>
+  <img src="assets/icon.svg" width="88" height="88" alt="Codex Usage Overlay icon">
+</p>
 
-## What it does
+Codex Usage Overlay is an unofficial Windows companion that keeps your remaining Codex quota visible beside the desktop app. It runs as a separate process, uses the documented Codex App Server protocol, and never injects code into Codex.
 
-- Anchors a 10px vertical usage rail to the active Codex desktop window.
-- Shows the remaining quota as the primary value.
-- Keeps the remaining percentage visible below the collapsed rail.
-- Drains smoothly from full to empty as the account quota is consumed.
-- Animates changes over 620ms with a calm ease-out transition.
-- Expands a detail card on hover and pins it on click.
-- Shows the remaining percentage, used percentage, reset countdown, and one additional model bucket when available.
-- Changes from green to amber at 70% and red at 90%.
+> Preview release: Windows only. This project is not affiliated with or endorsed by OpenAI.
+
+## Highlights
+
+- Shows remaining quota as a slim vertical rail with a compact percentage label.
+- Opens a detailed card with used percentage, reset time, and additional model limits.
+- Updates from `account/rateLimits/read` and `account/rateLimits/updated`.
 - Hides whenever Codex is minimized or another application is active.
-- Supports click-and-drag placement anywhere inside the Codex window and follows Codex across monitors.
-- Persists custom placement, position offsets, fullscreen behavior, and pause state.
-- Can start silently at Windows sign-in and wait until Codex becomes active.
-- Provides Refresh, Open log, and Exit actions from the system tray.
+- Supports drag-and-drop placement anywhere inside the Codex window.
+- Restores saved placement across restarts, resizes, and monitor changes.
+- Supports manual hide/show, 15-minute pause, fullscreen exclusion, and automatic startup.
+- Includes a native dark Settings window for visibility, position, appearance, and connection controls.
+- Provides a close button and Escape shortcut for pinned usage details without exiting the app.
+- Uses a single running instance. Launching it again restores a hidden overlay.
+- Stores no credentials and sends no telemetry.
+
+The App Server methods used by this project are documented in the [official OpenAI Codex App Server documentation](https://learn.chatgpt.com/docs/app-server).
 
 ## Requirements
 
-- Windows 10 or Windows 11
-- .NET 8 Desktop Runtime
+- Windows 10 or Windows 11, x64
 - Codex CLI available on `PATH`
 - Codex signed in with ChatGPT-backed authentication
 
-The account usage endpoints are not available with API-key-only or Bedrock authentication.
+The rate-limit endpoint requires authentication backed by Codex services. API-key-only and Bedrock authentication do not provide this account usage data.
 
-## Run from source
+## Install a release
+
+1. Download the Windows zip from the repository's Releases page.
+2. Extract it to a directory you control.
+3. Run `CodexUsageOverlay.exe`.
+4. Keep Codex active. The usage rail appears inside the Codex window.
+
+Optional helper scripts in the release package can add Windows shortcuts:
 
 ```powershell
-cd C:\path\to\codex-usage-overlay
+.\scripts\install-start-menu.ps1
+.\scripts\install-startup.ps1
+```
+
+Use the matching `uninstall-*.ps1` scripts to remove only those shortcuts.
+
+## Controls
+
+- Hover the rail to open quota details.
+- Click the rail to pin or unpin the detail card.
+- Use the close button or press Escape to collapse pinned details without closing the overlay.
+- Drag the rail and release it to save a custom position.
+- Right-click the rail to hide, refresh, or exit.
+- Select **Settings** from the rail or tray menu for General, Position, Appearance, and Advanced controls.
+- Launch the application again to restore an already-running hidden instance.
+
+Display settings include left and right presets, custom placement, position nudges, offset reset, and fullscreen hiding.
+
+## Settings
+
+The native Settings window uses explicit Save and Cancel controls. Safe display and appearance changes apply immediately; CLI path and refresh interval changes are saved for the next restart.
+
+![Native Codex Usage Overlay Settings window](docs/images/settings.png)
+
+## Build from source
+
+Install the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0), then run:
+
+```powershell
+cd codex-usage-overlay
 .\scripts\build.ps1
 .\scripts\run.ps1
 ```
 
-Keep the Codex desktop window active. The overlay appears near its lower-right edge.
+Run these commands from a local clone of the repository.
 
-## Preview a visual state
+### Demo mode
 
-Demo mode does not start App Server and is useful for visual review:
-
-```powershell
-dotnet run --project .\src\CodexUsageOverlay\CodexUsageOverlay.csproj --configuration Release -- --demo=63
-```
-
-Try `--demo=25`, `--demo=75`, or `--demo=92` to inspect each colour state.
-Add `--expanded` to open and pin the detail card for visual QA:
+Demo mode renders the interface without starting App Server:
 
 ```powershell
-dotnet run --project .\src\CodexUsageOverlay\CodexUsageOverlay.csproj --configuration Release -- --demo=75 --expanded
+dotnet run --project .\src\CodexUsageOverlay\CodexUsageOverlay.csproj `
+    --configuration Release -- --demo=75 --expanded
 ```
 
-## Create a Windows package
+Try `--demo=25`, `--demo=75`, and `--demo=92` to inspect each usage state.
+
+Open the Settings window directly for UI review:
 
 ```powershell
-.\scripts\package.ps1
+dotnet run --project .\src\CodexUsageOverlay\CodexUsageOverlay.csproj `
+    --configuration Release -- --demo=75 --settings
 ```
 
-The framework-dependent single-file build is written to `artifacts\win-x64`.
-
-Register a searchable Start-menu shortcut:
+### Tests
 
 ```powershell
-.\scripts\install-start-menu.ps1
+.\scripts\build.ps1
 ```
 
-Launching **Codex Usage Overlay** from Windows Search also restores an already-running hidden overlay. To remove only the shortcut:
+This performs a release build with warnings treated as errors and runs the dependency-free specification suite.
 
-```powershell
-.\scripts\uninstall-start-menu.ps1
-```
-
-Enable automatic startup so the overlay is already waiting whenever Codex opens:
-
-```powershell
-.\scripts\install-startup.ps1
-```
-
-To disable automatic startup:
-
-```powershell
-.\scripts\uninstall-startup.ps1
-```
-
-## Verify live App Server access
-
-Run the authenticated smoke test without opening the overlay UI:
+The authenticated smoke test is optional and should run only on a machine already signed in to Codex:
 
 ```powershell
 .\scripts\smoke-live.ps1
 ```
 
-It exits successfully only after receiving a real Codex quota snapshot.
+### Release package
 
-## Interaction
+Create the public Windows release zip and checksum:
 
-- Hover the rail to reveal quota details.
-- Click the rail to pin or unpin the detail card.
-- Drag the rail to move it anywhere inside the Codex window; release to save the position.
-- Right-click the rail to hide it, refresh usage, or exit.
-- Right-click the tray icon and choose **Show overlay** to restore a manually hidden rail.
-- Launch **Codex Usage Overlay** again from Windows Search to restore a hidden rail.
-- Double-click the tray icon to restore a hidden rail or expand a visible one.
-- Use the tray icon when the rail is hidden.
-- Open **Display settings** from the tray to use either edge, inspect custom placement, nudge the position, reset to the right edge, or hide in fullscreen.
-- Choose **Pause for 15 minutes** to hide temporarily while usage continues updating.
-- Toggle **Start automatically with Codex** to control sign-in startup.
-
-## Data and privacy
-
-The overlay launches `codex app-server --stdio`, sends `account/rateLimits/read`, and listens for `account/rateLimits/updated`. Authentication remains owned by Codex. The overlay does not read, copy, transmit, or store credentials. Diagnostic logs contain status and error messages only and are stored at:
-
-```text
-%LOCALAPPDATA%\CodexUsageOverlay\overlay.log
+```powershell
+.\scripts\package-release.ps1
 ```
+
+Generated files are written under `artifacts\release` and are excluded from Git.
+
+## How it works
+
+The overlay launches `codex app-server --stdio` and communicates through newline-delimited JSON-RPC. It requests current rate limits, listens for update notifications, and polls every 60 seconds as a fallback.
+
+The window tracker identifies the active Microsoft Store Codex package by executable path. The overlay is a non-activating WPF tool window, so it does not take keyboard focus from Codex. See [Architecture](docs/architecture.md) for the component map and trust boundaries.
+
+## Privacy and security
+
+- No telemetry or analytics are collected.
+- No conversation content is requested or read.
+- No credentials, cookies, or Codex authentication files are accessed.
+- Quota data, reset timestamps, settings, and diagnostic status remain local.
+- Diagnostic output is redacted before it is written to disk.
+
+Read [Privacy](docs/privacy.md) and [Security](SECURITY.md) before sharing logs or reporting a vulnerability.
 
 ## Limitations
 
-- Usage is near-real-time and depends on when the Codex service updates the quota percentage.
-- The first release targets the Microsoft Store Codex package on Windows.
-- The overlay is a separate companion process because the current desktop app has no documented permanent chrome slot for plugins.
-- Custom positions are stored as relative coordinates, so they remain stable when the Codex window is resized or moved to another monitor.
+- Usage is near-real-time, not token-by-token. The display changes when Codex services publish a new percentage.
+- This preview targets the Microsoft Store Codex desktop package on Windows.
+- Codex CLI must be installed separately and authenticated with a supported account mode.
+- The project is a companion overlay because no public permanent desktop-chrome extension point is documented.
 
-## License and disclaimer
+## Contributing
 
-MIT licensed. This is an unofficial community project and is not affiliated with or endorsed by OpenAI.
+Bug reports and focused pull requests are welcome. Start with [Contributing](CONTRIBUTING.md), [Code of Conduct](CODE_OF_CONDUCT.md), and [Support](SUPPORT.md).
+
+## License
+
+MIT. See [LICENSE](LICENSE).
+
+Codex and OpenAI are referenced only to describe compatibility. This project is independently maintained.
