@@ -25,12 +25,12 @@ public partial class MainWindow : Window
     private const double BottomInset = 46;
     private const double RailUsableHeight = 134;
 
-    public static readonly DependencyProperty AnimatedUsagePercentProperty =
+    public static readonly DependencyProperty AnimatedRemainingPercentProperty =
         DependencyProperty.Register(
-            nameof(AnimatedUsagePercent),
+            nameof(AnimatedRemainingPercent),
             typeof(double),
             typeof(MainWindow),
-            new PropertyMetadata(0d, AnimatedUsagePercentChanged));
+            new PropertyMetadata(0d, AnimatedRemainingPercentChanged));
 
     private readonly OverlayOptions _options;
     private readonly AppLogger _logger;
@@ -68,10 +68,10 @@ public partial class MainWindow : Window
         _notifyIcon = CreateNotifyIcon();
     }
 
-    public double AnimatedUsagePercent
+    public double AnimatedRemainingPercent
     {
-        get => (double)GetValue(AnimatedUsagePercentProperty);
-        set => SetValue(AnimatedUsagePercentProperty, value);
+        get => (double)GetValue(AnimatedRemainingPercentProperty);
+        set => SetValue(AnimatedRemainingPercentProperty, value);
     }
 
     private void Window_OnSourceInitialized(object? sender, EventArgs eventArgs)
@@ -303,26 +303,27 @@ public partial class MainWindow : Window
     private void ApplySnapshot(UsageSnapshot snapshot)
     {
         var primary = snapshot.Primary;
-        BucketNameText.Text = primary.DisplayName;
-        ResetText.Text = ResetTimeFormatter.Format(primary.Primary.ResetsAt, DateTimeOffset.Now);
-        PlanText.Text = string.IsNullOrWhiteSpace(primary.PlanType)
-            ? string.Empty
-            : primary.PlanType.ToUpperInvariant();
-
+        var usedPercent = UsageLevelResolver.Normalize(primary.Primary.UsedPercent);
+        var remainingPercent = UsageLevelResolver.RemainingFromUsed(usedPercent);
+        BucketNameText.Text = $"{primary.DisplayName} remaining";
+        ResetText.Text =
+            $"{Math.Round(usedPercent)}% used  ·  " +
+            ResetTimeFormatter.Format(primary.Primary.ResetsAt, DateTimeOffset.Now);
         AdditionalBucketText.Text = snapshot.Additional.Count == 0
             ? "No additional limits"
             : FormatAdditional(snapshot.Additional[0]);
 
-        AnimateUsageTo(primary.Primary.UsedPercent);
+        AnimateRemainingFromUsed(usedPercent);
         AutomationProperties.SetName(
             RailHitTarget,
-            $"Codex usage {Math.Round(primary.Primary.UsedPercent)} percent. {ResetText.Text}");
+            $"Codex usage {Math.Round(remainingPercent)} percent remaining. {ResetText.Text}");
     }
 
-    private void AnimateUsageTo(double percentage)
+    private void AnimateRemainingFromUsed(double usedPercentage)
     {
-        var normalized = UsageLevelResolver.Normalize(percentage);
-        var color = (System.Windows.Media.Color)FindResource(UsageLevelResolver.FromPercentage(normalized) switch
+        var normalizedUsed = UsageLevelResolver.Normalize(usedPercentage);
+        var remaining = UsageLevelResolver.RemainingFromUsed(normalizedUsed);
+        var color = (System.Windows.Media.Color)FindResource(UsageLevelResolver.FromPercentage(normalizedUsed) switch
         {
             UsageLevel.Critical => "OverlayCriticalColor",
             UsageLevel.Warning => "OverlayWarningColor",
@@ -331,8 +332,8 @@ public partial class MainWindow : Window
 
         if (!SystemParameters.ClientAreaAnimation)
         {
-            BeginAnimation(AnimatedUsagePercentProperty, null);
-            AnimatedUsagePercent = normalized;
+            BeginAnimation(AnimatedRemainingPercentProperty, null);
+            AnimatedRemainingPercent = remaining;
             UsageFillBrush.BeginAnimation(SolidColorBrush.ColorProperty, null);
             UsageFillBrush.Color = color;
             LeadingCap.Opacity = 0;
@@ -340,28 +341,28 @@ public partial class MainWindow : Window
         }
 
         var animation = new DoubleAnimation(
-            AnimatedUsagePercent,
-            normalized,
+            AnimatedRemainingPercent,
+            remaining,
             TimeSpan.FromMilliseconds(620))
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
         };
         animation.Completed += (_, _) =>
         {
-            BeginAnimation(AnimatedUsagePercentProperty, null);
-            AnimatedUsagePercent = normalized;
+            BeginAnimation(AnimatedRemainingPercentProperty, null);
+            AnimatedRemainingPercent = remaining;
             LeadingCap.Opacity = 0;
         };
 
         LeadingCap.Opacity = 0.8;
-        BeginAnimation(AnimatedUsagePercentProperty, animation, HandoffBehavior.SnapshotAndReplace);
+        BeginAnimation(AnimatedRemainingPercentProperty, animation, HandoffBehavior.SnapshotAndReplace);
 
         UsageFillBrush.BeginAnimation(
             SolidColorBrush.ColorProperty,
             new ColorAnimation(color, TimeSpan.FromMilliseconds(250)));
     }
 
-    private static void AnimatedUsagePercentChanged(
+    private static void AnimatedRemainingPercentChanged(
         DependencyObject dependencyObject,
         DependencyPropertyChangedEventArgs eventArgs)
     {
@@ -372,13 +373,14 @@ public partial class MainWindow : Window
 
         var normalized = UsageLevelResolver.Normalize(percentage);
         window.UsageFillScale.ScaleY = normalized / 100d;
-        window.UsagePercentText.Text = $"{Math.Round(normalized)}% used";
+        window.UsagePercentText.Text = $"{Math.Round(normalized)}% left";
         window.LeadingCapTranslate.Y = -(RailUsableHeight * normalized / 100d);
     }
 
     private static string FormatAdditional(RateLimitBucket bucket)
     {
-        return $"{bucket.DisplayName}  {Math.Round(bucket.Primary.UsedPercent)}%";
+        var remaining = UsageLevelResolver.RemainingFromUsed(bucket.Primary.UsedPercent);
+        return $"{bucket.DisplayName}  {Math.Round(remaining)}% left";
     }
 
     private static UsageSnapshot CreateDemoSnapshot(double percentage)

@@ -5,10 +5,11 @@ An unofficial Windows companion that places a slim live quota meter beside the C
 ## What it does
 
 - Anchors a 10px vertical usage rail to the active Codex desktop window.
-- Fills from bottom to top as the account quota is consumed.
+- Shows the remaining quota as the primary value.
+- Drains smoothly from full to empty as the account quota is consumed.
 - Animates changes over 620ms with a calm ease-out transition.
 - Expands a detail card on hover and pins it on click.
-- Shows the current quota percentage, reset countdown, plan, and one additional model bucket when available.
+- Shows the remaining percentage, used percentage, reset countdown, and one additional model bucket when available.
 - Changes from green to amber at 70% and red at 90%.
 - Hides whenever Codex is minimized or another application is active.
 - Provides Refresh, Open log, and Exit actions from the system tray.

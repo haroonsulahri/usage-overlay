@@ -10,7 +10,8 @@ var specs = new (string Name, Action Run)[]
     ("Clamps malformed percentage values", ClampsPercentage),
     ("Merges partial bucket updates", MergesPartialUpdate),
     ("Formats reset countdowns", FormatsResetCountdown),
-    ("Resolves warning thresholds", ResolvesUsageLevels)
+    ("Resolves warning thresholds", ResolvesUsageLevels),
+    ("Calculates remaining quota", CalculatesRemainingQuota)
 };
 
 var failures = new List<string>();
@@ -134,6 +135,13 @@ static void ResolvesUsageLevels()
     AssertEqual(UsageLevel.Normal, UsageLevelResolver.FromPercentage(69.9));
     AssertEqual(UsageLevel.Warning, UsageLevelResolver.FromPercentage(70));
     AssertEqual(UsageLevel.Critical, UsageLevelResolver.FromPercentage(90));
+}
+
+static void CalculatesRemainingQuota()
+{
+    AssertEqual(27d, UsageLevelResolver.RemainingFromUsed(73));
+    AssertEqual(100d, UsageLevelResolver.RemainingFromUsed(-5));
+    AssertEqual(0d, UsageLevelResolver.RemainingFromUsed(125));
 }
 
 static RateLimitBucket Bucket(string id, double usedPercent)

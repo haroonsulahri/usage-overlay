@@ -72,12 +72,12 @@
 
                 <StackPanel Grid.Row="1" Margin="0,13,0,0">
                     <TextBlock x:Name="BucketNameText"
-                               Text="All Codex models"
+                               Text="Usage remaining"
                                Foreground="{StaticResource OverlayMutedBrush}"
                                FontSize="{StaticResource OverlayTextSmall}" />
                     <TextBlock x:Name="UsagePercentText"
                                Margin="0,2,0,0"
-                               Text="0% used"
+                               Text="Checking..."
                                Foreground="{StaticResource OverlayTextBrush}"
                                FontSize="{StaticResource OverlayTextValue}"
                                FontWeight="Medium" />
@@ -91,21 +91,11 @@
                 <Border Grid.Row="2" Margin="0,12,0,0" Height="1" Background="{StaticResource OverlayBorderBrush}" />
 
                 <Grid Grid.Row="3" Margin="0,10,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
                     <TextBlock x:Name="AdditionalBucketText"
                                Text="No additional limits"
                                Foreground="{StaticResource OverlayMutedBrush}"
                                FontSize="{StaticResource OverlayTextSmall}"
                                TextTrimming="CharacterEllipsis" />
-                    <TextBlock x:Name="PlanText"
-                               Grid.Column="1"
-                               Margin="10,0,0,0"
-                               Text=""
-                               Foreground="{StaticResource OverlayMutedBrush}"
-                               FontSize="{StaticResource OverlayTextSmall}" />
                 </Grid>
             </Grid>
         </Border>

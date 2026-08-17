@@ -16,8 +16,10 @@ var runTask = client.RunAsync(timeout.Token);
 try
 {
     var snapshot = await snapshotReceived.Task.WaitAsync(timeout.Token);
+    var used = Math.Round(snapshot.Primary.Primary.UsedPercent);
+    var left = Math.Round(CodexUsage.Core.UsageLevelResolver.RemainingFromUsed(used));
     Console.WriteLine(
-        $"PASS  Live Codex usage: {Math.Round(snapshot.Primary.Primary.UsedPercent)}% " +
+        $"PASS  Live Codex usage: {left}% left, {used}% used " +
         $"for {snapshot.Primary.Id}; {snapshot.Additional.Count} additional bucket(s).");
 }
 catch (OperationCanceledException)
@@ -39,4 +41,3 @@ finally
         // Expected after the smoke test receives its snapshot.
     }
 }
-

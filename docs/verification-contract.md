@@ -13,7 +13,8 @@ A Windows companion overlay for the packaged Codex desktop application.
 ## Expected outcome
 
 - A narrow vertical usage rail appears only while the Codex desktop window is active.
-- The rail reflects the primary Codex quota percentage and reset time.
+- The rail and primary label reflect how much Codex quota remains.
+- Used percentage remains available as secondary context.
 - Usage changes animate smoothly from the previous percentage.
 - Hovering expands a compact detail card; clicking pins or unpins it.
 - The overlay does not modify, inject into, or restart Codex.
@@ -24,9 +25,9 @@ A Windows companion overlay for the packaged Codex desktop application.
 | State | Rail | Detail panel | Colour | Expected behavior |
 | --- | --- | --- | --- | --- |
 | Connecting | Empty | Connection status | Neutral | Retry without blocking Codex |
-| 0% to 69% | Filled bottom-up | Percentage and reset | Green | Normal status |
-| 70% to 89% | Filled bottom-up | Percentage and reset | Amber | Calm warning |
-| 90% to 100% | Filled bottom-up | Percentage and reset | Red | Near-limit warning |
+| 0% to 69% used | Remaining fill | Remaining, used, and reset | Green | Normal status |
+| 70% to 89% used | Remaining fill | Remaining, used, and reset | Amber | Calm warning |
+| 90% to 100% used | Remaining fill | Remaining, used, and reset | Red | Near-limit warning |
 | Codex inactive | Hidden | Hidden | N/A | Never float over other applications |
 | Reduced motion | Final value | Normal | Threshold colour | No looping or decorative motion |
 
@@ -43,4 +44,3 @@ A Windows companion overlay for the packaged Codex desktop application.
 - Live App Server smoke test returns a real quota snapshot.
 - The compiled overlay anchors to the current Codex window and hides when Codex is not active.
 - Visual states are checked at normal, warning, and critical percentages.
-

@@ -17,5 +17,6 @@ public static class UsageLevelResolver
     };
 
     public static double Normalize(double percentage) => Math.Clamp(percentage, 0, 100);
-}
 
+    public static double RemainingFromUsed(double usedPercentage) => 100 - Normalize(usedPercentage);
+}
