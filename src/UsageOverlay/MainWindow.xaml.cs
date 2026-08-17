@@ -655,7 +655,7 @@ public partial class MainWindow : Window
         var secondaryPercent = showingUsed ? remainingPercent : usedPercent;
         var primaryLabel = showingUsed ? "used" : "left";
         var secondaryLabel = showingUsed ? "left" : "used";
-        BucketNameText.Text = $"{primary.DisplayName} {primaryLabel}";
+        BucketNameText.Text = primary.DisplayName;
         ResetText.Text =
             $"{Math.Round(secondaryPercent)}% {secondaryLabel}  ·  " +
             ResetTimeFormatter.Format(primary.Primary.ResetsAt, DateTimeOffset.Now);
