@@ -23,7 +23,6 @@ public partial class MainWindow : Window
     private const double CollapsedWidth = 34;
     private const double ExpandedWidth = 254;
     private const double RightInset = 18;
-    private const double SidebarClearance = 330;
     private const double BottomInset = 46;
     private const double RailUsableHeight = 134;
     private const double PositionNudge = 20;
@@ -47,9 +46,9 @@ public partial class MainWindow : Window
     private readonly System.Windows.Forms.NotifyIcon _notifyIcon;
     private System.Windows.Forms.ToolStripMenuItem _trayVisibilityMenuItem = null!;
     private System.Windows.Forms.ToolStripMenuItem _pauseMenuItem = null!;
-    private System.Windows.Forms.ToolStripMenuItem _avoidSidebarPlacementItem = null!;
     private System.Windows.Forms.ToolStripMenuItem _rightEdgePlacementItem = null!;
     private System.Windows.Forms.ToolStripMenuItem _leftEdgePlacementItem = null!;
+    private System.Windows.Forms.ToolStripMenuItem _customPlacementItem = null!;
     private System.Windows.Forms.ToolStripMenuItem _hideFullscreenMenuItem = null!;
     private System.Windows.Forms.ToolStripMenuItem _automaticStartupMenuItem = null!;
     private OverlaySettings _settings;
@@ -57,6 +56,11 @@ public partial class MainWindow : Window
     private bool _isPinned;
     private bool _isManuallyHidden;
     private bool _isClosing;
+    private bool _isDragging;
+    private bool _hasDragged;
+    private System.Windows.Point _dragStartScreen;
+    private double _dragStartLeft;
+    private double _dragStartTop;
     private WindowBounds? _lastBounds;
 
     public MainWindow(OverlayOptions options, AppLogger logger)
@@ -149,6 +153,11 @@ public partial class MainWindow : Window
 
     private void WindowTrackingTimer_OnTick(object? sender, EventArgs eventArgs)
     {
+        if (_isDragging)
+        {
+            return;
+        }
+
         UpdateWindowPosition();
     }
 
@@ -222,8 +231,10 @@ public partial class MainWindow : Window
         var baseLeft = _settings.Placement switch
         {
             HorizontalPlacement.LeftEdge => bounds.Left + RightInset,
-            HorizontalPlacement.RightEdge => bounds.Right - RightInset - Width,
-            _ => bounds.Right - SidebarClearance - Width
+            HorizontalPlacement.Custom =>
+                bounds.Left + (bounds.Right - bounds.Left) * _settings.CustomXRatio -
+                (Width - CollapsedWidth / 2),
+            _ => bounds.Right - RightInset - Width
         };
         var maximumLeft = Math.Max(bounds.Left + WindowPadding, bounds.Right - Width - WindowPadding);
         Left = Math.Clamp(
@@ -231,7 +242,10 @@ public partial class MainWindow : Window
             bounds.Left + WindowPadding,
             maximumLeft);
 
-        var baseTop = bounds.Bottom - BottomInset - Height - _settings.VerticalOffset;
+        var baseTop = _settings.Placement == HorizontalPlacement.Custom
+            ? bounds.Top + (bounds.Bottom - bounds.Top) * _settings.CustomYRatio - Height / 2 -
+              _settings.VerticalOffset
+            : bounds.Bottom - BottomInset - Height - _settings.VerticalOffset;
         var maximumTop = Math.Max(bounds.Top + WindowPadding, bounds.Bottom - Height - WindowPadding);
         Top = Math.Clamp(baseTop, bounds.Top + WindowPadding, maximumTop);
     }
@@ -281,6 +295,95 @@ public partial class MainWindow : Window
 
     private void RailHitTarget_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs eventArgs)
     {
+        if (eventArgs.ChangedButton != MouseButton.Left)
+        {
+            return;
+        }
+
+        _collapseTimer.Stop();
+        _isDragging = true;
+        _hasDragged = false;
+        _dragStartScreen = RailHitTarget.PointToScreen(eventArgs.GetPosition(RailHitTarget));
+        _dragStartLeft = Left;
+        _dragStartTop = Top;
+        _ = RailHitTarget.CaptureMouse();
+        eventArgs.Handled = true;
+    }
+
+    private void RailHitTarget_OnMouseMove(object sender, System.Windows.Input.MouseEventArgs eventArgs)
+    {
+        if (!_isDragging || eventArgs.LeftButton != MouseButtonState.Pressed)
+        {
+            return;
+        }
+
+        var currentScreen = RailHitTarget.PointToScreen(eventArgs.GetPosition(RailHitTarget));
+        var dpi = VisualTreeHelper.GetDpi(this);
+        var horizontalChange = (currentScreen.X - _dragStartScreen.X) / dpi.DpiScaleX;
+        var verticalChange = (currentScreen.Y - _dragStartScreen.Y) / dpi.DpiScaleY;
+
+        if (!_hasDragged && Math.Sqrt(horizontalChange * horizontalChange + verticalChange * verticalChange) < 4)
+        {
+            return;
+        }
+
+        _hasDragged = true;
+        var bounds = GetCurrentPlacementBounds();
+        Left = Math.Clamp(
+            _dragStartLeft + horizontalChange,
+            bounds.Left + WindowPadding,
+            Math.Max(bounds.Left + WindowPadding, bounds.Right - Width - WindowPadding));
+        Top = Math.Clamp(
+            _dragStartTop + verticalChange,
+            bounds.Top + WindowPadding,
+            Math.Max(bounds.Top + WindowPadding, bounds.Bottom - Height - WindowPadding));
+        eventArgs.Handled = true;
+    }
+
+    private void RailHitTarget_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs eventArgs)
+    {
+        if (!_isDragging || eventArgs.ChangedButton != MouseButton.Left)
+        {
+            return;
+        }
+
+        var wasDragged = _hasDragged;
+        _isDragging = false;
+        _hasDragged = false;
+        RailHitTarget.ReleaseMouseCapture();
+
+        if (wasDragged)
+        {
+            SaveCustomPosition();
+        }
+        else
+        {
+            TogglePinnedDetails();
+        }
+
+        eventArgs.Handled = true;
+    }
+
+    private void RailHitTarget_OnLostMouseCapture(
+        object sender,
+        System.Windows.Input.MouseEventArgs eventArgs)
+    {
+        if (!_isDragging)
+        {
+            return;
+        }
+
+        var wasDragged = _hasDragged;
+        _isDragging = false;
+        _hasDragged = false;
+        if (wasDragged)
+        {
+            SaveCustomPosition();
+        }
+    }
+
+    private void TogglePinnedDetails()
+    {
         _isPinned = !_isPinned;
 
         if (_isPinned)
@@ -292,7 +395,45 @@ public partial class MainWindow : Window
             CollapseDetails();
         }
 
-        eventArgs.Handled = true;
+    }
+
+    private WindowBounds GetCurrentPlacementBounds()
+    {
+        if (_lastBounds is { } bounds)
+        {
+            return bounds;
+        }
+
+        var workArea = SystemParameters.WorkArea;
+        return new WindowBounds(
+            workArea.Left,
+            workArea.Top,
+            workArea.Right,
+            workArea.Bottom,
+            false);
+    }
+
+    private void SaveCustomPosition()
+    {
+        var bounds = GetCurrentPlacementBounds();
+        var width = Math.Max(1, bounds.Right - bounds.Left);
+        var height = Math.Max(1, bounds.Bottom - bounds.Top);
+        var railCenterX = Left + Width - CollapsedWidth / 2;
+        var windowCenterY = Top + Height / 2;
+
+        _settings = _settings with
+        {
+            Placement = HorizontalPlacement.Custom,
+            HorizontalOffset = 0,
+            VerticalOffset = 0,
+            CustomXRatio = Math.Clamp((railCenterX - bounds.Left) / width, 0, 1),
+            CustomYRatio = Math.Clamp((windowCenterY - bounds.Top) / height, 0, 1)
+        };
+        PersistSettings();
+        _logger.Info(
+            $"Saved custom overlay position at {_settings.CustomXRatio:P0} x, " +
+            $"{_settings.CustomYRatio:P0} y.");
+        UpdateWindowPosition();
     }
 
     private void ExpandDetails()
@@ -538,14 +679,15 @@ public partial class MainWindow : Window
         var displayMenu = new System.Windows.Forms.ToolStripMenuItem("Display settings");
         var placementMenu = new System.Windows.Forms.ToolStripMenuItem("Position");
 
-        _avoidSidebarPlacementItem = CreatePlacementMenuItem(
-            "Avoid right sidebar",
-            HorizontalPlacement.AvoidRightSidebar);
         _rightEdgePlacementItem = CreatePlacementMenuItem("Right edge", HorizontalPlacement.RightEdge);
         _leftEdgePlacementItem = CreatePlacementMenuItem("Left edge", HorizontalPlacement.LeftEdge);
-        placementMenu.DropDownItems.Add(_avoidSidebarPlacementItem);
         placementMenu.DropDownItems.Add(_rightEdgePlacementItem);
         placementMenu.DropDownItems.Add(_leftEdgePlacementItem);
+        _customPlacementItem = new System.Windows.Forms.ToolStripMenuItem("Custom position (drag rail)")
+        {
+            Enabled = false
+        };
+        placementMenu.DropDownItems.Add(_customPlacementItem);
         displayMenu.DropDownItems.Add(placementMenu);
         displayMenu.DropDownItems.Add(new System.Windows.Forms.ToolStripSeparator());
         displayMenu.DropDownItems.Add(
@@ -565,9 +707,9 @@ public partial class MainWindow : Window
             null,
             (_, _) => Dispatcher.Invoke(() => NudgePosition(horizontal: 0, vertical: -PositionNudge)));
         displayMenu.DropDownItems.Add(
-            "Reset offsets",
+            "Reset to right edge",
             null,
-            (_, _) => Dispatcher.Invoke(ResetPositionOffsets));
+            (_, _) => Dispatcher.Invoke(ResetToRightEdge));
         displayMenu.DropDownItems.Add(new System.Windows.Forms.ToolStripSeparator());
         _hideFullscreenMenuItem = new System.Windows.Forms.ToolStripMenuItem("Hide in fullscreen");
         _hideFullscreenMenuItem.Click += (_, _) => Dispatcher.Invoke(ToggleHideInFullscreen);
@@ -629,7 +771,12 @@ public partial class MainWindow : Window
 
     private void SetPlacement(HorizontalPlacement placement)
     {
-        _settings = _settings with { Placement = placement };
+        _settings = _settings with
+        {
+            Placement = placement,
+            HorizontalOffset = 0,
+            VerticalOffset = 0
+        };
         PersistSettings();
         UpdateWindowPosition();
     }
@@ -645,9 +792,14 @@ public partial class MainWindow : Window
         UpdateWindowPosition();
     }
 
-    private void ResetPositionOffsets()
+    private void ResetToRightEdge()
     {
-        _settings = _settings with { HorizontalOffset = 0, VerticalOffset = 0 };
+        _settings = _settings with
+        {
+            Placement = HorizontalPlacement.RightEdge,
+            HorizontalOffset = 0,
+            VerticalOffset = 0
+        };
         PersistSettings();
         UpdateWindowPosition();
     }
@@ -674,10 +826,9 @@ public partial class MainWindow : Window
 
     private void UpdateSettingsMenuState()
     {
-        _avoidSidebarPlacementItem.Checked =
-            _settings.Placement == HorizontalPlacement.AvoidRightSidebar;
         _rightEdgePlacementItem.Checked = _settings.Placement == HorizontalPlacement.RightEdge;
         _leftEdgePlacementItem.Checked = _settings.Placement == HorizontalPlacement.LeftEdge;
+        _customPlacementItem.Checked = _settings.Placement == HorizontalPlacement.Custom;
         _hideFullscreenMenuItem.Checked = _settings.HideInFullscreen;
         _automaticStartupMenuItem.Checked = _startupShortcutManager.IsEnabled;
         _pauseMenuItem.Text = _settings.IsPaused(DateTimeOffset.Now)

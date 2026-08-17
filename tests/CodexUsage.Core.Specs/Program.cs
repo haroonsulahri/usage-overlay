@@ -154,12 +154,16 @@ static void NormalizesDisplaySettings()
         Placement = (HorizontalPlacement)999,
         HorizontalOffset = 900,
         VerticalOffset = -500,
+        CustomXRatio = 2,
+        CustomYRatio = -1,
         PausedUntil = now.AddMinutes(15)
     }.Normalize();
 
-    AssertEqual(HorizontalPlacement.AvoidRightSidebar, settings.Placement);
+    AssertEqual(HorizontalPlacement.RightEdge, settings.Placement);
     AssertEqual(600d, settings.HorizontalOffset);
     AssertEqual(-300d, settings.VerticalOffset);
+    AssertEqual(1d, settings.CustomXRatio);
+    AssertEqual(0d, settings.CustomYRatio);
     Assert(settings.IsPaused(now), "Expected the future pause to be active.");
     Assert(!settings.IsPaused(now.AddMinutes(16)), "Expected the expired pause to be inactive.");
 }

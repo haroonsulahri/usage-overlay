@@ -104,9 +104,12 @@
               x:Name="RailHitTarget"
               Width="34"
               Background="#01000000"
-              Cursor="Hand"
+              Cursor="SizeAll"
               AutomationProperties.Name="Codex usage meter"
-              MouseLeftButtonDown="RailHitTarget_OnMouseLeftButtonDown">
+              MouseLeftButtonDown="RailHitTarget_OnMouseLeftButtonDown"
+              MouseLeftButtonUp="RailHitTarget_OnMouseLeftButtonUp"
+              MouseMove="RailHitTarget_OnMouseMove"
+              LostMouseCapture="RailHitTarget_OnLostMouseCapture">
             <Grid.ContextMenu>
                 <ContextMenu>
                     <MenuItem x:Name="RailVisibilityMenuItem"
