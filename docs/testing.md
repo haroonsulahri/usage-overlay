@@ -57,6 +57,7 @@ Recommended visual states:
 | Relaunch while hidden | Existing instance becomes eligible to show; no duplicate remains |
 | Windows Search launch | Existing or new instance opens Settings; no duplicate remains |
 | Automatic startup | Overlay starts without opening Settings |
+| Settings title bar | Close is available; minimize and maximize are unavailable |
 | Pause | Overlay hides for 15 minutes, then resumes automatically |
 | Fullscreen exclusion | Overlay hides only while Codex is fullscreen |
 | Reduced motion | Values update without animated interpolation |

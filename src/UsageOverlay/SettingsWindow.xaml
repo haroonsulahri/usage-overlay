@@ -6,6 +6,7 @@
         Height="760"
         MinWidth="590"
         MinHeight="560"
+        ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         Background="#FF171717"
