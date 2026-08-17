@@ -33,7 +33,7 @@ jobs:
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: codex-usage-overlay-${{ github.ref_name }}-win-x64
+          name: quotarail-for-codex-${{ github.ref_name }}-win-x64
           path: artifacts/release/*
           if-no-files-found: error
 
@@ -44,6 +44,5 @@ jobs:
         run: |
           $files = Get-ChildItem -LiteralPath .\artifacts\release -File | ForEach-Object FullName
           gh release create $env:GITHUB_REF_NAME $files `
-            --title "Codex Usage Overlay $env:GITHUB_REF_NAME" `
+            --title "QuotaRail for Codex $env:GITHUB_REF_NAME" `
             --generate-notes
-

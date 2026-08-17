@@ -10,10 +10,10 @@ using CodexUsage.Core;
 using CodexUsage.Core.Formatting;
 using CodexUsage.Core.Models;
 using CodexUsage.Core.Settings;
-using CodexUsageOverlay.Infrastructure;
-using CodexUsageOverlay.Services;
+using QuotaRail.Infrastructure;
+using QuotaRail.Services;
 
-namespace CodexUsageOverlay;
+namespace QuotaRail;
 
 [SuppressMessage(
     "Design",
@@ -775,7 +775,7 @@ public partial class MainWindow : Window
 
         var icon = new System.Windows.Forms.NotifyIcon
         {
-            Text = "Codex Usage Overlay",
+            Text = "QuotaRail for Codex",
             Icon = _applicationIcon,
             ContextMenuStrip = menu,
             Visible = true

@@ -1,7 +1,7 @@
-<Window x:Class="CodexUsageOverlay.SettingsWindow"
+<Window x:Class="QuotaRail.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Codex Usage Overlay Settings"
+        Title="QuotaRail for Codex Settings"
         Width="650"
         Height="760"
         MinWidth="590"
@@ -10,7 +10,7 @@
         ShowInTaskbar="False"
         Background="#FF171717"
         Foreground="{StaticResource OverlayTextBrush}"
-        Icon="Assets/CodexUsageOverlay.ico"
+        Icon="Assets/QuotaRail.ico"
         Loaded="Window_OnLoaded"
         SourceInitialized="Window_OnSourceInitialized"
         KeyDown="Window_OnKeyDown">
@@ -111,11 +111,18 @@
 
         <Border Grid.Row="0" Padding="24,20" BorderBrush="{StaticResource OverlayBorderBrush}" BorderThickness="0,0,0,1">
             <StackPanel>
-                <TextBlock Text="Settings" FontSize="{StaticResource OverlayTextValue}" FontWeight="Medium" />
+                <TextBlock Text="QuotaRail" FontSize="{StaticResource OverlayTextValue}" FontWeight="Medium" />
                 <TextBlock Margin="0,5,0,0"
-                           Text="Configure visibility, placement, appearance, and the Codex connection."
                            Foreground="{StaticResource OverlayMutedBrush}"
-                           FontSize="{StaticResource OverlayTextBody}" />
+                           FontSize="{StaticResource OverlayTextBody}">
+                    <Run Text="Settings for Codex usage visibility. Built by " />
+                    <Hyperlink NavigateUri="https://haroone.com"
+                               Foreground="#FF55C878"
+                               RequestNavigate="HarooneLink_OnRequestNavigate"
+                               ToolTip="Open Haroone.com">
+                        <Run Text="Haroone.com" />
+                    </Hyperlink>
+                </TextBlock>
             </StackPanel>
         </Border>
 

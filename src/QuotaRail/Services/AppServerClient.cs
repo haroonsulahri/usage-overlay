@@ -4,9 +4,9 @@ using System.Text;
 using System.Text.Json;
 using CodexUsage.Core.Models;
 using CodexUsage.Core.Protocol;
-using CodexUsageOverlay.Infrastructure;
+using QuotaRail.Infrastructure;
 
-namespace CodexUsageOverlay.Services;
+namespace QuotaRail.Services;
 
 public sealed class AppServerClient : IAsyncDisposable
 {
@@ -82,7 +82,7 @@ public sealed class AppServerClient : IAsyncDisposable
         {
             StatusChanged?.Invoke(this, "Codex CLI not found");
             throw new FileNotFoundException(
-                "Could not find codex.cmd or codex.exe on PATH. Set CODEX_USAGE_CODEX_PATH to override.");
+                "Could not find codex.cmd or codex.exe on PATH. Set QUOTARAIL_CODEX_PATH to override.");
         }
 
         _logger.Info($"Starting App Server through {codexCommand}.");
@@ -111,8 +111,8 @@ public sealed class AppServerClient : IAsyncDisposable
                 {
                     clientInfo = new
                     {
-                        name = "codex_usage_overlay",
-                        title = "Codex Usage Overlay",
+                        name = "quotarail",
+                        title = "QuotaRail for Codex",
                         version = "0.1.0"
                     }
                 }
@@ -280,7 +280,11 @@ public sealed class AppServerClient : IAsyncDisposable
             return File.Exists(configuredPath) ? Path.GetFullPath(configuredPath) : null;
         }
 
-        var configured = Environment.GetEnvironmentVariable("CODEX_USAGE_CODEX_PATH");
+        var configured = Environment.GetEnvironmentVariable("QUOTARAIL_CODEX_PATH");
+        if (string.IsNullOrWhiteSpace(configured))
+        {
+            configured = Environment.GetEnvironmentVariable("CODEX_USAGE_CODEX_PATH");
+        }
         if (!string.IsNullOrWhiteSpace(configured) && File.Exists(configured))
         {
             return Path.GetFullPath(configured);

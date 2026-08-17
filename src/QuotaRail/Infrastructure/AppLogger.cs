@@ -1,6 +1,6 @@
 using CodexUsage.Core.Security;
 
-namespace CodexUsageOverlay.Infrastructure;
+namespace QuotaRail.Infrastructure;
 
 public sealed class AppLogger
 {
@@ -10,7 +10,7 @@ public sealed class AppLogger
     public AppLogger()
     {
         var root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var directory = System.IO.Path.Combine(root, "CodexUsageOverlay");
+        var directory = System.IO.Path.Combine(root, "QuotaRail");
         System.IO.Directory.CreateDirectory(directory);
         _path = System.IO.Path.Combine(directory, "overlay.log");
     }

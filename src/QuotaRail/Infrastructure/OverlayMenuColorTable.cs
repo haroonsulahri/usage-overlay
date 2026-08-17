@@ -1,7 +1,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace CodexUsageOverlay.Infrastructure;
+namespace QuotaRail.Infrastructure;
 
 public sealed class OverlayMenuColorTable : ProfessionalColorTable
 {
@@ -44,4 +44,3 @@ public sealed class OverlayMenuColorTable : ProfessionalColorTable
 
     public override Color SeparatorLight => Border;
 }
-

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Codex Usage Overlay is a Windows-only companion process. It does not modify the Codex desktop package or render inside Codex's DOM.
+QuotaRail for Codex is a Windows-only companion process. It does not modify the Codex desktop package or render inside Codex's DOM.
 
 ```text
 Codex services
@@ -31,7 +31,7 @@ Platform-neutral logic:
 - Persistent display settings model
 - Log redaction
 
-### `CodexUsageOverlay`
+### `QuotaRail`
 
 Windows integration:
 
@@ -44,7 +44,7 @@ Windows integration:
 
 ## Data flow
 
-1. The overlay locates `codex.cmd` or `codex.exe` on `PATH`, or uses `CODEX_USAGE_CODEX_PATH` when configured.
+1. The overlay locates `codex.cmd` or `codex.exe` on `PATH`, or uses `QUOTARAIL_CODEX_PATH` when configured. The legacy `CODEX_USAGE_CODEX_PATH` variable is also accepted.
 2. It starts `codex app-server --stdio` with redirected standard streams.
 3. It sends `initialize`, `initialized`, and `account/rateLimits/read`.
 4. It listens for `account/rateLimits/updated` and polls every 60 seconds as a fallback.
@@ -60,13 +60,13 @@ The WPF tool window is topmost and non-activating. It can receive pointer input 
 ## Local state
 
 ```text
-%LOCALAPPDATA%\CodexUsageOverlay\settings.json
-%LOCALAPPDATA%\CodexUsageOverlay\overlay.log
+%LOCALAPPDATA%\QuotaRail\settings.json
+%LOCALAPPDATA%\QuotaRail\overlay.log
 ```
 
 Settings contain placement, offsets, fullscreen preference, and pause expiry. Logs contain redacted, truncated status and error messages.
 
-Additional settings control Codex-only visibility, monitor following, remaining-versus-used display, colour thresholds, animation, compact labels, CLI path, and polling interval. Existing settings files remain compatible because missing fields receive bounded defaults.
+Additional settings control Codex-only visibility, monitor following, remaining-versus-used display, colour thresholds, animation, compact labels, CLI path, and polling interval. Existing settings files remain compatible because missing fields receive bounded defaults. On first launch, QuotaRail imports settings from the previous `%LOCALAPPDATA%\CodexUsageOverlay\settings.json` location when no QuotaRail settings file exists.
 
 ## Failure handling
 

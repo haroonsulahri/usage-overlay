@@ -29,7 +29,7 @@ The smoke test starts App Server, waits up to 20 seconds for a real rate-limit s
 Demo mode does not start App Server:
 
 ```powershell
-dotnet run --project .\src\CodexUsageOverlay\CodexUsageOverlay.csproj `
+dotnet run --project .\src\QuotaRail\QuotaRail.csproj `
     --configuration Release -- --demo=75 --expanded
 ```
 

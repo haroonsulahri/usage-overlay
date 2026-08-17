@@ -14,11 +14,19 @@ if (-not $validationDirectory.StartsWith($requiredPrefix, [StringComparison]::Or
     throw "Refusing to use a validation directory outside artifacts: $validationDirectory"
 }
 
-$archiveName = "codex-usage-overlay-v$Version-win-x64.zip"
+$archiveName = "quotarail-for-codex-v$Version-win-x64.zip"
 $archivePath = Join-Path $releaseDirectory $archiveName
 $checksumPath = Join-Path $releaseDirectory 'SHA256SUMS.txt'
-if (-not (Test-Path -LiteralPath $archivePath) -or -not (Test-Path -LiteralPath $checksumPath)) {
-    throw 'Release archive or checksum file is missing. Run package-release.ps1 first.'
+$manifestPath = Join-Path $releaseDirectory 'release-manifest.json'
+if (-not (Test-Path -LiteralPath $archivePath) -or
+    -not (Test-Path -LiteralPath $checksumPath) -or
+    -not (Test-Path -LiteralPath $manifestPath)) {
+    throw 'Release archive, checksum, or manifest is missing. Run package-release.ps1 first.'
+}
+
+$manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+if ($manifest.product -ne 'QuotaRail for Codex' -or $manifest.publisher -ne 'Haroone.com') {
+    throw 'Release manifest contains unexpected product or publisher metadata.'
 }
 
 $expectedHash = ((Get-Content -LiteralPath $checksumPath -Raw).Trim() -split '\s+')[0]
@@ -33,9 +41,9 @@ if (Test-Path -LiteralPath $validationDirectory) {
 [void](New-Item -ItemType Directory -Path $validationDirectory -Force)
 Expand-Archive -LiteralPath $archivePath -DestinationPath $validationDirectory -Force
 
-$packageDirectory = Join-Path $validationDirectory 'CodexUsageOverlay'
+$packageDirectory = Join-Path $validationDirectory 'QuotaRail'
 $requiredFiles = @(
-    'CodexUsageOverlay.exe',
+    'QuotaRail.exe',
     'README.md',
     'LICENSE',
     'CHANGELOG.md',
@@ -58,8 +66,11 @@ if ($missingFiles.Count -gt 0) {
     throw "Release package is missing: $($missingFiles -join ', ')"
 }
 
-$executable = Join-Path $packageDirectory 'CodexUsageOverlay.exe'
+$executable = Join-Path $packageDirectory 'QuotaRail.exe'
 $versionInfo = (Get-Item -LiteralPath $executable).VersionInfo
+if ($versionInfo.ProductName -ne 'QuotaRail for Codex' -or $versionInfo.CompanyName -ne 'Haroone.com') {
+    throw 'Executable contains unexpected product or publisher metadata.'
+}
 
 [pscustomobject]@{
     Archive = $archivePath
@@ -69,5 +80,6 @@ $versionInfo = (Get-Item -LiteralPath $executable).VersionInfo
     ExtractedFileCount = (Get-ChildItem -LiteralPath $packageDirectory -Recurse -File).Count
     FileVersion = $versionInfo.FileVersion
     ProductVersion = $versionInfo.ProductVersion
+    ProductName = $versionInfo.ProductName
+    CompanyName = $versionInfo.CompanyName
 }
-

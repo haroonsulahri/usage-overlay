@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace CodexUsageOverlay.Services;
+namespace QuotaRail.Services;
 
 public static class NativeHotKey
 {
@@ -27,4 +27,3 @@ public static class NativeHotKey
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool UnregisterHotKey(IntPtr windowHandle, int identifier);
 }
-

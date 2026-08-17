@@ -6,11 +6,15 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>Assets\CodexUsageOverlay.ico</ApplicationIcon>
-    <AssemblyName>CodexUsageOverlay</AssemblyName>
-    <RootNamespace>CodexUsageOverlay</RootNamespace>
-    <Product>Codex Usage Overlay</Product>
-    <Description>Unofficial Windows companion overlay for Codex quota visibility.</Description>
+    <ApplicationIcon>Assets\QuotaRail.ico</ApplicationIcon>
+    <AssemblyName>QuotaRail</AssemblyName>
+    <RootNamespace>QuotaRail</RootNamespace>
+    <Product>QuotaRail for Codex</Product>
+    <AssemblyTitle>QuotaRail for Codex</AssemblyTitle>
+    <Company>Haroone.com</Company>
+    <Authors>Haroone.com</Authors>
+    <Copyright>Copyright (c) 2026 Haroone.com</Copyright>
+    <Description>Unofficial Windows usage monitor for Codex.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
@@ -19,6 +23,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Assets\CodexUsageOverlay.ico" />
+    <Resource Include="Assets\QuotaRail.ico" />
   </ItemGroup>
 </Project>

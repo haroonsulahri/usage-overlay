@@ -18,22 +18,21 @@ Do not include real credentials, session tokens, private conversations, or anoth
 
 ## Trust boundaries
 
-Codex Usage Overlay:
+QuotaRail for Codex:
 
 - Starts the locally installed Codex CLI in App Server stdio mode
 - Requests account rate-limit metadata only
 - Uses Codex-owned authentication without reading authentication files
 - Identifies the active Codex window through Windows process metadata
-- Stores settings and redacted diagnostic logs under `%LOCALAPPDATA%\CodexUsageOverlay`
+- Stores settings and redacted diagnostic logs under `%LOCALAPPDATA%\QuotaRail`
 - Creates Start-menu or Startup shortcuts only when the user requests them
 
 It does not inject code into Codex, inspect conversation content, read cookies, expose a network listener, or send telemetry.
 
 ## Local attack considerations
 
-The overlay executes the `codex` command found on `PATH`, unless `CODEX_USAGE_CODEX_PATH` points to a specific executable. Users should install Codex CLI from a trusted source and keep untrusted directories out of `PATH`.
+The overlay executes the `codex` command found on `PATH`, unless `QUOTARAIL_CODEX_PATH` points to a specific executable. The legacy `CODEX_USAGE_CODEX_PATH` variable remains supported for backward compatibility. Users should install Codex CLI from a trusted source and keep untrusted directories out of `PATH`.
 
 Diagnostic messages are redacted and truncated before writing. Review logs before sharing them because error messages can still contain machine or environment details.
 
 Release binaries should be downloaded from this repository's official Releases page and verified against the published SHA-256 checksum.
-

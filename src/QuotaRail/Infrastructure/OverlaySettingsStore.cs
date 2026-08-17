@@ -2,7 +2,7 @@ using System.Text.Json;
 using System.IO;
 using CodexUsage.Core.Settings;
 
-namespace CodexUsageOverlay.Infrastructure;
+namespace QuotaRail.Infrastructure;
 
 public sealed class OverlaySettingsStore
 {
@@ -13,6 +13,7 @@ public sealed class OverlaySettingsStore
 
     private readonly AppLogger _logger;
     private readonly string _path;
+    private readonly string _legacyPath;
 
     public OverlaySettingsStore(AppLogger logger)
     {
@@ -20,12 +21,33 @@ public sealed class OverlaySettingsStore
         var directory = System.IO.Path.GetDirectoryName(logger.Path) ??
                         throw new InvalidOperationException("The application log path has no directory.");
         _path = System.IO.Path.Combine(directory, "settings.json");
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        _legacyPath = System.IO.Path.Combine(localAppData, "CodexUsageOverlay", "settings.json");
     }
 
     public string Path => _path;
 
     public OverlaySettings Load()
     {
+        if (!File.Exists(_path) && File.Exists(_legacyPath))
+        {
+            try
+            {
+                var legacyJson = File.ReadAllText(_legacyPath);
+                var migrated = (JsonSerializer.Deserialize<OverlaySettings>(legacyJson) ?? new OverlaySettings()).Normalize();
+                Save(migrated);
+                if (File.Exists(_path))
+                {
+                    _logger.Info("Migrated settings from the previous application name.");
+                }
+                return migrated;
+            }
+            catch (Exception exception) when (exception is IOException or JsonException or UnauthorizedAccessException)
+            {
+                _logger.Error($"Could not migrate previous display settings: {exception.Message}");
+            }
+        }
+
         if (!File.Exists(_path))
         {
             return new OverlaySettings();

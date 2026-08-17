@@ -8,6 +8,7 @@ The project follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- QuotaRail for Codex product identity and Haroone.com creator attribution
 - Live Codex quota rail driven by the documented App Server rate-limit methods
 - Remaining percentage, reset countdown, additional model limits, and threshold colours
 - Smooth GPU-safe animations with reduced-motion support

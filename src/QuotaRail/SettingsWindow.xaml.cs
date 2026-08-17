@@ -1,11 +1,14 @@
 using System.Globalization;
 using System.IO;
+using System.Diagnostics;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Navigation;
 using CodexUsage.Core.Settings;
-using CodexUsageOverlay.Services;
+using QuotaRail.Services;
 
-namespace CodexUsageOverlay;
+namespace QuotaRail;
 
 public partial class SettingsWindow : Window
 {
@@ -203,6 +206,20 @@ public partial class SettingsWindow : Window
     }
 
     private void OpenLogsButton_OnClick(object sender, RoutedEventArgs eventArgs) => _openLogs();
+
+    private void HarooneLink_OnRequestNavigate(object sender, RequestNavigateEventArgs eventArgs)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(eventArgs.Uri.AbsoluteUri) { UseShellExecute = true });
+        }
+        catch (Exception exception) when (exception is Win32Exception or InvalidOperationException)
+        {
+            ValidationText.Text = "Could not open Haroone.com in the default browser.";
+        }
+
+        eventArgs.Handled = true;
+    }
 
     private void Window_OnKeyDown(object sender, System.Windows.Input.KeyEventArgs eventArgs)
     {

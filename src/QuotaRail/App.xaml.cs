@@ -1,9 +1,9 @@
 using System.Threading;
 using System.Windows;
 using System.Diagnostics.CodeAnalysis;
-using CodexUsageOverlay.Infrastructure;
+using QuotaRail.Infrastructure;
 
-namespace CodexUsageOverlay;
+namespace QuotaRail;
 
 [SuppressMessage(
     "Design",
@@ -11,8 +11,8 @@ namespace CodexUsageOverlay;
     Justification = "The WPF application lifecycle releases the mutex in OnExit.")]
 public partial class App : System.Windows.Application
 {
-    private const string SingleInstanceMutexName = "Local\\CodexUsageOverlay";
-    private const string ShowOverlayEventName = "Local\\CodexUsageOverlay.Show";
+    private const string SingleInstanceMutexName = "Local\\QuotaRail";
+    private const string ShowOverlayEventName = "Local\\QuotaRail.Show";
 
     private Mutex? _singleInstanceMutex;
     private EventWaitHandle? _showOverlayEvent;
@@ -40,7 +40,7 @@ public partial class App : System.Windows.Application
         StartShowSignalListener();
 
         _logger = new AppLogger();
-        _logger.Info("Starting Codex Usage Overlay.");
+        _logger.Info("Starting QuotaRail for Codex.");
 
         var options = OverlayOptions.Parse(e.Args);
         var window = new MainWindow(options, _logger);
@@ -54,7 +54,7 @@ public partial class App : System.Windows.Application
         _showOverlayEvent?.Set();
         _showSignalThread?.Join(TimeSpan.FromSeconds(1));
         _showOverlayEvent?.Dispose();
-        _logger?.Info("Stopping Codex Usage Overlay.");
+        _logger?.Info("Stopping QuotaRail for Codex.");
 
         if (_ownsMutex)
         {
@@ -79,7 +79,7 @@ public partial class App : System.Windows.Application
 
                 _ = Dispatcher.BeginInvoke(() =>
                 {
-                    if (MainWindow is CodexUsageOverlay.MainWindow overlayWindow)
+                    if (MainWindow is QuotaRail.MainWindow overlayWindow)
                     {
                         overlayWindow.ShowFromExternalLaunch();
                     }
@@ -88,7 +88,7 @@ public partial class App : System.Windows.Application
         })
         {
             IsBackground = true,
-            Name = "CodexUsageOverlay.ShowSignal"
+            Name = "QuotaRail.ShowSignal"
         };
         _showSignalThread.Start();
     }

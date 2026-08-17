@@ -1,10 +1,12 @@
-# Codex Usage Overlay
+# QuotaRail for Codex
 
 <p>
-  <img src="assets/icon.svg" width="88" height="88" alt="Codex Usage Overlay icon">
+  <img src="assets/icon.svg" width="88" height="88" alt="QuotaRail icon">
 </p>
 
-Codex Usage Overlay is an unofficial Windows companion that keeps your remaining Codex quota visible beside the desktop app. It runs as a separate process, uses the documented Codex App Server protocol, and never injects code into Codex.
+QuotaRail is an unofficial Windows companion that keeps your remaining Codex quota visible beside the desktop app. It runs as a separate process, uses the documented Codex App Server protocol, and never injects code into Codex.
+
+Built by [Haroone.com](https://haroone.com).
 
 > Preview release: Windows only. This project is not affiliated with or endorsed by OpenAI.
 
@@ -36,7 +38,7 @@ The rate-limit endpoint requires authentication backed by Codex services. API-ke
 
 1. Download the Windows zip from the repository's Releases page.
 2. Extract it to a directory you control.
-3. Run `CodexUsageOverlay.exe`.
+3. Run `QuotaRail.exe`.
 4. Keep Codex active. The usage rail appears inside the Codex window.
 
 Optional helper scripts in the release package can add Windows shortcuts:
@@ -64,14 +66,14 @@ Display settings include left and right presets, custom placement, position nudg
 
 The native Settings window uses explicit Save and Cancel controls. Safe display and appearance changes apply immediately; CLI path and refresh interval changes are saved for the next restart.
 
-![Native Codex Usage Overlay Settings window](docs/images/settings.png)
+![Native QuotaRail Settings window](docs/images/settings.png)
 
 ## Build from source
 
 Install the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0), then run:
 
 ```powershell
-cd codex-usage-overlay
+cd quotarail-for-codex
 .\scripts\build.ps1
 .\scripts\run.ps1
 ```
@@ -83,7 +85,7 @@ Run these commands from a local clone of the repository.
 Demo mode renders the interface without starting App Server:
 
 ```powershell
-dotnet run --project .\src\CodexUsageOverlay\CodexUsageOverlay.csproj `
+dotnet run --project .\src\QuotaRail\QuotaRail.csproj `
     --configuration Release -- --demo=75 --expanded
 ```
 
@@ -92,7 +94,7 @@ Try `--demo=25`, `--demo=75`, and `--demo=92` to inspect each usage state.
 Open the Settings window directly for UI review:
 
 ```powershell
-dotnet run --project .\src\CodexUsageOverlay\CodexUsageOverlay.csproj `
+dotnet run --project .\src\QuotaRail\QuotaRail.csproj `
     --configuration Release -- --demo=75 --settings
 ```
 
@@ -149,6 +151,6 @@ Bug reports and focused pull requests are welcome. Start with [Contributing](CON
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+Built by [Haroone.com](https://haroone.com) and released under the [MIT License](LICENSE).
 
-Codex and OpenAI are referenced only to describe compatibility. This project is independently maintained.
+QuotaRail is an independent open-source project and is not affiliated with or endorsed by OpenAI. Codex and OpenAI are referenced only to describe compatibility.
