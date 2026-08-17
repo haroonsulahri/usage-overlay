@@ -39,8 +39,10 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _collapseTimer;
     private readonly CancellationTokenSource _cancellation = new();
     private readonly System.Windows.Forms.NotifyIcon _notifyIcon;
+    private System.Windows.Forms.ToolStripMenuItem _trayVisibilityMenuItem = null!;
     private bool _isExpanded;
     private bool _isPinned;
+    private bool _isManuallyHidden;
     private bool _isClosing;
     private WindowBounds? _lastBounds;
 
@@ -122,6 +124,16 @@ public partial class MainWindow : Window
 
     private void UpdateWindowPosition()
     {
+        if (_isManuallyHidden)
+        {
+            if (IsVisible)
+            {
+                Hide();
+            }
+
+            return;
+        }
+
         if (_options.DemoPercent is not null)
         {
             PositionForDemo();
@@ -404,6 +416,10 @@ public partial class MainWindow : Window
     private System.Windows.Forms.NotifyIcon CreateNotifyIcon()
     {
         var menu = new System.Windows.Forms.ContextMenuStrip();
+        _trayVisibilityMenuItem = new System.Windows.Forms.ToolStripMenuItem("Hide overlay");
+        _trayVisibilityMenuItem.Click += (_, _) => Dispatcher.Invoke(ToggleManualVisibility);
+        menu.Items.Add(_trayVisibilityMenuItem);
+        menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         menu.Items.Add("Refresh now", null, (_, _) => _ = _appServerClient.RefreshAsync());
         menu.Items.Add("Open log", null, (_, _) => OpenLog());
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
@@ -418,10 +434,48 @@ public partial class MainWindow : Window
         };
         icon.DoubleClick += (_, _) => Dispatcher.Invoke(() =>
         {
+            if (_isManuallyHidden)
+            {
+                ToggleManualVisibility();
+                return;
+            }
+
             _isPinned = true;
             ExpandDetails();
         });
         return icon;
+    }
+
+    private void ToggleManualVisibility()
+    {
+        _isManuallyHidden = !_isManuallyHidden;
+        _trayVisibilityMenuItem.Text = _isManuallyHidden ? "Show overlay" : "Hide overlay";
+        RailVisibilityMenuItem.Header = _trayVisibilityMenuItem.Text;
+
+        if (_isManuallyHidden)
+        {
+            ResetToCollapsedState();
+            Hide();
+            _logger.Info("Overlay manually hidden. Usage updates remain active.");
+            return;
+        }
+
+        _logger.Info("Overlay manually enabled. Waiting for the active Codex window.");
+        UpdateWindowPosition();
+    }
+
+    private void ResetToCollapsedState()
+    {
+        _collapseTimer.Stop();
+        _isPinned = false;
+        _isExpanded = false;
+        DetailsPanel.BeginAnimation(OpacityProperty, null);
+        DetailsTranslate.BeginAnimation(TranslateTransform.XProperty, null);
+        DetailsPanel.Opacity = 0;
+        DetailsTranslate.X = 8;
+        DetailsPanel.Visibility = Visibility.Collapsed;
+        Width = CollapsedWidth;
+        RepositionAfterWidthChange();
     }
 
     private void OpenLog()
@@ -445,6 +499,11 @@ public partial class MainWindow : Window
     private async void RefreshMenuItem_OnClick(object sender, RoutedEventArgs eventArgs)
     {
         await _appServerClient.RefreshAsync();
+    }
+
+    private void VisibilityMenuItem_OnClick(object sender, RoutedEventArgs eventArgs)
+    {
+        ToggleManualVisibility();
     }
 
     private void ExitMenuItem_OnClick(object sender, RoutedEventArgs eventArgs)

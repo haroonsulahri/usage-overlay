@@ -71,7 +71,9 @@ It exits successfully only after receiving a real Codex quota snapshot.
 
 - Hover the rail to reveal quota details.
 - Click the rail to pin or unpin the detail card.
-- Right-click the rail for Refresh and Exit.
+- Right-click the rail to hide it, refresh usage, or exit.
+- Right-click the tray icon and choose **Show overlay** to restore a manually hidden rail.
+- Double-click the tray icon to restore a hidden rail or expand a visible one.
 - Use the tray icon when the rail is hidden.
 
 ## Data and privacy

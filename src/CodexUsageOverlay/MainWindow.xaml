@@ -109,6 +109,10 @@
               MouseLeftButtonDown="RailHitTarget_OnMouseLeftButtonDown">
             <Grid.ContextMenu>
                 <ContextMenu>
+                    <MenuItem x:Name="RailVisibilityMenuItem"
+                              Header="Hide overlay"
+                              Click="VisibilityMenuItem_OnClick" />
+                    <Separator />
                     <MenuItem Header="Refresh now" Click="RefreshMenuItem_OnClick" />
                     <Separator />
                     <MenuItem Header="Exit" Click="ExitMenuItem_OnClick" />

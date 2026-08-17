@@ -29,6 +29,7 @@ A Windows companion overlay for the packaged Codex desktop application.
 | 70% to 89% used | Remaining fill | Remaining, used, and reset | Amber | Calm warning |
 | 90% to 100% used | Remaining fill | Remaining, used, and reset | Red | Near-limit warning |
 | Codex inactive | Hidden | Hidden | N/A | Never float over other applications |
+| Manually hidden | Hidden | Hidden | N/A | Continue usage updates and expose Show overlay in the tray |
 | Reduced motion | Final value | Normal | Threshold colour | No looping or decorative motion |
 
 ## Must remain unchanged
