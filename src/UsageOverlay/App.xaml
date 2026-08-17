@@ -14,6 +14,7 @@
         <Color x:Key="OverlayCriticalColor">#FFE55A5A</Color>
         <Color x:Key="OverlayMenuHoverColor">#FF333333</Color>
         <Color x:Key="OverlayMenuCriticalHoverColor">#FF3B2929</Color>
+        <Color x:Key="SettingsPrimaryTextColor">#FF102419</Color>
 
         <SolidColorBrush x:Key="OverlaySurfaceBrush" Color="{StaticResource OverlaySurfaceColor}" />
         <SolidColorBrush x:Key="OverlaySurfaceRaisedBrush" Color="{StaticResource OverlaySurfaceRaisedColor}" />
@@ -24,6 +25,7 @@
         <SolidColorBrush x:Key="OverlayMenuHoverBrush" Color="{StaticResource OverlayMenuHoverColor}" />
         <SolidColorBrush x:Key="OverlayMenuCriticalHoverBrush" Color="{StaticResource OverlayMenuCriticalHoverColor}" />
         <SolidColorBrush x:Key="OverlayCriticalBrush" Color="{StaticResource OverlayCriticalColor}" />
+        <SolidColorBrush x:Key="SettingsPrimaryTextBrush" Color="{StaticResource SettingsPrimaryTextColor}" />
 
         <sys:Double x:Key="OverlayTextSmall">11</sys:Double>
         <sys:Double x:Key="OverlayTextBody">13</sys:Double>
@@ -44,11 +46,11 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ContextMenu">
-                        <Border Background="{StaticResource OverlayBorderBrush}"
+                        <Border Background="{DynamicResource OverlayBorderBrush}"
                                 CornerRadius="12"
                                 Padding="1"
                                 SnapsToDevicePixels="True">
-                            <Border Background="{StaticResource OverlaySurfaceBrush}"
+                            <Border Background="{DynamicResource OverlaySurfaceBrush}"
                                     CornerRadius="11"
                                     Padding="5">
                                 <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle" />
@@ -84,7 +86,7 @@
         </Style>
 
         <Style x:Key="OverlayMenuItemStyle" TargetType="MenuItem">
-            <Setter Property="Foreground" Value="{StaticResource OverlayTextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource OverlayTextBrush}" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="FontSize" Value="{StaticResource OverlayTextBody}" />
             <Setter Property="FontWeight" Value="Normal" />
@@ -106,14 +108,14 @@
                             <Trigger Property="IsHighlighted" Value="True">
                                 <Setter TargetName="ItemSurface"
                                         Property="Background"
-                                        Value="{StaticResource OverlayMenuHoverBrush}" />
+                                        Value="{DynamicResource OverlayMenuHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Foreground" Value="{StaticResource OverlayMutedBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource OverlayMutedBrush}" />
                                 <Setter Property="Opacity" Value="0.55" />
                             </Trigger>
                             <Trigger Property="Tag" Value="Destructive">
-                                <Setter Property="Foreground" Value="{StaticResource OverlayCriticalBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource OverlayCriticalBrush}" />
                             </Trigger>
                             <MultiTrigger>
                                 <MultiTrigger.Conditions>
@@ -122,7 +124,7 @@
                                 </MultiTrigger.Conditions>
                                 <Setter TargetName="ItemSurface"
                                         Property="Background"
-                                        Value="{StaticResource OverlayMenuCriticalHoverBrush}" />
+                                        Value="{DynamicResource OverlayMenuCriticalHoverBrush}" />
                             </MultiTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -133,7 +135,7 @@
         <Style x:Key="OverlayMenuSeparatorStyle" TargetType="Separator">
             <Setter Property="Height" Value="1" />
             <Setter Property="Margin" Value="8,4" />
-            <Setter Property="Background" Value="{StaticResource OverlayBorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource OverlayBorderBrush}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Separator">
@@ -165,13 +167,13 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="IconSurface" Property="Background" Value="{StaticResource OverlayMenuHoverBrush}" />
+                                <Setter TargetName="IconSurface" Property="Background" Value="{DynamicResource OverlayMenuHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="IconSurface" Property="Background" Value="#FF2E2E2E" />
+                                <Setter TargetName="IconSurface" Property="Background" Value="{DynamicResource SettingsButtonPressedBrush}" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="IconSurface" Property="BorderBrush" Value="#FF55C878" />
+                                <Setter TargetName="IconSurface" Property="BorderBrush" Value="{DynamicResource OverlayBorderBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

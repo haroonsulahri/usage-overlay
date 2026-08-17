@@ -1,5 +1,12 @@
 namespace CodexUsage.Core.Settings;
 
+public enum AppTheme
+{
+    System,
+    Dark,
+    Light
+}
+
 public enum HorizontalPlacement
 {
     RightEdge,
@@ -15,6 +22,8 @@ public enum PrimaryUsageDisplay
 
 public sealed record OverlaySettings
 {
+    public AppTheme Theme { get; init; } = AppTheme.System;
+
     public HorizontalPlacement Placement { get; init; } = HorizontalPlacement.RightEdge;
 
     public double HorizontalOffset { get; init; }
@@ -49,6 +58,10 @@ public sealed record OverlaySettings
 
     public OverlaySettings Normalize()
     {
+        var theme = Enum.IsDefined(Theme)
+            ? Theme
+            : AppTheme.System;
+
         var placement = Enum.IsDefined(Placement)
             ? Placement
             : HorizontalPlacement.RightEdge;
@@ -66,6 +79,7 @@ public sealed record OverlaySettings
 
         return this with
         {
+            Theme = theme,
             Placement = placement,
             HorizontalOffset = Math.Clamp(HorizontalOffset, -600, 600),
             VerticalOffset = Math.Clamp(VerticalOffset, -300, 600),

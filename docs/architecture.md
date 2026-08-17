@@ -64,9 +64,9 @@ The WPF tool window is topmost and non-activating. It can receive pointer input 
 %LOCALAPPDATA%\UsageOverlay\overlay.log
 ```
 
-Settings contain placement, offsets, fullscreen preference, and pause expiry. Logs contain redacted, truncated status and error messages.
+Settings contain theme, placement, offsets, fullscreen preference, and pause expiry. Logs contain redacted, truncated status and error messages.
 
-Additional settings control Codex-only visibility, monitor following, remaining-versus-used display, colour thresholds, animation, compact labels, CLI path, and polling interval. Existing settings files remain compatible because missing fields receive bounded defaults. On first launch, Usage Overlay imports settings from `%LOCALAPPDATA%\QuotaRail\settings.json` or the older `%LOCALAPPDATA%\CodexUsageOverlay\settings.json` location when no Usage Overlay settings file exists.
+Additional settings control Codex-only visibility, monitor following, System/Dark/Light appearance, remaining-versus-used display, colour thresholds, animation, compact labels, CLI path, and polling interval. Existing settings files remain compatible because missing fields receive bounded defaults. On first launch, Usage Overlay imports settings from `%LOCALAPPDATA%\QuotaRail\settings.json` or the older `%LOCALAPPDATA%\CodexUsageOverlay\settings.json` location when no Usage Overlay settings file exists.
 
 ## Failure handling
 

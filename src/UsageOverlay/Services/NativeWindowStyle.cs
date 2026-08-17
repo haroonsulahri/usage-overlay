@@ -24,8 +24,18 @@ public static class NativeWindowStyle
 
     public static void ApplyDarkTitleBar(Window window)
     {
+        ApplyTitleBarTheme(window, isDark: true);
+    }
+
+    public static void ApplyTitleBarTheme(Window window, bool isDark)
+    {
         var handle = new WindowInteropHelper(window).Handle;
-        var enabled = 1;
+        if (handle == IntPtr.Zero)
+        {
+            return;
+        }
+
+        var enabled = isDark ? 1 : 0;
         if (DwmSetWindowAttribute(handle, DwmUseImmersiveDarkMode, ref enabled, sizeof(int)) != 0)
         {
             _ = DwmSetWindowAttribute(handle, DwmUseImmersiveDarkModeLegacy, ref enabled, sizeof(int));

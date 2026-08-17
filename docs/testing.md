@@ -65,6 +65,9 @@ Recommended visual states:
 | Pause | Overlay hides for 15 minutes, then resumes automatically |
 | Fullscreen exclusion | Overlay hides only while Codex is fullscreen |
 | Reduced motion | Values update without animated interpolation |
+| System theme | Overlay follows Windows app-theme changes without restart |
+| Dark theme | Settings, rail, detail card, and menus use the dark palette |
+| Light theme | Settings, rail, detail card, and menus use the light palette with readable contrast |
 | App Server exit | Overlay reconnects after a bounded delay |
 | Settings Save | Validated values persist to JSON and apply immediately when safe |
 | Save hover | Primary action stays green and shows a clear light border |

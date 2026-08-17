@@ -75,6 +75,9 @@ public partial class MainWindow : Window
         _logger = logger;
         _settingsStore = new OverlaySettingsStore(logger);
         _settings = _settingsStore.Load();
+        ThemeManager.Instance.Initialize(_settings.Theme);
+        ThemeManager.Instance.ThemeApplied += ThemeManager_OnThemeApplied;
+
         _startupShortcutManager = new StartupShortcutManager(logger);
         _appServerClient = new AppServerClient(
             logger,
@@ -97,6 +100,7 @@ public partial class MainWindow : Window
 
         _applicationIcon = LoadApplicationIcon();
         _notifyIcon = CreateNotifyIcon();
+        UpdateTrayMenuTheme();
 
         if (_options.StartHidden)
         {
@@ -156,6 +160,7 @@ public partial class MainWindow : Window
         }
 
         _isClosing = true;
+        ThemeManager.Instance.ThemeApplied -= ThemeManager_OnThemeApplied;
         _windowTrackingTimer.Stop();
         _collapseTimer.Stop();
         NativeHotKey.Unregister(_windowHandle, EscapeHotKeyIdentifier);
@@ -810,6 +815,32 @@ public partial class MainWindow : Window
         return icon;
     }
 
+    private void UpdateTrayMenuTheme()
+    {
+        if (_notifyIcon.ContextMenuStrip is { } menu)
+        {
+            var isDark = ThemeManager.Instance.IsEffectiveDark;
+            menu.BackColor = isDark ? System.Drawing.Color.FromArgb(36, 36, 36) : System.Drawing.Color.FromArgb(255, 255, 255);
+            menu.ForeColor = isDark ? System.Drawing.Color.FromArgb(242, 242, 242) : System.Drawing.Color.FromArgb(24, 24, 27);
+            menu.Renderer = new System.Windows.Forms.ToolStripProfessionalRenderer(new OverlayMenuColorTable(isDark));
+            if (menu.Items.Count > 0 && menu.Items[^1] is System.Windows.Forms.ToolStripMenuItem exitItem)
+            {
+                exitItem.ForeColor = isDark
+                    ? System.Drawing.Color.FromArgb(229, 90, 90)
+                    : System.Drawing.Color.FromArgb(220, 38, 38);
+            }
+        }
+    }
+
+    private void ThemeManager_OnThemeApplied()
+    {
+        UpdateTrayMenuTheme();
+        if (_lastUsageSnapshot is not null)
+        {
+            ApplySnapshot(_lastUsageSnapshot);
+        }
+    }
+
     private static System.Drawing.Icon LoadApplicationIcon()
     {
         var executablePath = Environment.ProcessPath;
@@ -934,6 +965,8 @@ public partial class MainWindow : Window
     private void ApplySettingsFromWindow(OverlaySettings settings, bool startAutomatically)
     {
         _settings = settings.Normalize();
+        ThemeManager.Instance.ApplyTheme(_settings.Theme);
+        UpdateTrayMenuTheme();
         _ = _startupShortcutManager.SetEnabled(startAutomatically);
         _fixedPlacementBounds = _settings.FollowCodexAcrossMonitors ? null : _lastBounds;
         PersistSettings();

@@ -19,7 +19,8 @@ Built by [Haroone.com](https://haroone.com).
 - Supports drag-and-drop placement anywhere inside the Codex window.
 - Restores saved placement across restarts, resizes, and monitor changes.
 - Supports manual hide/show, 15-minute pause, fullscreen exclusion, and automatic startup.
-- Includes a native dark Settings window for visibility, position, appearance, and connection controls.
+- Includes a native Settings window for visibility, position, appearance, and connection controls.
+- Supports System, Dark, and Light themes, including live Windows theme changes in System mode.
 - Provides a close button and Escape shortcut for pinned usage details without exiting the app.
 - Uses a single running instance. Launching it again restores a hidden overlay.
 - Stores no credentials and sends no telemetry.
@@ -67,7 +68,7 @@ Display settings include left and right presets, custom placement, position nudg
 
 ## Settings
 
-The native Settings window uses explicit Save and Cancel controls. Safe display and appearance changes apply immediately; CLI path and refresh interval changes are saved for the next restart.
+The native Settings window uses explicit Save and Cancel controls. Theme previews and safe display changes apply immediately; CLI path and refresh interval changes are saved for the next restart. Choose System, Dark, or Light under Appearance.
 
 ![Native Usage Overlay Settings window](docs/images/settings.png)
 

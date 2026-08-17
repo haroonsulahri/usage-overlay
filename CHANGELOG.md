@@ -9,6 +9,7 @@ The project follows [Semantic Versioning](https://semver.org/).
 ### Added
 
 - Usage Overlay product identity and Haroone.com creator attribution
+- System, Dark, and Light themes with live Windows theme following
 - Live Codex quota rail driven by the documented App Server rate-limit methods
 - Remaining percentage, reset countdown, additional model limits, and threshold colours
 - Smooth GPU-safe animations with reduced-motion support

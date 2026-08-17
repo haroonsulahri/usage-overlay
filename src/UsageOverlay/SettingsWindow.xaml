@@ -10,9 +10,9 @@
         WindowStyle="None"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
-        Background="#FF171717"
-        Foreground="{StaticResource OverlayTextBrush}"
-        BorderBrush="{StaticResource OverlayBorderBrush}"
+        Background="{DynamicResource SettingsWindowBackgroundBrush}"
+        Foreground="{DynamicResource OverlayTextBrush}"
+        BorderBrush="{DynamicResource OverlayBorderBrush}"
         BorderThickness="1"
         Icon="Assets/UsageOverlay.ico"
         Loaded="Window_OnLoaded"
@@ -20,38 +20,38 @@
         KeyDown="Window_OnKeyDown">
     <Window.Resources>
         <Style x:Key="SettingsTextBoxStyle" TargetType="TextBox">
-            <Setter Property="Foreground" Value="{StaticResource OverlayTextBrush}" />
-            <Setter Property="Background" Value="{StaticResource OverlaySurfaceRaisedBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource OverlayBorderBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource OverlayTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource OverlaySurfaceRaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource OverlayBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="10,7" />
             <Setter Property="FontSize" Value="{StaticResource OverlayTextBody}" />
-            <Setter Property="CaretBrush" Value="{StaticResource OverlayTextBrush}" />
+            <Setter Property="CaretBrush" Value="{DynamicResource OverlayTextBrush}" />
             <Style.Triggers>
                 <Trigger Property="IsKeyboardFocused" Value="True">
-                    <Setter Property="BorderBrush" Value="#FF55C878" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource OverlayNormalBrush}" />
                 </Trigger>
             </Style.Triggers>
         </Style>
 
         <Style x:Key="SettingsCheckStyle" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{StaticResource OverlayTextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource OverlayTextBrush}" />
             <Setter Property="FontSize" Value="{StaticResource OverlayTextBody}" />
             <Setter Property="Margin" Value="0,7,0,0" />
             <Setter Property="Padding" Value="2" />
         </Style>
 
         <Style x:Key="SettingsRadioStyle" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="{StaticResource OverlayTextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource OverlayTextBrush}" />
             <Setter Property="FontSize" Value="{StaticResource OverlayTextBody}" />
             <Setter Property="Margin" Value="0,7,0,0" />
             <Setter Property="Padding" Value="2" />
         </Style>
 
         <Style x:Key="SettingsButtonStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="{StaticResource OverlayTextBrush}" />
-            <Setter Property="Background" Value="{StaticResource OverlaySurfaceRaisedBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource OverlayBorderBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource OverlayTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource OverlaySurfaceRaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource OverlayBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="13,8" />
             <Setter Property="FontSize" Value="{StaticResource OverlayTextBody}" />
@@ -70,13 +70,13 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ButtonSurface" Property="Background" Value="#FF343434" />
+                                <Setter TargetName="ButtonSurface" Property="Background" Value="{DynamicResource SettingsButtonHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="ButtonSurface" Property="Background" Value="#FF2E2E2E" />
+                                <Setter TargetName="ButtonSurface" Property="Background" Value="{DynamicResource SettingsButtonPressedBrush}" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="ButtonSurface" Property="BorderBrush" Value="#FF55C878" />
+                                <Setter TargetName="ButtonSurface" Property="BorderBrush" Value="{DynamicResource OverlayNormalBrush}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.45" />
@@ -88,17 +88,9 @@
         </Style>
 
         <Style x:Key="SettingsPrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource SettingsButtonStyle}">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <SolidColorBrush Color="{StaticResource OverlayNormalColor}" />
-                </Setter.Value>
-            </Setter>
-            <Setter Property="Foreground" Value="#FF102419" />
-            <Setter Property="BorderBrush">
-                <Setter.Value>
-                    <SolidColorBrush Color="{StaticResource OverlayNormalColor}" />
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Background" Value="{DynamicResource OverlayNormalBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource SettingsPrimaryTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource OverlayNormalBrush}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -112,14 +104,15 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ButtonSurface" Property="BorderBrush" Value="{StaticResource OverlayTextBrush}" />
+                                <Setter TargetName="ButtonSurface" Property="Opacity" Value="0.9" />
+                                <Setter TargetName="ButtonSurface" Property="BorderBrush" Value="{DynamicResource OverlayTextBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="ButtonSurface" Property="Opacity" Value="0.8" />
-                                <Setter TargetName="ButtonSurface" Property="BorderBrush" Value="{StaticResource OverlayTextBrush}" />
+                                <Setter TargetName="ButtonSurface" Property="Opacity" Value="0.75" />
+                                <Setter TargetName="ButtonSurface" Property="BorderBrush" Value="{DynamicResource OverlayTextBrush}" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="ButtonSurface" Property="BorderBrush" Value="{StaticResource OverlayTextBrush}" />
+                                <Setter TargetName="ButtonSurface" Property="BorderBrush" Value="{DynamicResource OverlayTextBrush}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.45" />
@@ -149,13 +142,13 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="TitleBarButtonSurface" Property="Background" Value="{StaticResource OverlayMenuHoverBrush}" />
+                                <Setter TargetName="TitleBarButtonSurface" Property="Background" Value="{DynamicResource OverlayMenuHoverBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="TitleBarButtonSurface" Property="Background" Value="{StaticResource OverlaySurfaceBrush}" />
+                                <Setter TargetName="TitleBarButtonSurface" Property="Background" Value="{DynamicResource OverlaySurfaceBrush}" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="TitleBarButtonSurface" Property="BorderBrush" Value="{StaticResource OverlayTextBrush}" />
+                                <Setter TargetName="TitleBarButtonSurface" Property="BorderBrush" Value="{DynamicResource OverlayTextBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -164,13 +157,13 @@
         </Style>
 
         <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource OverlayTextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource OverlayTextBrush}" />
             <Setter Property="FontSize" Value="{StaticResource OverlayTextValue}" />
             <Setter Property="FontWeight" Value="Medium" />
         </Style>
 
         <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource OverlayMutedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource OverlayMutedBrush}" />
             <Setter Property="FontSize" Value="{StaticResource OverlayTextSmall}" />
             <Setter Property="Margin" Value="0,10,0,5" />
         </Style>
@@ -185,8 +178,8 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0"
-                Background="{StaticResource OverlaySurfaceRaisedBrush}"
-                BorderBrush="{StaticResource OverlayBorderBrush}"
+                Background="{DynamicResource OverlaySurfaceRaisedBrush}"
+                BorderBrush="{DynamicResource OverlayBorderBrush}"
                 BorderThickness="0,0,0,1">
             <Grid MouseLeftButtonDown="TitleBar_OnMouseLeftButtonDown">
                 <Grid.ColumnDefinitions>
@@ -199,7 +192,7 @@
                 <TextBlock Grid.Column="1"
                            VerticalAlignment="Center"
                            Text="Usage Overlay Settings"
-                           Foreground="{StaticResource OverlayTextBrush}"
+                           Foreground="{DynamicResource OverlayTextBrush}"
                            FontSize="{StaticResource OverlayTextSmall}" />
                 <Button Grid.Column="2"
                         AutomationProperties.Name="Hide Settings"
@@ -209,7 +202,7 @@
                     <Path Width="12"
                           Height="12"
                           Data="M 2,7 L 10,7"
-                          Stroke="{StaticResource OverlayMutedBrush}"
+                          Stroke="{DynamicResource OverlayMutedBrush}"
                           StrokeThickness="1.25"
                           StrokeStartLineCap="Round"
                           StrokeEndLineCap="Round" />
@@ -222,7 +215,7 @@
                     <Path Width="12"
                           Height="12"
                           Data="M 2,2 L 10,10 M 10,2 L 2,10"
-                          Stroke="{StaticResource OverlayMutedBrush}"
+                          Stroke="{DynamicResource OverlayMutedBrush}"
                           StrokeThickness="1.25"
                           StrokeStartLineCap="Round"
                           StrokeEndLineCap="Round" />
@@ -230,15 +223,15 @@
             </Grid>
         </Border>
 
-        <Border Grid.Row="1" Padding="24,20" BorderBrush="{StaticResource OverlayBorderBrush}" BorderThickness="0,0,0,1">
+        <Border Grid.Row="1" Padding="24,20" BorderBrush="{DynamicResource OverlayBorderBrush}" BorderThickness="0,0,0,1">
             <StackPanel>
-                <TextBlock Text="Usage Overlay" FontSize="{StaticResource OverlayTextValue}" FontWeight="Medium" />
+                <TextBlock Text="Usage Overlay" FontSize="{StaticResource OverlayTextValue}" FontWeight="Medium" Foreground="{DynamicResource OverlayTextBrush}" />
                 <TextBlock Margin="0,5,0,0"
-                           Foreground="{StaticResource OverlayMutedBrush}"
+                           Foreground="{DynamicResource OverlayMutedBrush}"
                            FontSize="{StaticResource OverlayTextBody}">
                     <Run Text="Your Codex limits at a glance. Built by " />
                     <Hyperlink NavigateUri="https://haroone.com"
-                               Foreground="#FF55C878"
+                               Foreground="{DynamicResource OverlayNormalBrush}"
                                RequestNavigate="HarooneLink_OnRequestNavigate"
                                ToolTip="Open Haroone.com">
                         <Run Text="Haroone.com" />
@@ -252,8 +245,8 @@
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
             <StackPanel Margin="20,16,20,20">
-                <Border Margin="0,0,0,12" Padding="1" Background="{StaticResource OverlayBorderBrush}" CornerRadius="15">
-                    <Border Padding="18" Background="{StaticResource OverlaySurfaceBrush}" CornerRadius="14">
+                <Border Margin="0,0,0,12" Padding="1" Background="{DynamicResource OverlayBorderBrush}" CornerRadius="15">
+                    <Border Padding="18" Background="{DynamicResource OverlaySurfaceBrush}" CornerRadius="14">
                         <StackPanel>
                             <TextBlock Text="General" Style="{StaticResource SectionTitleStyle}" />
                             <CheckBox x:Name="StartAutomaticallyCheckBox"
@@ -263,13 +256,13 @@
                     </Border>
                 </Border>
 
-                <Border Margin="0,0,0,12" Padding="1" Background="{StaticResource OverlayBorderBrush}" CornerRadius="15">
-                    <Border Padding="18" Background="{StaticResource OverlaySurfaceBrush}" CornerRadius="14">
+                <Border Margin="0,0,0,12" Padding="1" Background="{DynamicResource OverlayBorderBrush}" CornerRadius="15">
+                    <Border Padding="18" Background="{DynamicResource OverlaySurfaceBrush}" CornerRadius="14">
                         <StackPanel>
                             <TextBlock Text="Visibility" Style="{StaticResource SectionTitleStyle}" />
                             <TextBlock Margin="0,6,0,2"
                                        Text="Choose when the usage rail appears."
-                                       Foreground="{StaticResource OverlayMutedBrush}"
+                                       Foreground="{DynamicResource OverlayMutedBrush}"
                                        FontSize="{StaticResource OverlayTextSmall}" />
                             <TextBlock Text="Show the rail" Style="{StaticResource FieldLabelStyle}" />
                             <StackPanel Orientation="Horizontal">
@@ -285,7 +278,7 @@
                             </StackPanel>
                             <TextBlock Margin="0,5,0,0"
                                        Text="Across Windows keeps the rail in its last position when you switch apps."
-                                       Foreground="{StaticResource OverlayMutedBrush}"
+                                       Foreground="{DynamicResource OverlayMutedBrush}"
                                        FontSize="{StaticResource OverlayTextSmall}" />
                             <CheckBox x:Name="HideFullscreenCheckBox"
                                       Content="Hide while Codex is fullscreen"
@@ -296,10 +289,10 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel>
-                                    <TextBlock Text="Pause the overlay" FontSize="{StaticResource OverlayTextBody}" />
+                                    <TextBlock Text="Pause the overlay" FontSize="{StaticResource OverlayTextBody}" Foreground="{DynamicResource OverlayTextBrush}" />
                                     <TextBlock x:Name="PauseStatusText"
                                                Margin="0,3,0,0"
-                                               Foreground="{StaticResource OverlayMutedBrush}"
+                                               Foreground="{DynamicResource OverlayMutedBrush}"
                                                FontSize="{StaticResource OverlayTextSmall}" />
                                 </StackPanel>
                                 <Button x:Name="PauseButton"
@@ -311,13 +304,13 @@
                     </Border>
                 </Border>
 
-                <Border Margin="0,0,0,12" Padding="1" Background="{StaticResource OverlayBorderBrush}" CornerRadius="15">
-                    <Border Padding="18" Background="{StaticResource OverlaySurfaceBrush}" CornerRadius="14">
+                <Border Margin="0,0,0,12" Padding="1" Background="{DynamicResource OverlayBorderBrush}" CornerRadius="15">
+                    <Border Padding="18" Background="{DynamicResource OverlaySurfaceBrush}" CornerRadius="14">
                         <StackPanel>
                             <TextBlock Text="Position" Style="{StaticResource SectionTitleStyle}" />
                             <TextBlock Margin="0,6,0,2"
                                        Text="Drag the rail where you want it, or snap it to an edge."
-                                       Foreground="{StaticResource OverlayMutedBrush}"
+                                       Foreground="{DynamicResource OverlayMutedBrush}"
                                        FontSize="{StaticResource OverlayTextSmall}" />
                             <StackPanel Orientation="Horizontal">
                                 <RadioButton x:Name="RightEdgeRadio"
@@ -368,7 +361,7 @@
                             </StackPanel>
                             <TextBlock x:Name="PositionOffsetText"
                                        Margin="0,7,0,0"
-                                       Foreground="{StaticResource OverlayMutedBrush}"
+                                       Foreground="{DynamicResource OverlayMutedBrush}"
                                        FontSize="{StaticResource OverlayTextSmall}" />
                             <CheckBox x:Name="FollowMonitorsCheckBox"
                                       Content="Follow Codex between monitors"
@@ -377,10 +370,30 @@
                     </Border>
                 </Border>
 
-                <Border Margin="0,0,0,12" Padding="1" Background="{StaticResource OverlayBorderBrush}" CornerRadius="15">
-                    <Border Padding="18" Background="{StaticResource OverlaySurfaceBrush}" CornerRadius="14">
+                <Border Margin="0,0,0,12" Padding="1" Background="{DynamicResource OverlayBorderBrush}" CornerRadius="15">
+                    <Border Padding="18" Background="{DynamicResource OverlaySurfaceBrush}" CornerRadius="14">
                         <StackPanel>
                             <TextBlock Text="Appearance" Style="{StaticResource SectionTitleStyle}" />
+                            <TextBlock Text="Theme" Style="{StaticResource FieldLabelStyle}" />
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="SystemThemeRadio"
+                                             GroupName="ThemeMode"
+                                             Content="System"
+                                             Style="{StaticResource SettingsRadioStyle}"
+                                             Click="ThemeRadio_OnClick" />
+                                <RadioButton x:Name="DarkThemeRadio"
+                                             Margin="18,7,0,0"
+                                             GroupName="ThemeMode"
+                                             Content="Dark"
+                                             Style="{StaticResource SettingsRadioStyle}"
+                                             Click="ThemeRadio_OnClick" />
+                                <RadioButton x:Name="LightThemeRadio"
+                                             Margin="18,7,0,0"
+                                             GroupName="ThemeMode"
+                                             Content="Light"
+                                             Style="{StaticResource SettingsRadioStyle}"
+                                             Click="ThemeRadio_OnClick" />
+                            </StackPanel>
                             <TextBlock Text="Main number" Style="{StaticResource FieldLabelStyle}" />
                             <StackPanel Orientation="Horizontal">
                                 <RadioButton x:Name="RemainingPrimaryRadio"
@@ -412,16 +425,16 @@
                                              Style="{StaticResource SettingsTextBoxStyle}" />
                                 </StackPanel>
                             </Grid>
-                            <Border Margin="0,12,0,2" Height="8" CornerRadius="4" Background="{StaticResource OverlayTrackBrush}">
+                            <Border Margin="0,12,0,2" Height="8" CornerRadius="4" Background="{DynamicResource OverlayTrackBrush}">
                                 <Grid ClipToBounds="True">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="7*" />
                                         <ColumnDefinition Width="2*" />
                                         <ColumnDefinition Width="1*" />
                                     </Grid.ColumnDefinitions>
-                                    <Border Background="#FF55C878" />
-                                    <Border Grid.Column="1" Background="#FFF0B45E" />
-                                    <Border Grid.Column="2" Background="#FFE55A5A" />
+                                    <Border Background="{DynamicResource OverlayNormalBrush}" />
+                                    <Border Grid.Column="1" Background="{DynamicResource OverlayWarningBrush}" />
+                                    <Border Grid.Column="2" Background="{DynamicResource OverlayCriticalBrush}" />
                                 </Grid>
                             </Border>
                             <CheckBox x:Name="AnimationsCheckBox"
@@ -429,7 +442,7 @@
                                       Style="{StaticResource SettingsCheckStyle}" />
                             <TextBlock Margin="22,3,0,0"
                                        Text="Windows may reduce motion for accessibility."
-                                       Foreground="{StaticResource OverlayMutedBrush}"
+                                       Foreground="{DynamicResource OverlayMutedBrush}"
                                        FontSize="{StaticResource OverlayTextSmall}" />
                             <CheckBox x:Name="CompactPercentageCheckBox"
                                       Content="Show the percentage below the rail"
@@ -438,8 +451,8 @@
                     </Border>
                 </Border>
 
-                <Border Padding="1" Background="{StaticResource OverlayBorderBrush}" CornerRadius="15">
-                    <Border Padding="18" Background="{StaticResource OverlaySurfaceBrush}" CornerRadius="14">
+                <Border Padding="1" Background="{DynamicResource OverlayBorderBrush}" CornerRadius="15">
+                    <Border Padding="18" Background="{DynamicResource OverlaySurfaceBrush}" CornerRadius="14">
                         <StackPanel>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -450,7 +463,7 @@
                                     <TextBlock Text="Connection &amp; diagnostics" Style="{StaticResource SectionTitleStyle}" />
                                     <TextBlock Margin="0,6,0,0"
                                                Text="Only needed if Usage Overlay cannot connect or update."
-                                               Foreground="{StaticResource OverlayMutedBrush}"
+                                               Foreground="{DynamicResource OverlayMutedBrush}"
                                                FontSize="{StaticResource OverlayTextSmall}" />
                                 </StackPanel>
                                 <Button x:Name="ConnectionToggleButton"
@@ -467,7 +480,7 @@
                                          Style="{StaticResource SettingsTextBoxStyle}" />
                                 <TextBlock x:Name="CodexCliStatusText"
                                            Margin="0,5,0,0"
-                                           Foreground="{StaticResource OverlayMutedBrush}"
+                                           Foreground="{DynamicResource OverlayMutedBrush}"
                                            FontSize="{StaticResource OverlayTextSmall}" />
                                 <TextBlock Text="Refresh every (15–3600 seconds)" Style="{StaticResource FieldLabelStyle}" />
                                 <TextBox x:Name="RefreshIntervalTextBox"
@@ -487,7 +500,7 @@
             </StackPanel>
         </ScrollViewer>
 
-        <Border Grid.Row="3" Padding="20,14" BorderBrush="{StaticResource OverlayBorderBrush}" BorderThickness="0,1,0,0">
+        <Border Grid.Row="3" Padding="20,14" BorderBrush="{DynamicResource OverlayBorderBrush}" BorderThickness="0,1,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -495,10 +508,10 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock x:Name="ValidationText"
-                               Foreground="{StaticResource OverlayCriticalBrush}"
+                               Foreground="{DynamicResource OverlayCriticalBrush}"
                                FontSize="{StaticResource OverlayTextSmall}" />
                     <TextBlock x:Name="SavedStatusText"
-                               Foreground="#FF55C878"
+                               Foreground="{DynamicResource OverlayNormalBrush}"
                                FontSize="{StaticResource OverlayTextSmall}" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal">

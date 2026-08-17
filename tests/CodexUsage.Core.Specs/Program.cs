@@ -16,6 +16,7 @@ var specs = new (string Name, Action Run)[]
     ("Resolves warning thresholds", ResolvesUsageLevels),
     ("Calculates remaining quota", CalculatesRemainingQuota),
     ("Normalizes persistent display settings", NormalizesDisplaySettings),
+    ("Normalizes theme settings and preserves defaults", NormalizesThemeSettings),
     ("Redacts secrets from diagnostic logs", RedactsDiagnosticSecrets),
     ("Loads legacy settings with new safe defaults", LoadsLegacySettings)
 };
@@ -184,6 +185,26 @@ static void NormalizesDisplaySettings()
     Assert(!settings.IsPaused(now.AddMinutes(16)), "Expected the expired pause to be inactive.");
 }
 
+static void NormalizesThemeSettings()
+{
+    var defaultSettings = new OverlaySettings().Normalize();
+    AssertEqual(AppTheme.System, defaultSettings.Theme);
+
+    var darkSettings = new OverlaySettings { Theme = AppTheme.Dark }.Normalize();
+    AssertEqual(AppTheme.Dark, darkSettings.Theme);
+
+    var lightSettings = new OverlaySettings { Theme = AppTheme.Light }.Normalize();
+    AssertEqual(AppTheme.Light, lightSettings.Theme);
+
+    var invalidThemeSettings = new OverlaySettings { Theme = (AppTheme)99 }.Normalize();
+    AssertEqual(AppTheme.System, invalidThemeSettings.Theme);
+
+    var serializedLight = JsonSerializer.Serialize(lightSettings);
+    var deserialized = JsonSerializer.Deserialize<OverlaySettings>(serializedLight)?.Normalize();
+    Assert(deserialized is not null, "Deserialized settings should not be null.");
+    AssertEqual(AppTheme.Light, deserialized!.Theme);
+}
+
 static void RedactsDiagnosticSecrets()
 {
     const string message =
@@ -213,7 +234,8 @@ static void LoadsLegacySettings()
 
     var settings = JsonSerializer.Deserialize<OverlaySettings>(legacyJson)?.Normalize();
     Assert(settings is not null, "Legacy settings failed to deserialize.");
-    Assert(settings!.ShowOnlyWhenCodexActive, "Codex-only visibility default was not preserved.");
+    AssertEqual(AppTheme.System, settings!.Theme);
+    Assert(settings.ShowOnlyWhenCodexActive, "Codex-only visibility default was not preserved.");
     Assert(settings.FollowCodexAcrossMonitors, "Monitor-following default was not preserved.");
     AssertEqual(PrimaryUsageDisplay.Remaining, settings.PrimaryDisplay);
     Assert(settings.AnimationsEnabled, "Animation default was not preserved.");

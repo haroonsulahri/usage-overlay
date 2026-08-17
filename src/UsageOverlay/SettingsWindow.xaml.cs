@@ -7,6 +7,7 @@ using System.Windows.Automation;
 using System.Windows.Input;
 using System.Windows.Navigation;
 using CodexUsage.Core.Settings;
+using UsageOverlay.Infrastructure;
 using UsageOverlay.Services;
 
 namespace UsageOverlay;
@@ -57,6 +58,9 @@ public partial class SettingsWindow : Window
         HideFullscreenCheckBox.IsChecked = _settings.HideInFullscreen;
         AnimationsCheckBox.IsChecked = _settings.AnimationsEnabled;
         CompactPercentageCheckBox.IsChecked = _settings.ShowCompactPercentage;
+        SystemThemeRadio.IsChecked = _settings.Theme == AppTheme.System;
+        DarkThemeRadio.IsChecked = _settings.Theme == AppTheme.Dark;
+        LightThemeRadio.IsChecked = _settings.Theme == AppTheme.Light;
         RemainingPrimaryRadio.IsChecked = _settings.PrimaryDisplay == PrimaryUsageDisplay.Remaining;
         UsedPrimaryRadio.IsChecked = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used;
         RightEdgeRadio.IsChecked = _settings.Placement == HorizontalPlacement.RightEdge;
@@ -68,6 +72,17 @@ public partial class SettingsWindow : Window
         RefreshIntervalTextBox.Text = _settings.RefreshIntervalSeconds.ToString(CultureInfo.InvariantCulture);
         UpdatePauseControls();
         UpdatePositionOffsetText();
+    }
+
+    private void ThemeRadio_OnClick(object sender, RoutedEventArgs eventArgs)
+    {
+        var theme = LightThemeRadio.IsChecked == true
+            ? AppTheme.Light
+            : DarkThemeRadio.IsChecked == true
+                ? AppTheme.Dark
+                : AppTheme.System;
+        ThemeManager.Instance.ApplyTheme(theme);
+        NativeWindowStyle.ApplyTitleBarTheme(this, ThemeManager.Instance.IsEffectiveDark);
     }
 
     private async void Window_OnLoaded(object sender, RoutedEventArgs eventArgs)
@@ -84,7 +99,7 @@ public partial class SettingsWindow : Window
 
     private void Window_OnSourceInitialized(object? sender, EventArgs eventArgs)
     {
-        NativeWindowStyle.ApplyDarkTitleBar(this);
+        NativeWindowStyle.ApplyTitleBarTheme(this, ThemeManager.Instance.IsEffectiveDark);
     }
 
     private void TitleBar_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs eventArgs)
@@ -121,7 +136,11 @@ public partial class SettingsWindow : Window
         Hide();
     }
 
-    private void CloseSettingsButton_OnClick(object sender, RoutedEventArgs eventArgs) => Close();
+    private void CloseSettingsButton_OnClick(object sender, RoutedEventArgs eventArgs)
+    {
+        ThemeManager.Instance.ApplyTheme(_settings.Theme);
+        Close();
+    }
 
     private void SaveButton_OnClick(object sender, RoutedEventArgs eventArgs)
     {
@@ -170,8 +189,15 @@ public partial class SettingsWindow : Window
             ? PrimaryUsageDisplay.Used
             : PrimaryUsageDisplay.Remaining;
 
+        var theme = LightThemeRadio.IsChecked == true
+            ? AppTheme.Light
+            : DarkThemeRadio.IsChecked == true
+                ? AppTheme.Dark
+                : AppTheme.System;
+
         var updated = (_settings with
         {
+            Theme = theme,
             Placement = placement,
             HorizontalOffset = _pendingHorizontalOffset,
             VerticalOffset = _pendingVerticalOffset,
@@ -199,7 +225,11 @@ public partial class SettingsWindow : Window
             : $"Saved at {DateTime.Now:t}.";
     }
 
-    private void CancelButton_OnClick(object sender, RoutedEventArgs eventArgs) => Close();
+    private void CancelButton_OnClick(object sender, RoutedEventArgs eventArgs)
+    {
+        ThemeManager.Instance.ApplyTheme(_settings.Theme);
+        Close();
+    }
 
     private void PauseButton_OnClick(object sender, RoutedEventArgs eventArgs)
     {
@@ -251,6 +281,8 @@ public partial class SettingsWindow : Window
         ValidationText.Text = string.Empty;
         SavedStatusText.Text = "Defaults are ready. Select Save to use them.";
         LoadControls();
+        ThemeManager.Instance.ApplyTheme(_settings.Theme);
+        NativeWindowStyle.ApplyTitleBarTheme(this, ThemeManager.Instance.IsEffectiveDark);
     }
 
     private void OpenLogsButton_OnClick(object sender, RoutedEventArgs eventArgs) => _openLogs();
@@ -287,6 +319,7 @@ public partial class SettingsWindow : Window
     {
         if (eventArgs.Key == Key.Escape)
         {
+            ThemeManager.Instance.ApplyTheme(_settings.Theme);
             Close();
             eventArgs.Handled = true;
             return;

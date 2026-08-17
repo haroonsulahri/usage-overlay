@@ -35,8 +35,8 @@
                 Margin="0,12,12,12"
                 Padding="14"
                 VerticalAlignment="Center"
-                Background="{StaticResource OverlaySurfaceBrush}"
-                BorderBrush="{StaticResource OverlayBorderBrush}"
+                Background="{DynamicResource OverlaySurfaceBrush}"
+                BorderBrush="{DynamicResource OverlayBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="12"
                 Opacity="0"
@@ -60,17 +60,17 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="Codex limits"
                                VerticalAlignment="Center"
-                               Foreground="{StaticResource OverlayTextBrush}"
+                               Foreground="{DynamicResource OverlayTextBrush}"
                                FontSize="{StaticResource OverlayTextBody}"
                                FontWeight="Medium" />
                     <StackPanel Grid.Column="1"
                                 Margin="0,0,10,0"
                                 Orientation="Horizontal"
                                 VerticalAlignment="Center">
-                        <Ellipse x:Name="LiveDot" Width="6" Height="6" Margin="0,0,5,0" Fill="#FF55C878" />
+                        <Ellipse x:Name="LiveDot" Width="6" Height="6" Margin="0,0,5,0" Fill="{DynamicResource OverlayNormalBrush}" />
                         <TextBlock x:Name="StatusText"
                                    Text="Connecting…"
-                                   Foreground="{StaticResource OverlayMutedBrush}"
+                                   Foreground="{DynamicResource OverlayMutedBrush}"
                                    FontSize="{StaticResource OverlayTextSmall}" />
                     </StackPanel>
                     <Button Grid.Column="2"
@@ -84,7 +84,7 @@
                               Height="10"
                               Data="M 0,0 L 10,10 M 10,0 L 0,10"
                               Stretch="Fill"
-                              Stroke="{StaticResource OverlayMutedBrush}"
+                              Stroke="{DynamicResource OverlayMutedBrush}"
                               StrokeThickness="1.25"
                               StrokeStartLineCap="Round"
                               StrokeEndLineCap="Round" />
@@ -94,27 +94,27 @@
                 <StackPanel Grid.Row="1" Margin="0,13,0,0">
                     <TextBlock x:Name="BucketNameText"
                                Text="Usage left"
-                               Foreground="{StaticResource OverlayMutedBrush}"
+                               Foreground="{DynamicResource OverlayMutedBrush}"
                                FontSize="{StaticResource OverlayTextSmall}" />
                     <TextBlock x:Name="UsagePercentText"
                                Margin="0,2,0,0"
                                Text="Checking…"
-                               Foreground="{StaticResource OverlayTextBrush}"
+                               Foreground="{DynamicResource OverlayTextBrush}"
                                FontSize="{StaticResource OverlayTextValue}"
                                FontWeight="Medium" />
                     <TextBlock x:Name="ResetText"
                                Margin="0,3,0,0"
                                Text="Waiting for the first update"
-                               Foreground="{StaticResource OverlayMutedBrush}"
+                               Foreground="{DynamicResource OverlayMutedBrush}"
                                FontSize="{StaticResource OverlayTextSmall}" />
                 </StackPanel>
 
-                <Border Grid.Row="2" Margin="0,12,0,0" Height="1" Background="{StaticResource OverlayBorderBrush}" />
+                <Border Grid.Row="2" Margin="0,12,0,0" Height="1" Background="{DynamicResource OverlayBorderBrush}" />
 
                 <Grid Grid.Row="3" Margin="0,10,0,0">
                     <TextBlock x:Name="AdditionalBucketText"
                                Text="No other limits"
-                               Foreground="{StaticResource OverlayMutedBrush}"
+                               Foreground="{DynamicResource OverlayMutedBrush}"
                                FontSize="{StaticResource OverlayTextSmall}"
                                TextTrimming="CharacterEllipsis" />
                 </Grid>
@@ -155,8 +155,8 @@
 
             <StackPanel Width="34" Margin="0,0,0,5" VerticalAlignment="Bottom">
                 <Grid Width="14" Height="138" HorizontalAlignment="Center">
-                    <Border Background="{StaticResource OverlayTrackBrush}"
-                            BorderBrush="{StaticResource OverlayBorderBrush}"
+                    <Border Background="{DynamicResource OverlayTrackBrush}"
+                            BorderBrush="{DynamicResource OverlayBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="7" />
                     <Border x:Name="UsageFill"
@@ -164,7 +164,7 @@
                             CornerRadius="5"
                             RenderTransformOrigin="0.5,1">
                         <Border.Background>
-                            <SolidColorBrush x:Name="UsageFillBrush" Color="{StaticResource OverlayNormalColor}" />
+                            <SolidColorBrush x:Name="UsageFillBrush" Color="{DynamicResource OverlayNormalColor}" />
                         </Border.Background>
                         <Border.RenderTransform>
                             <ScaleTransform x:Name="UsageFillScale" ScaleY="0" />
@@ -174,7 +174,7 @@
                             Width="8"
                             Height="2"
                             VerticalAlignment="Bottom"
-                            Background="#FFF2FFF5"
+                            Background="{DynamicResource LeadingCapBrush}"
                             CornerRadius="1"
                             Opacity="0"
                             RenderTransformOrigin="0.5,1">
@@ -188,7 +188,7 @@
                            HorizontalAlignment="Center"
                            Text="--"
                            TextAlignment="Center"
-                           Foreground="{StaticResource OverlayMutedBrush}"
+                           Foreground="{DynamicResource OverlayMutedBrush}"
                            FontSize="{StaticResource OverlayTextSmall}"
                            FontWeight="Medium" />
             </StackPanel>
