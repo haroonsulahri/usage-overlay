@@ -13,9 +13,9 @@ $projectRoot = [System.IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
 $artifactsRoot = [System.IO.Path]::GetFullPath((Join-Path $projectRoot 'artifacts'))
 $workRoot = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'release-work'))
 $publishDirectory = Join-Path $workRoot 'publish'
-$packageDirectory = Join-Path $workRoot 'QuotaRail'
+$packageDirectory = Join-Path $workRoot 'UsageOverlay'
 $releaseDirectory = Join-Path $artifactsRoot 'release'
-$overlayProject = Join-Path $projectRoot 'src\QuotaRail\QuotaRail.csproj'
+$overlayProject = Join-Path $projectRoot 'src\UsageOverlay\UsageOverlay.csproj'
 
 function Reset-ReleaseDirectory {
     param([Parameter(Mandatory)][string]$Path)
@@ -52,7 +52,7 @@ dotnet publish $overlayProject `
     -p:DebugType=None `
     -p:DebugSymbols=false
 
-Copy-Item -LiteralPath (Join-Path $publishDirectory 'QuotaRail.exe') -Destination $packageDirectory
+Copy-Item -LiteralPath (Join-Path $publishDirectory 'UsageOverlay.exe') -Destination $packageDirectory
 foreach ($document in @(
     'README.md',
     'LICENSE',
@@ -76,7 +76,7 @@ foreach ($script in @(
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot $script) -Destination (Join-Path $packageDirectory 'scripts')
 }
 
-$archiveName = "quotarail-for-codex-v$Version-win-x64.zip"
+$archiveName = "usage-overlay-v$Version-win-x64.zip"
 $archivePath = Join-Path $releaseDirectory $archiveName
 if (Test-Path -LiteralPath $archivePath) {
     Remove-Item -LiteralPath $archivePath -Force
@@ -88,7 +88,7 @@ $checksumPath = Join-Path $releaseDirectory 'SHA256SUMS.txt'
 Set-Content -LiteralPath $checksumPath -Value "$hash  $archiveName" -Encoding ascii
 
 $manifest = [ordered]@{
-    product = 'QuotaRail for Codex'
+    product = 'Usage Overlay'
     publisher = 'Haroone.com'
     version = $Version
     runtime = 'win-x64'

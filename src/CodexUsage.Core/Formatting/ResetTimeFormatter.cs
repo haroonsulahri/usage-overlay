@@ -6,13 +6,13 @@ public static class ResetTimeFormatter
     {
         if (resetsAt is null)
         {
-            return "Reset time unavailable";
+            return "Reset time isn’t available";
         }
 
         var remaining = resetsAt.Value - now;
         if (remaining <= TimeSpan.Zero)
         {
-            return "Resetting now";
+            return "Resets now";
         }
 
         if (remaining.TotalDays >= 1)
@@ -28,4 +28,3 @@ public static class ResetTimeFormatter
         return $"Resets in {Math.Max(1, (int)Math.Ceiling(remaining.TotalMinutes))}m";
     }
 }
-

@@ -4,9 +4,9 @@ using System.Text;
 using System.Text.Json;
 using CodexUsage.Core.Models;
 using CodexUsage.Core.Protocol;
-using QuotaRail.Infrastructure;
+using UsageOverlay.Infrastructure;
 
-namespace QuotaRail.Services;
+namespace UsageOverlay.Services;
 
 public sealed class AppServerClient : IAsyncDisposable
 {
@@ -50,7 +50,7 @@ public sealed class AppServerClient : IAsyncDisposable
             catch (Exception exception)
             {
                 _logger.Error($"App Server session failed: {exception.Message}");
-                StatusChanged?.Invoke(this, "Reconnecting");
+                StatusChanged?.Invoke(this, "Trying again…");
             }
             finally
             {
@@ -80,13 +80,13 @@ public sealed class AppServerClient : IAsyncDisposable
         var codexCommand = ResolveCodexCommand(_configuredCodexPath);
         if (codexCommand is null)
         {
-            StatusChanged?.Invoke(this, "Codex CLI not found");
+            StatusChanged?.Invoke(this, "CLI not found");
             throw new FileNotFoundException(
-                "Could not find codex.cmd or codex.exe on PATH. Set QUOTARAIL_CODEX_PATH to override.");
+                "Could not find codex.cmd or codex.exe on PATH. Set USAGE_OVERLAY_CODEX_PATH to override.");
         }
 
         _logger.Info($"Starting App Server through {codexCommand}.");
-        StatusChanged?.Invoke(this, "Connecting");
+        StatusChanged?.Invoke(this, "Connecting…");
         var process = StartProcess(codexCommand);
         _process = process;
         _initialized = false;
@@ -111,8 +111,8 @@ public sealed class AppServerClient : IAsyncDisposable
                 {
                     clientInfo = new
                     {
-                        name = "quotarail",
-                        title = "QuotaRail for Codex",
+                        name = "usage_overlay",
+                        title = "Usage Overlay",
                         version = "0.1.0"
                     }
                 }
@@ -173,7 +173,7 @@ public sealed class AppServerClient : IAsyncDisposable
                     ? messageElement.GetString() ?? "Unknown App Server error"
                     : "Unknown App Server error";
                 _logger.Error(message);
-                StatusChanged?.Invoke(this, message);
+                StatusChanged?.Invoke(this, "Couldn’t connect");
                 return;
             }
 
@@ -280,7 +280,12 @@ public sealed class AppServerClient : IAsyncDisposable
             return File.Exists(configuredPath) ? Path.GetFullPath(configuredPath) : null;
         }
 
-        var configured = Environment.GetEnvironmentVariable("QUOTARAIL_CODEX_PATH");
+        var configured = Environment.GetEnvironmentVariable("USAGE_OVERLAY_CODEX_PATH");
+        if (string.IsNullOrWhiteSpace(configured))
+        {
+            configured = Environment.GetEnvironmentVariable("QUOTARAIL_CODEX_PATH");
+        }
+
         if (string.IsNullOrWhiteSpace(configured))
         {
             configured = Environment.GetEnvironmentVariable("CODEX_USAGE_CODEX_PATH");

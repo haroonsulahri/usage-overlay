@@ -1,7 +1,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace QuotaRail.Infrastructure;
+namespace UsageOverlay.Infrastructure;
 
 public sealed class OverlayMenuColorTable : ProfessionalColorTable
 {

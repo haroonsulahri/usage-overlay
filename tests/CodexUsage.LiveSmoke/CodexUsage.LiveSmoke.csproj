@@ -5,6 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\QuotaRail\QuotaRail.csproj" />
+    <ProjectReference Include="..\..\src\UsageOverlay\UsageOverlay.csproj" />
   </ItemGroup>
 </Project>

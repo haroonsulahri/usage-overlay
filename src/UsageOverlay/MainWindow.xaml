@@ -1,10 +1,10 @@
-<Window x:Class="QuotaRail.MainWindow"
+<Window x:Class="UsageOverlay.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="QuotaRail for Codex"
+        Title="Usage Overlay"
         Width="34"
         Height="190"
         AllowsTransparency="True"
@@ -58,7 +58,7 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Codex usage"
+                    <TextBlock Text="Codex limits"
                                VerticalAlignment="Center"
                                Foreground="{StaticResource OverlayTextBrush}"
                                FontSize="{StaticResource OverlayTextBody}"
@@ -69,7 +69,7 @@
                                 VerticalAlignment="Center">
                         <Ellipse x:Name="LiveDot" Width="6" Height="6" Margin="0,0,5,0" Fill="#FF55C878" />
                         <TextBlock x:Name="StatusText"
-                                   Text="Connecting"
+                                   Text="Connecting…"
                                    Foreground="{StaticResource OverlayMutedBrush}"
                                    FontSize="{StaticResource OverlayTextSmall}" />
                     </StackPanel>
@@ -93,18 +93,18 @@
 
                 <StackPanel Grid.Row="1" Margin="0,13,0,0">
                     <TextBlock x:Name="BucketNameText"
-                               Text="Usage remaining"
+                               Text="Usage left"
                                Foreground="{StaticResource OverlayMutedBrush}"
                                FontSize="{StaticResource OverlayTextSmall}" />
                     <TextBlock x:Name="UsagePercentText"
                                Margin="0,2,0,0"
-                               Text="Checking..."
+                               Text="Checking…"
                                Foreground="{StaticResource OverlayTextBrush}"
                                FontSize="{StaticResource OverlayTextValue}"
                                FontWeight="Medium" />
                     <TextBlock x:Name="ResetText"
                                Margin="0,3,0,0"
-                               Text="Waiting for usage data"
+                               Text="Waiting for the first update"
                                Foreground="{StaticResource OverlayMutedBrush}"
                                FontSize="{StaticResource OverlayTextSmall}" />
                 </StackPanel>
@@ -113,7 +113,7 @@
 
                 <Grid Grid.Row="3" Margin="0,10,0,0">
                     <TextBlock x:Name="AdditionalBucketText"
-                               Text="No additional limits"
+                               Text="No other limits"
                                Foreground="{StaticResource OverlayMutedBrush}"
                                FontSize="{StaticResource OverlayTextSmall}"
                                TextTrimming="CharacterEllipsis" />
@@ -126,7 +126,7 @@
               Width="34"
               Background="#01000000"
               Cursor="SizeAll"
-              AutomationProperties.Name="QuotaRail usage meter"
+              AutomationProperties.Name="Usage Overlay meter"
               MouseLeftButtonDown="RailHitTarget_OnMouseLeftButtonDown"
               MouseLeftButtonUp="RailHitTarget_OnMouseLeftButtonUp"
               MouseMove="RailHitTarget_OnMouseMove"
@@ -134,19 +134,19 @@
             <Grid.ContextMenu>
                 <ContextMenu Style="{StaticResource OverlayContextMenuStyle}">
                     <MenuItem x:Name="RailVisibilityMenuItem"
-                              Header="Hide overlay"
+                              Header="Hide"
                               Style="{StaticResource OverlayMenuItemStyle}"
                               Click="VisibilityMenuItem_OnClick" />
                     <Separator Style="{StaticResource OverlayMenuSeparatorStyle}" />
-                    <MenuItem Header="Settings..."
+                    <MenuItem Header="Settings…"
                               Style="{StaticResource OverlayMenuItemStyle}"
                               Click="SettingsMenuItem_OnClick" />
                     <Separator Style="{StaticResource OverlayMenuSeparatorStyle}" />
-                    <MenuItem Header="Refresh now"
+                    <MenuItem Header="Refresh"
                               Style="{StaticResource OverlayMenuItemStyle}"
                               Click="RefreshMenuItem_OnClick" />
                     <Separator Style="{StaticResource OverlayMenuSeparatorStyle}" />
-                    <MenuItem Header="Exit"
+                    <MenuItem Header="Quit"
                               Tag="Destructive"
                               Style="{StaticResource OverlayMenuItemStyle}"
                               Click="ExitMenuItem_OnClick" />

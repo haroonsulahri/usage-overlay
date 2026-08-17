@@ -2,17 +2,17 @@ using System.Runtime.InteropServices;
 using System.Globalization;
 using System.IO;
 
-namespace QuotaRail.Infrastructure;
+namespace UsageOverlay.Infrastructure;
 
 public sealed class StartupShortcutManager
 {
-    private const string ShortcutName = "QuotaRail for Codex.lnk";
-    private const string LegacyShortcutName = "Codex Usage Overlay.lnk";
+    private const string ShortcutName = "Usage Overlay.lnk";
+    private static readonly string[] LegacyShortcutNames = ["QuotaRail for Codex.lnk", "Codex Usage Overlay.lnk"];
 
     private readonly AppLogger _logger;
     private readonly string _executablePath;
     private readonly string _shortcutPath;
-    private readonly string _legacyShortcutPath;
+    private readonly string[] _legacyShortcutPaths;
 
     public StartupShortcutManager(AppLogger logger)
     {
@@ -20,17 +20,19 @@ public sealed class StartupShortcutManager
         _executablePath = Environment.ProcessPath ?? string.Empty;
         var startupDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
         _shortcutPath = System.IO.Path.Combine(startupDirectory, ShortcutName);
-        _legacyShortcutPath = System.IO.Path.Combine(startupDirectory, LegacyShortcutName);
+        _legacyShortcutPaths = LegacyShortcutNames
+            .Select(name => System.IO.Path.Combine(startupDirectory, name))
+            .ToArray();
     }
 
     public bool IsSupported =>
         !string.IsNullOrWhiteSpace(_executablePath) &&
         string.Equals(
             System.IO.Path.GetFileName(_executablePath),
-            "QuotaRail.exe",
+            "UsageOverlay.exe",
             StringComparison.OrdinalIgnoreCase);
 
-    public bool IsEnabled => File.Exists(_shortcutPath) || File.Exists(_legacyShortcutPath);
+    public bool IsEnabled => File.Exists(_shortcutPath) || _legacyShortcutPaths.Any(File.Exists);
 
     public bool SetEnabled(bool enabled)
     {
@@ -45,7 +47,7 @@ public sealed class StartupShortcutManager
             if (enabled)
             {
                 CreateShortcut();
-                RemoveLegacyShortcut();
+                RemoveLegacyShortcuts();
             }
             else
             {
@@ -54,7 +56,7 @@ public sealed class StartupShortcutManager
                     File.Delete(_shortcutPath);
                 }
 
-                RemoveLegacyShortcut();
+                RemoveLegacyShortcuts();
             }
 
             _logger.Info($"Automatic startup {(enabled ? "enabled" : "disabled")}.");
@@ -112,7 +114,7 @@ public sealed class StartupShortcutManager
                 System.Reflection.BindingFlags.SetProperty,
                 null,
                 shortcut,
-                new object[] { "Start QuotaRail for Codex automatically" },
+                new object[] { "Start Usage Overlay with Windows" },
                 CultureInfo.InvariantCulture);
             shortcutType.InvokeMember(
                 "Save",
@@ -136,11 +138,14 @@ public sealed class StartupShortcutManager
         }
     }
 
-    private void RemoveLegacyShortcut()
+    private void RemoveLegacyShortcuts()
     {
-        if (File.Exists(_legacyShortcutPath))
+        foreach (var legacyShortcutPath in _legacyShortcutPaths)
         {
-            File.Delete(_legacyShortcutPath);
+            if (File.Exists(legacyShortcutPath))
+            {
+                File.Delete(legacyShortcutPath);
+            }
         }
     }
 }

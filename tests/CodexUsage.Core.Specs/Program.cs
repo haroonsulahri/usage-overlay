@@ -133,7 +133,7 @@ static void FormatsResetCountdown()
     var now = new DateTimeOffset(2026, 8, 17, 12, 0, 0, TimeSpan.Zero);
     AssertEqual("Resets in 3d 2h", ResetTimeFormatter.Format(now.AddDays(3).AddHours(2), now));
     AssertEqual("Resets in 45m", ResetTimeFormatter.Format(now.AddMinutes(45), now));
-    AssertEqual("Resetting now", ResetTimeFormatter.Format(now.AddSeconds(-1), now));
+    AssertEqual("Resets now", ResetTimeFormatter.Format(now.AddSeconds(-1), now));
 }
 
 static void ResolvesUsageLevels()

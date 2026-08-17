@@ -2,7 +2,7 @@ using System.Text.Json;
 using System.IO;
 using CodexUsage.Core.Settings;
 
-namespace QuotaRail.Infrastructure;
+namespace UsageOverlay.Infrastructure;
 
 public sealed class OverlaySettingsStore
 {
@@ -13,7 +13,7 @@ public sealed class OverlaySettingsStore
 
     private readonly AppLogger _logger;
     private readonly string _path;
-    private readonly string _legacyPath;
+    private readonly string[] _legacyPaths;
 
     public OverlaySettingsStore(AppLogger logger)
     {
@@ -22,18 +22,23 @@ public sealed class OverlaySettingsStore
                         throw new InvalidOperationException("The application log path has no directory.");
         _path = System.IO.Path.Combine(directory, "settings.json");
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        _legacyPath = System.IO.Path.Combine(localAppData, "CodexUsageOverlay", "settings.json");
+        _legacyPaths =
+        [
+            System.IO.Path.Combine(localAppData, "QuotaRail", "settings.json"),
+            System.IO.Path.Combine(localAppData, "CodexUsageOverlay", "settings.json")
+        ];
     }
 
     public string Path => _path;
 
     public OverlaySettings Load()
     {
-        if (!File.Exists(_path) && File.Exists(_legacyPath))
+        var legacyPath = _legacyPaths.FirstOrDefault(File.Exists);
+        if (!File.Exists(_path) && legacyPath is not null)
         {
             try
             {
-                var legacyJson = File.ReadAllText(_legacyPath);
+                var legacyJson = File.ReadAllText(legacyPath);
                 var migrated = (JsonSerializer.Deserialize<OverlaySettings>(legacyJson) ?? new OverlaySettings()).Normalize();
                 Save(migrated);
                 if (File.Exists(_path))

@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace QuotaRail.Services;
+namespace UsageOverlay.Services;
 
 public sealed class CodexWindowLocator
 {

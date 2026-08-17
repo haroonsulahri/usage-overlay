@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 
-namespace QuotaRail.Services;
+namespace UsageOverlay.Services;
 
 public static class NativeWindowStyle
 {

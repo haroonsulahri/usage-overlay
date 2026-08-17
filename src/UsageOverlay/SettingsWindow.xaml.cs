@@ -6,9 +6,9 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Navigation;
 using CodexUsage.Core.Settings;
-using QuotaRail.Services;
+using UsageOverlay.Services;
 
-namespace QuotaRail;
+namespace UsageOverlay;
 
 public partial class SettingsWindow : Window
 {
@@ -85,14 +85,14 @@ public partial class SettingsWindow : Window
         if (!TryReadDouble(WarningThresholdTextBox.Text, out var warningThreshold) ||
             !TryReadDouble(CriticalThresholdTextBox.Text, out var criticalThreshold))
         {
-            ValidationText.Text = "Enter valid numeric colour thresholds.";
+            ValidationText.Text = "Enter numbers for both colour thresholds.";
             WarningThresholdTextBox.Focus();
             return;
         }
 
         if (warningThreshold < 0 || criticalThreshold > 100 || warningThreshold >= criticalThreshold)
         {
-            ValidationText.Text = "Amber must be lower than red, within 0–100%.";
+            ValidationText.Text = "Set amber below red. Both values must be between 0 and 100.";
             WarningThresholdTextBox.Focus();
             return;
         }
@@ -100,7 +100,7 @@ public partial class SettingsWindow : Window
         if (!int.TryParse(RefreshIntervalTextBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var interval) ||
             interval is < 15 or > 3_600)
         {
-            ValidationText.Text = "Refresh interval must be between 15 and 3600 seconds.";
+            ValidationText.Text = "Choose a refresh time between 15 and 3600 seconds.";
             RefreshIntervalTextBox.Focus();
             return;
         }
@@ -108,7 +108,7 @@ public partial class SettingsWindow : Window
         var cliPath = CodexCliPathTextBox.Text.Trim();
         if (cliPath.Length > 0 && !File.Exists(cliPath))
         {
-            ValidationText.Text = "The configured Codex CLI path does not exist.";
+            ValidationText.Text = "We couldn’t find the Codex CLI at that path.";
             CodexCliPathTextBox.Focus();
             return;
         }
@@ -147,7 +147,7 @@ public partial class SettingsWindow : Window
         _saveSettings(updated, _startAutomatically);
         _settings = updated;
         SavedStatusText.Text = requiresRestart
-            ? "Saved. Restart the overlay to apply CLI or refresh changes."
+            ? "Saved. Restart Usage Overlay to use the new CLI path or refresh time."
             : $"Saved at {DateTime.Now:t}.";
     }
 
@@ -201,7 +201,7 @@ public partial class SettingsWindow : Window
         _pendingHorizontalOffset = 0;
         _pendingVerticalOffset = 0;
         ValidationText.Text = string.Empty;
-        SavedStatusText.Text = "Defaults loaded. Select Save to apply them.";
+        SavedStatusText.Text = "Defaults are ready. Select Save to use them.";
         LoadControls();
     }
 
@@ -215,7 +215,7 @@ public partial class SettingsWindow : Window
         }
         catch (Exception exception) when (exception is Win32Exception or InvalidOperationException)
         {
-            ValidationText.Text = "Could not open Haroone.com in the default browser.";
+            ValidationText.Text = "We couldn’t open Haroone.com in your browser.";
         }
 
         eventArgs.Handled = true;
@@ -249,14 +249,14 @@ public partial class SettingsWindow : Window
         else
         {
             PauseButton.Content = "Pause 15 min";
-            PauseStatusText.Text = "Overlay is active when visibility rules allow it.";
+            PauseStatusText.Text = "Usage Overlay is running.";
         }
     }
 
     private void UpdatePositionOffsetText()
     {
         PositionOffsetText.Text =
-            $"Pending offsets: X {_pendingHorizontalOffset:+0;-0;0}px, " +
+            $"Position offset: X {_pendingHorizontalOffset:+0;-0;0}px, " +
             $"Y {_pendingVerticalOffset:+0;-0;0}px";
     }
 

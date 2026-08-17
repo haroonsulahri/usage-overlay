@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace QuotaRail.Services;
+namespace UsageOverlay.Services;
 
 public static class NativeHotKey
 {

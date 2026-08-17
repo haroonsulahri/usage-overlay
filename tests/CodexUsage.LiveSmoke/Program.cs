@@ -1,6 +1,6 @@
 using CodexUsage.Core.Models;
-using QuotaRail.Infrastructure;
-using QuotaRail.Services;
+using UsageOverlay.Infrastructure;
+using UsageOverlay.Services;
 
 var logger = new AppLogger();
 await using var client = new AppServerClient(logger);

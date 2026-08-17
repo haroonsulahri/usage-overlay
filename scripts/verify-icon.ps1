@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$iconPath = Join-Path $projectRoot 'src\QuotaRail\Assets\QuotaRail.ico'
+$iconPath = Join-Path $projectRoot 'src\UsageOverlay\Assets\UsageOverlay.ico'
 if (-not (Test-Path -LiteralPath $iconPath)) {
     throw "Icon file not found: $iconPath"
 }

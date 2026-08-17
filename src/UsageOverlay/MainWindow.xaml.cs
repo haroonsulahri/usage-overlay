@@ -10,10 +10,10 @@ using CodexUsage.Core;
 using CodexUsage.Core.Formatting;
 using CodexUsage.Core.Models;
 using CodexUsage.Core.Settings;
-using QuotaRail.Infrastructure;
-using QuotaRail.Services;
+using UsageOverlay.Infrastructure;
+using UsageOverlay.Services;
 
-namespace QuotaRail;
+namespace UsageOverlay;
 
 [SuppressMessage(
     "Design",
@@ -638,14 +638,14 @@ public partial class MainWindow : Window
         var showingUsed = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used;
         var primaryPercent = showingUsed ? usedPercent : remainingPercent;
         var secondaryPercent = showingUsed ? remainingPercent : usedPercent;
-        var primaryLabel = showingUsed ? "used" : "remaining";
+        var primaryLabel = showingUsed ? "used" : "left";
         var secondaryLabel = showingUsed ? "left" : "used";
         BucketNameText.Text = $"{primary.DisplayName} {primaryLabel}";
         ResetText.Text =
             $"{Math.Round(secondaryPercent)}% {secondaryLabel}  ·  " +
             ResetTimeFormatter.Format(primary.Primary.ResetsAt, DateTimeOffset.Now);
         AdditionalBucketText.Text = snapshot.Additional.Count == 0
-            ? "No additional limits"
+            ? "No other limits"
             : FormatAdditional(snapshot.Additional[0]);
 
         RailRemainingText.Visibility = _settings.ShowCompactPercentage
@@ -654,7 +654,7 @@ public partial class MainWindow : Window
         AnimateUsageValue(primaryPercent, usedPercent);
         AutomationProperties.SetName(
             RailHitTarget,
-            $"Codex usage {Math.Round(primaryPercent)} percent {primaryLabel}. {ResetText.Text}");
+            $"Codex limit: {Math.Round(primaryPercent)} percent {primaryLabel}. {ResetText.Text}");
     }
 
     private void AnimateUsageValue(double displayPercentage, double usedPercentage)
@@ -758,16 +758,16 @@ public partial class MainWindow : Window
             Padding = new System.Windows.Forms.Padding(6),
             Renderer = new System.Windows.Forms.ToolStripProfessionalRenderer(new OverlayMenuColorTable())
         };
-        _trayVisibilityMenuItem = new System.Windows.Forms.ToolStripMenuItem("Hide overlay");
+        _trayVisibilityMenuItem = new System.Windows.Forms.ToolStripMenuItem("Hide");
         _trayVisibilityMenuItem.Click += (_, _) => Dispatcher.Invoke(ToggleManualVisibility);
         menu.Items.Add(_trayVisibilityMenuItem);
-        menu.Items.Add("Settings...", null, (_, _) => Dispatcher.Invoke(ShowSettings));
+        menu.Items.Add("Settings…", null, (_, _) => Dispatcher.Invoke(ShowSettings));
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
-        menu.Items.Add("Refresh now", null, (_, _) => _ = _appServerClient.RefreshAsync());
-        menu.Items.Add("Open log", null, (_, _) => OpenLog());
+        menu.Items.Add("Refresh", null, (_, _) => _ = _appServerClient.RefreshAsync());
+        menu.Items.Add("Open log file", null, (_, _) => OpenLog());
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         var exitItem = menu.Items.Add(
-            "Exit",
+            "Quit",
             null,
             (_, _) => Dispatcher.Invoke(System.Windows.Application.Current.Shutdown));
         exitItem.ForeColor = System.Drawing.Color.FromArgb(229, 90, 90);
@@ -775,7 +775,7 @@ public partial class MainWindow : Window
 
         var icon = new System.Windows.Forms.NotifyIcon
         {
-            Text = "QuotaRail for Codex",
+            Text = "Usage Overlay",
             Icon = _applicationIcon,
             ContextMenuStrip = menu,
             Visible = true
@@ -873,8 +873,8 @@ public partial class MainWindow : Window
 
         var resolvedCliPath = AppServerClient.ResolveCodexCommand(_settings.CodexCliPath);
         var cliStatus = resolvedCliPath is null
-            ? $"Codex CLI not found. App Server status: {_appServerStatus}."
-            : $"Codex CLI found. App Server status: {_appServerStatus}.";
+            ? $"Codex CLI wasn’t found. Connection: {_appServerStatus}."
+            : $"Codex CLI is ready. Connection: {_appServerStatus}.";
         var window = new SettingsWindow(
             _settings,
             _startupShortcutManager.IsEnabled,
@@ -918,7 +918,7 @@ public partial class MainWindow : Window
 
     private void UpdateVisibilityMenuLabels()
     {
-        var label = _isManuallyHidden ? "Show overlay" : "Hide overlay";
+        var label = _isManuallyHidden ? "Show" : "Hide";
         _trayVisibilityMenuItem.Text = label;
         RailVisibilityMenuItem.Header = label;
     }

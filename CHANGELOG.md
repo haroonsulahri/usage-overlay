@@ -8,7 +8,7 @@ The project follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- QuotaRail for Codex product identity and Haroone.com creator attribution
+- Usage Overlay product identity and Haroone.com creator attribution
 - Live Codex quota rail driven by the documented App Server rate-limit methods
 - Remaining percentage, reset countdown, additional model limits, and threshold colours
 - Smooth GPU-safe animations with reduced-motion support
@@ -23,3 +23,11 @@ The project follows [Semantic Versioning](https://semver.org/).
 - Dependency-free specifications and authenticated live smoke test
 - Redacted local diagnostic logging
 - Windows release packaging with SHA-256 checksums
+
+### Changed
+
+- Reworked in-app labels, status messages, validation, and settings copy for clearer everyday language
+
+### Fixed
+
+- Kept the primary Save action green on hover, with clear hover, pressed, focus, and disabled states

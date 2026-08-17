@@ -1,6 +1,6 @@
 # Privacy
 
-QuotaRail for Codex is designed to keep its data surface narrow.
+Usage Overlay is designed to keep its data surface narrow.
 
 ## Data read
 
@@ -16,14 +16,14 @@ It does not request or inspect prompts, responses, files, repository content, br
 
 ## Data stored
 
-Two local files may be created under `%LOCALAPPDATA%\QuotaRail`:
+Two local files may be created under `%LOCALAPPDATA%\UsageOverlay`:
 
 - `settings.json` stores display preferences.
 - `overlay.log` stores redacted and truncated diagnostic messages.
 
 Neither file is uploaded by this application.
 
-For backward compatibility, the first branded launch may read the previous `%LOCALAPPDATA%\CodexUsageOverlay\settings.json` file and copy its normalized settings into the QuotaRail directory. The previous file is not deleted.
+For backward compatibility, the first launch may read `%LOCALAPPDATA%\QuotaRail\settings.json` or the older `%LOCALAPPDATA%\CodexUsageOverlay\settings.json` file and copy its normalized settings into the Usage Overlay directory. Previous files are not deleted.
 
 ## Authentication
 

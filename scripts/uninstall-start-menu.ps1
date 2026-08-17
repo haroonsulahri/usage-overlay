@@ -2,6 +2,7 @@ $ErrorActionPreference = 'Stop'
 
 $programsDirectory = [Environment]::GetFolderPath([Environment+SpecialFolder]::Programs)
 $shortcutPaths = @(
+    (Join-Path $programsDirectory 'Usage Overlay.lnk'),
     (Join-Path $programsDirectory 'QuotaRail for Codex.lnk'),
     (Join-Path $programsDirectory 'Codex Usage Overlay.lnk')
 )
@@ -16,5 +17,5 @@ foreach ($shortcutPath in $shortcutPaths) {
 }
 
 if (-not $removed) {
-    Write-Host 'QuotaRail for Codex Start-menu shortcut is not installed.'
+    Write-Host 'Usage Overlay Start-menu shortcut is not installed.'
 }

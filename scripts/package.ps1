@@ -2,13 +2,18 @@ $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$overlayProject = Join-Path $projectRoot 'src\QuotaRail\QuotaRail.csproj'
+$overlayProject = Join-Path $projectRoot 'src\UsageOverlay\UsageOverlay.csproj'
 $outputDirectory = Join-Path $projectRoot 'artifacts\win-x64'
-$legacyExecutable = Join-Path $outputDirectory 'CodexUsageOverlay.exe'
+$legacyExecutables = @(
+    (Join-Path $outputDirectory 'QuotaRail.exe'),
+    (Join-Path $outputDirectory 'CodexUsageOverlay.exe')
+)
 
 & (Join-Path $PSScriptRoot 'build.ps1')
-if (Test-Path -LiteralPath $legacyExecutable) {
-    Remove-Item -LiteralPath $legacyExecutable -Force
+foreach ($legacyExecutable in $legacyExecutables) {
+    if (Test-Path -LiteralPath $legacyExecutable) {
+        Remove-Item -LiteralPath $legacyExecutable -Force
+    }
 }
 dotnet publish $overlayProject `
     --configuration Release `

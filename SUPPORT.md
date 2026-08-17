@@ -4,7 +4,7 @@
 
 Use repository Discussions when available. Otherwise, open a support issue with:
 
-- QuotaRail version
+- Usage Overlay version
 - Windows version
 - Codex CLI version from `codex --version`
 - Whether Codex CLI is signed in with ChatGPT-backed authentication
@@ -19,7 +19,7 @@ Use the bug report template. Include the smallest reproducible case and a screen
 Logs are stored at:
 
 ```text
-%LOCALAPPDATA%\QuotaRail\overlay.log
+%LOCALAPPDATA%\UsageOverlay\overlay.log
 ```
 
 The application redacts common secret formats, but you should still review logs before sharing them publicly.

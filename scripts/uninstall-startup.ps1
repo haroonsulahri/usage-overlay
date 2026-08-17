@@ -2,6 +2,7 @@ $ErrorActionPreference = 'Stop'
 
 $startupDirectory = [Environment]::GetFolderPath([Environment+SpecialFolder]::Startup)
 $shortcutPaths = @(
+    (Join-Path $startupDirectory 'Usage Overlay.lnk'),
     (Join-Path $startupDirectory 'QuotaRail for Codex.lnk'),
     (Join-Path $startupDirectory 'Codex Usage Overlay.lnk')
 )
@@ -16,5 +17,5 @@ foreach ($shortcutPath in $shortcutPaths) {
 }
 
 if (-not $removed) {
-    Write-Host 'QuotaRail for Codex automatic startup is not enabled.'
+    Write-Host 'Usage Overlay automatic startup is not enabled.'
 }

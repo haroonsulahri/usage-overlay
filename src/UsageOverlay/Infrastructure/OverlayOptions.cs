@@ -1,4 +1,4 @@
-namespace QuotaRail.Infrastructure;
+namespace UsageOverlay.Infrastructure;
 
 public sealed record OverlayOptions(
     double? DemoPercent,

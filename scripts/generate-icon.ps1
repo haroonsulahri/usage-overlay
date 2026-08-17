@@ -3,8 +3,8 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$outputDirectory = Join-Path $projectRoot 'src\QuotaRail\Assets'
-$outputPath = Join-Path $outputDirectory 'QuotaRail.ico'
+$outputDirectory = Join-Path $projectRoot 'src\UsageOverlay\Assets'
+$outputPath = Join-Path $outputDirectory 'UsageOverlay.ico'
 [void](New-Item -ItemType Directory -Path $outputDirectory -Force)
 
 function New-RoundedRectanglePath {

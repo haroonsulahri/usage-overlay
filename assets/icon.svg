@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title description">
-  <title id="title">QuotaRail icon</title>
+  <title id="title">Usage Overlay icon</title>
   <desc id="description">A dark rounded square containing a slim vertical usage rail with green and amber fill.</desc>
   <defs>
     <linearGradient id="usage-fill" x1="0" y1="0" x2="0" y2="1">

@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve QuotaRail for Codex. Small, focused changes are easiest to review and safest for a desktop companion that handles account metadata.
+Thanks for helping improve Usage Overlay. Small, focused changes are easiest to review and safest for a desktop companion that handles account metadata.
 
 ## Before opening an issue
 
@@ -28,7 +28,7 @@ Run the local quality gate:
 Preview the UI without account access:
 
 ```powershell
-dotnet run --project .\src\QuotaRail\QuotaRail.csproj `
+dotnet run --project .\src\UsageOverlay\UsageOverlay.csproj `
     --configuration Release -- --demo=75 --expanded
 ```
 

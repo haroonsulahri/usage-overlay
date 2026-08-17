@@ -29,7 +29,7 @@ The smoke test starts App Server, waits up to 20 seconds for a real rate-limit s
 Demo mode does not start App Server:
 
 ```powershell
-dotnet run --project .\src\QuotaRail\QuotaRail.csproj `
+dotnet run --project .\src\UsageOverlay\UsageOverlay.csproj `
     --configuration Release -- --demo=75 --expanded
 ```
 
@@ -60,6 +60,7 @@ Recommended visual states:
 | Reduced motion | Values update without animated interpolation |
 | App Server exit | Overlay reconnects after a bounded delay |
 | Settings Save | Validated values persist to JSON and apply immediately when safe |
+| Save hover | Primary action stays green and shows a clear light border |
 | Settings Cancel | Unsaved changes are discarded |
 | Second launch | Existing process receives the show signal; no duplicate remains |
 
