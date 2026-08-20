@@ -56,6 +56,7 @@ public partial class MainWindow : Window
     private HwndSource? _windowSource;
     private IntPtr _windowHandle;
     private string _appServerStatus = "Connecting";
+    private bool _hasCurrentUsage;
     private bool _isExpanded;
     private bool _isPinned;
     private bool _isManuallyHidden;
@@ -134,6 +135,7 @@ public partial class MainWindow : Window
 
         if (_options.DemoPercent is { } demoPercent)
         {
+            _hasCurrentUsage = true;
             ApplySnapshot(CreateDemoSnapshot(demoPercent));
             PositionForDemo();
             StatusText.Text = "Demo";
@@ -639,7 +641,11 @@ public partial class MainWindow : Window
     private void AppServerClient_OnSnapshotChanged(object? sender, UsageSnapshot snapshot)
     {
         _lastUsageSnapshot = snapshot;
-        _ = Dispatcher.InvokeAsync(() => ApplySnapshot(snapshot));
+        _ = Dispatcher.InvokeAsync(() =>
+        {
+            _hasCurrentUsage = true;
+            ApplySnapshot(snapshot);
+        });
     }
 
     private void AppServerClient_OnStatusChanged(object? sender, string status)
@@ -651,7 +657,53 @@ public partial class MainWindow : Window
             LiveDot.Fill = status == "Live"
                 ? new SolidColorBrush((System.Windows.Media.Color)FindResource("OverlayNormalColor"))
                 : new SolidColorBrush((System.Windows.Media.Color)FindResource("OverlayMutedColor"));
+
+            if (status == "Connecting…" || status == "Trying again…" ||
+                status == "Couldn’t connect" || status == "CLI not found")
+            {
+                _hasCurrentUsage = false;
+            }
+
+            if (!_hasCurrentUsage)
+            {
+                ApplyConnectionState(status);
+            }
         });
+    }
+
+    private void ApplyConnectionState(string status)
+    {
+        BeginAnimation(AnimatedRemainingPercentProperty, null);
+        AnimatedRemainingPercent = 0;
+        UsageFillBrush.BeginAnimation(SolidColorBrush.ColorProperty, null);
+        UsageFillBrush.Color = (System.Windows.Media.Color)FindResource("OverlayMutedColor");
+        LeadingCap.Opacity = 0;
+        RailRemainingText.Text = "--";
+        BucketNameText.Text = "Codex usage";
+
+        switch (status)
+        {
+            case "CLI not found":
+                UsagePercentText.Text = "Usage unavailable";
+                ResetText.Text = "Codex CLI not found.";
+                AdditionalBucketText.Text = "Check Connection in Settings.";
+                break;
+            case "Couldn’t connect":
+            case "Trying again…":
+                UsagePercentText.Text = "Usage unavailable";
+                ResetText.Text = "Couldn’t load limits. Retrying…";
+                AdditionalBucketText.Text = "Open Settings if this continues.";
+                break;
+            default:
+                UsagePercentText.Text = "Loading usage…";
+                ResetText.Text = "Connecting to Codex…";
+                AdditionalBucketText.Text = "Limits will appear shortly.";
+                break;
+        }
+
+        AutomationProperties.SetName(
+            RailHitTarget,
+            $"Codex usage unavailable. {ResetText.Text} {AdditionalBucketText.Text}");
     }
 
     private void ApplySnapshot(UsageSnapshot snapshot)
@@ -840,9 +892,13 @@ public partial class MainWindow : Window
     {
         _logger.Info($"Theme applied: {(ThemeManager.Instance.IsEffectiveDark ? "Dark" : "Light")}.");
         UpdateTrayMenuTheme();
-        if (_lastUsageSnapshot is not null)
+        if (_hasCurrentUsage && _lastUsageSnapshot is not null)
         {
             ApplySnapshot(_lastUsageSnapshot);
+        }
+        else
+        {
+            ApplyConnectionState(_appServerStatus);
         }
     }
 
@@ -979,9 +1035,13 @@ public partial class MainWindow : Window
             ? Visibility.Visible
             : Visibility.Collapsed;
 
-        if (_lastUsageSnapshot is not null)
+        if (_hasCurrentUsage && _lastUsageSnapshot is not null)
         {
             ApplySnapshot(_lastUsageSnapshot);
+        }
+        else
+        {
+            ApplyConnectionState(_appServerStatus);
         }
 
         UpdateWindowPosition();

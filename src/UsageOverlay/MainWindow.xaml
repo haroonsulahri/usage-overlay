@@ -93,18 +93,18 @@
 
                 <StackPanel Grid.Row="1" Margin="0,13,0,0">
                     <TextBlock x:Name="BucketNameText"
-                               Text="Usage left"
+                               Text="Codex usage"
                                Foreground="{DynamicResource OverlayMutedBrush}"
                                FontSize="{StaticResource OverlayTextSmall}" />
                     <TextBlock x:Name="UsagePercentText"
                                Margin="0,2,0,0"
-                               Text="Checking…"
+                               Text="Loading usage…"
                                Foreground="{DynamicResource OverlayTextBrush}"
                                FontSize="{StaticResource OverlayTextValue}"
                                FontWeight="Medium" />
                     <TextBlock x:Name="ResetText"
                                Margin="0,3,0,0"
-                               Text="Waiting for the first update"
+                               Text="Connecting to Codex…"
                                Foreground="{DynamicResource OverlayMutedBrush}"
                                FontSize="{StaticResource OverlayTextSmall}" />
                 </StackPanel>
@@ -113,7 +113,7 @@
 
                 <Grid Grid.Row="3" Margin="0,10,0,0">
                     <TextBlock x:Name="AdditionalBucketText"
-                               Text="No other limits"
+                               Text="Limits will appear shortly."
                                Foreground="{DynamicResource OverlayMutedBrush}"
                                FontSize="{StaticResource OverlayTextSmall}"
                                TextTrimming="CharacterEllipsis" />

@@ -36,5 +36,6 @@ The project follows [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Replaced stale quota values with clear loading and unavailable messages when Codex limits cannot be read
 - Kept the primary Save action green on hover, with clear hover, pressed, focus, and disabled states
 - Replaced Settings minimization with a minus action that hides only the Settings window
