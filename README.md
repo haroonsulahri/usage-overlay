@@ -108,50 +108,94 @@ Choosing **Hide usage rail** does not stop usage updates. Use the tray icon to s
 
 ## Settings
 
-Open Settings from the rail menu, system tray, or Windows Search. Changes are written only when you choose **Save**. **Cancel** discards unsaved changes.
+Open Settings from **Open settings…** in the rail or tray menu. Opening **Usage Overlay** from Windows Search also goes straight to this window.
 
 ![Native Usage Overlay Settings window](docs/images/settings.png)
 
+### Saving and closing
+
+Most controls are staged while the window is open. Choose **Save** or press `Ctrl+S` to validate and write them to `%LOCALAPPDATA%\UsageOverlay\settings.json`.
+
+- **Save:** applies valid changes and keeps the Settings window open. A confirmation appears beside the buttons.
+- **Cancel:** closes Settings and discards changes made since the last save.
+- **Escape:** works like Cancel.
+- **Minus button:** hides only the Settings window. The rail and tray process keep running, and unsaved fields remain available when you reopen Settings.
+- **Close button:** closes Settings, discards unsaved changes, and does not quit Usage Overlay.
+
+Theme choices are previewed immediately so you can compare them. Cancel, Escape, or the close button restores the last saved theme.
+
+Save is blocked when:
+
+- The amber or red threshold is not a number
+- A threshold is outside `0–100`
+- The amber threshold is equal to or higher than the red threshold
+- The refresh interval is outside `15–3600` seconds
+- A custom Codex CLI path does not point to an existing file
+
+The validation message appears at the bottom of the window and moves focus to the field that needs attention.
+
 ### General
 
-- **Open when Windows starts:** adds or removes the user-level startup shortcut.
+- **Open when Windows starts:** adds or removes a shortcut in your Windows Startup folder. This is a user-level setting and does not install a service.
 
 ### Visibility
 
-- **Only in Codex:** shows the rail while the Codex window is active and hides it when you switch away.
-- **Across Windows:** keeps the overlay visible outside Codex.
-- **Hide while Codex is fullscreen:** removes the rail from fullscreen sessions.
-- **Pause for 15 minutes:** temporarily hides the overlay and resumes it automatically.
+- **Only in Codex:** shows the rail while the Codex window is active and hides it when you switch away. This is the default.
+- **Across Windows:** keeps the rail at its last position when you switch to another application.
+- **Hide while Codex is fullscreen:** removes the rail only while the active Codex window fills its monitor.
+- **Pause 15 min:** stages a 15-minute pause. Save to start the pause. Reopen Settings and choose **Resume now** to end it early.
+
+Pausing or hiding the rail does not disconnect App Server. Usage can continue updating in the background.
 
 ### Position
 
-- Snap to the **Right edge** or **Left edge**.
-- Choose **Anywhere** and drag the rail to a custom location.
-- Nudge the saved position left, right, up, or down.
-- Reset position offsets.
-- Follow Codex when it moves between monitors.
+- **Right edge:** anchors the rail to the right side of the tracked window.
+- **Left edge:** anchors it to the left side.
+- **Anywhere:** uses the custom position saved when you drag the rail.
+- **X and Y buttons:** move the selected position 20 pixels with each click. The current offset is shown below the buttons.
+- **Reset:** selects the right edge and returns both offsets to zero.
+- **Follow Codex between monitors:** moves the overlay with Codex instead of keeping it on the monitor where the position was first established.
 
 Custom positions are stored as relative coordinates, so the rail remains inside the Codex window after resizing or changing monitors.
 
 ### Appearance
 
-- Show **Remaining** or **Used** as the main percentage.
-- Set warning and critical thresholds.
-- Preview the normal, warning, and critical colour range.
-- Enable or disable smooth value changes.
-- Show or hide the compact percentage below the rail.
-- Choose **Follow Codex**, **Dark**, or **Light**.
+- **Theme:** choose **Follow Codex**, **Dark**, or **Light**.
+- **Main number:** choose **Left** to lead with remaining usage or **Used** to lead with consumed usage.
+- **Turn amber at:** set the used percentage where the rail changes from green to amber.
+- **Turn red at:** set the higher used percentage where the rail changes to red.
+- **Animate changes:** smoothly moves the rail when a fresh value arrives. Windows reduced-motion preferences are still respected.
+- **Show the percentage below the rail:** keeps the compact number visible while the detail card is closed.
 
 **Follow Codex** checks a few background pixels from the active Codex window to decide whether the surface is light or dark. It does not capture, save, or log screen content. Windows appearance is used as a fallback when Codex is unavailable.
 
 ### Connection and diagnostics
 
-- Set a custom path to `codex.cmd` or `codex.exe` when the CLI is not on `PATH`.
-- Change the fallback refresh interval from 15 to 3,600 seconds.
-- Open the local diagnostic log.
-- Restore default settings.
+- This section is collapsed by default because most users do not need it.
+- **Codex CLI path:** optionally point directly to `codex.cmd` or `codex.exe` when the command is not available on `PATH`.
+- **Refresh every:** sets the fallback polling interval from 15 to 3,600 seconds. Live notifications can still update the rail sooner.
+- **Open logs:** opens the local redacted diagnostic log.
+- **Restore defaults:** stages the original settings. Choose Save to keep them.
 
 CLI path and refresh interval changes take effect after the app restarts.
+
+### Default settings
+
+| Setting | Default |
+| --- | --- |
+| Start with Windows | Off |
+| Visibility | Only in Codex |
+| Hide in fullscreen | Off |
+| Position | Right edge |
+| Follow Codex between monitors | On |
+| Theme | Follow Codex |
+| Main number | Left |
+| Amber threshold | 70% used |
+| Red threshold | 90% used |
+| Animate changes | On |
+| Percentage below rail | On |
+| Custom CLI path | Empty; use `PATH` |
+| Refresh interval | 60 seconds |
 
 ## Connection states
 
