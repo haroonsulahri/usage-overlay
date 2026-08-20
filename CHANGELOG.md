@@ -12,7 +12,7 @@ The project follows [Semantic Versioning](https://semver.org/).
 - Follow Codex, Dark, and Light themes with rendered Codex-theme detection and Windows fallback
 - Clearer rail menu labels for hide, settings, refresh, and quit actions
 - Live Codex quota rail driven by the documented App Server rate-limit methods
-- Remaining percentage, reset countdown, additional model limits, and threshold colours
+- Remaining percentage, reset countdown, and threshold colours
 - Smooth GPU-safe animations with reduced-motion support
 - Hover details, click-to-pin behavior, and freely draggable persistent placement
 - Codex-only visibility, manual hide/show, pause, fullscreen exclusion, and automatic startup
@@ -28,6 +28,7 @@ The project follows [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Kept the hover card focused on the main Codex limit by removing the additional Spark row
 - Reworked in-app labels, status messages, validation, and settings copy for clearer everyday language
 - Made Windows Search launches open Settings while keeping automatic startup background-only
 - Added a dedicated Visibility section and collapsed connection diagnostics by default

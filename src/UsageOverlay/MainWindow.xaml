@@ -48,8 +48,6 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <Grid Grid.Row="0" Height="24">
@@ -109,15 +107,6 @@
                                FontSize="{StaticResource OverlayTextSmall}" />
                 </StackPanel>
 
-                <Border Grid.Row="2" Margin="0,12,0,0" Height="1" Background="{DynamicResource OverlayBorderBrush}" />
-
-                <Grid Grid.Row="3" Margin="0,10,0,0">
-                    <TextBlock x:Name="AdditionalBucketText"
-                               Text="Limits will appear shortly."
-                               Foreground="{DynamicResource OverlayMutedBrush}"
-                               FontSize="{StaticResource OverlayTextSmall}"
-                               TextTrimming="CharacterEllipsis" />
-                </Grid>
             </Grid>
         </Border>
 

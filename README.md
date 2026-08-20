@@ -6,7 +6,7 @@
 
 **See your remaining Codex usage without leaving the desktop app.**
 
-Usage Overlay is a small, open-source Windows companion for the Codex desktop app. It places a slim usage rail beside Codex and opens a compact detail card when you need the numbers. You can see how much usage is left, when the limit resets, and whether another model has a separate limit.
+Usage Overlay is a small, open-source Windows companion for the Codex desktop app. It places a slim usage rail beside Codex and opens a compact detail card when you need the numbers. You can see how much usage is left and when the main Codex limit resets.
 
 It runs as its own process. It does not modify Codex, inject code into the app, read conversations, or handle your credentials.
 
@@ -23,7 +23,6 @@ Hover over the rail to open the detail card. The card shows:
 
 - Remaining or used percentage, depending on your preference
 - The reset countdown for the current limit window
-- Additional model limits returned by Codex
 - Live, connecting, or unavailable connection status
 - Green, amber, or red status based on your configured thresholds
 
@@ -34,7 +33,6 @@ If Codex has not returned a fresh limit yet, the rail shows `--`. The card says 
 - **Remaining usage first:** the default view answers the useful question: how much do I have left?
 - **Compact detail card:** hover to inspect the limit or click to keep the card open.
 - **Reset countdown:** see when the current quota window resets.
-- **Multiple limits:** display an additional model bucket when Codex returns one.
 - **Live updates:** listen for App Server updates and poll at a configurable interval as a fallback.
 - **Three visual states:** green for normal usage, amber for warning, and red for critical.
 - **Flexible placement:** use the right edge, left edge, position nudges, or drag the rail anywhere inside Codex.

@@ -685,25 +685,22 @@ public partial class MainWindow : Window
         {
             case "CLI not found":
                 UsagePercentText.Text = "Usage unavailable";
-                ResetText.Text = "Codex CLI not found.";
-                AdditionalBucketText.Text = "Check Connection in Settings.";
+                ResetText.Text = "CLI not found. Check Settings.";
                 break;
             case "Couldn’t connect":
             case "Trying again…":
                 UsagePercentText.Text = "Usage unavailable";
                 ResetText.Text = "Couldn’t load limits. Retrying…";
-                AdditionalBucketText.Text = "Open Settings if this continues.";
                 break;
             default:
                 UsagePercentText.Text = "Loading usage…";
                 ResetText.Text = "Connecting to Codex…";
-                AdditionalBucketText.Text = "Limits will appear shortly.";
                 break;
         }
 
         AutomationProperties.SetName(
             RailHitTarget,
-            $"Codex usage unavailable. {ResetText.Text} {AdditionalBucketText.Text}");
+            $"Codex usage unavailable. {ResetText.Text}");
     }
 
     private void ApplySnapshot(UsageSnapshot snapshot)
@@ -720,10 +717,6 @@ public partial class MainWindow : Window
         ResetText.Text =
             $"{Math.Round(secondaryPercent)}% {secondaryLabel}  ·  " +
             ResetTimeFormatter.Format(primary.Primary.ResetsAt, DateTimeOffset.Now);
-        AdditionalBucketText.Text = snapshot.Additional.Count == 0
-            ? "No other limits"
-            : FormatAdditional(snapshot.Additional[0]);
-
         RailRemainingText.Visibility = _settings.ShowCompactPercentage
             ? Visibility.Visible
             : Visibility.Collapsed;
@@ -794,16 +787,6 @@ public partial class MainWindow : Window
         window.UsagePercentText.Text = $"{Math.Round(normalized)}% {suffix}";
         window.RailRemainingText.Text = $"{Math.Round(normalized)}%";
         window.LeadingCapTranslate.Y = -(RailUsableHeight * normalized / 100d);
-    }
-
-    private string FormatAdditional(RateLimitBucket bucket)
-    {
-        var used = UsageLevelResolver.Normalize(bucket.Primary.UsedPercent);
-        var value = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used
-            ? used
-            : UsageLevelResolver.RemainingFromUsed(used);
-        var suffix = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used ? "used" : "left";
-        return $"{bucket.DisplayName}  {Math.Round(value)}% {suffix}";
     }
 
     private static UsageSnapshot CreateDemoSnapshot(double percentage)
