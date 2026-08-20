@@ -1,8 +1,6 @@
 # Usage Overlay
 
-<p>
-  <img src="assets/icon.svg" width="88" height="88" alt="Usage Overlay icon">
-</p>
+![Usage Overlay showing remaining Codex usage beside the desktop app](docs/images/usage-overlay-readme-banner.png)
 
 **See your remaining Codex usage without leaving the desktop app.**
 
