@@ -28,6 +28,7 @@ The project follows [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Renamed the visible Codex limits label to the clearer Codex usage wording
 - Kept the hover card focused on the main Codex limit by removing the additional Spark row
 - Reworked in-app labels, status messages, validation, and settings copy for clearer everyday language
 - Made Windows Search launches open Settings while keeping automatic startup background-only

@@ -56,7 +56,7 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Codex limits"
+                    <TextBlock Text="Codex usage"
                                VerticalAlignment="Center"
                                Foreground="{DynamicResource OverlayTextBrush}"
                                FontSize="{StaticResource OverlayTextBody}"
