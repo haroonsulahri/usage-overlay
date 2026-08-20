@@ -404,8 +404,14 @@ Focused bug reports and pull requests are welcome. Please read [Contributing](CO
 
 Do not include credentials, account identifiers, private conversations, unreviewed logs, or private screenshots in public issues.
 
+## About Haroone.com
+
+Usage Overlay is built and maintained by [Haroone.com](https://haroone.com), a founder-led Magento and eCommerce engineering studio. Haroone works on custom modules, storefronts, integrations, migrations, performance, and technical SEO, alongside practical open-source tools like this one.
+
+Usage Overlay is independently developed and is not affiliated with or endorsed by OpenAI.
+
 ## Licence
 
 Usage Overlay is released under the [MIT Licence](LICENSE).
 
-Built by [Haroone.com](https://haroone.com). Codex and OpenAI are referenced only to describe compatibility.
+Codex and OpenAI are referenced only to describe compatibility.
