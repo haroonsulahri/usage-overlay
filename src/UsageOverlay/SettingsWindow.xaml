@@ -91,33 +91,100 @@
             <Setter Property="Background" Value="{DynamicResource OverlayNormalBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource SettingsPrimaryTextBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource OverlayNormalBrush}" />
+            <Setter Property="MinWidth" Value="72" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="ButtonSurface"
                                 Padding="{TemplateBinding Padding}"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
+                                Background="{DynamicResource OverlayNormalBrush}"
+                                BorderBrush="{DynamicResource OverlayNormalBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="8">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              TextElement.Foreground="{TemplateBinding Foreground}" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ButtonSurface" Property="Opacity" Value="0.9" />
-                                <Setter TargetName="ButtonSurface" Property="BorderBrush" Value="{DynamicResource OverlayTextBrush}" />
+                                <Setter TargetName="ButtonSurface" Property="BorderBrush" Value="{DynamicResource LeadingCapBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="ButtonSurface" Property="Opacity" Value="0.75" />
-                                <Setter TargetName="ButtonSurface" Property="BorderBrush" Value="{DynamicResource OverlayTextBrush}" />
+                                <Setter TargetName="ButtonSurface" Property="Opacity" Value="0.82" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="ButtonSurface" Property="BorderBrush" Value="{DynamicResource OverlayTextBrush}" />
+                                <Setter TargetName="ButtonSurface" Property="BorderBrush" Value="{DynamicResource LeadingCapBrush}" />
+                                <Setter TargetName="ButtonSurface" Property="BorderThickness" Value="2" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.45" />
+                                <Setter TargetName="ButtonSurface" Property="Background" Value="{DynamicResource OverlaySurfaceRaisedBrush}" />
+                                <Setter TargetName="ButtonSurface" Property="BorderBrush" Value="{DynamicResource OverlayBorderBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource OverlayMutedBrush}" />
+                                <Setter Property="Opacity" Value="0.7" />
                             </Trigger>
                         </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SettingsScrollThumbStyle" TargetType="Thumb">
+            <Setter Property="Background" Value="{DynamicResource OverlayMutedBrush}" />
+            <Setter Property="Opacity" Value="0.55" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border Margin="2,1"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="3" />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.8" />
+                            </Trigger>
+                            <Trigger Property="IsDragging" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource OverlayNormalBrush}" />
+                                <Setter Property="Opacity" Value="1" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SettingsScrollPageButtonStyle" TargetType="RepeatButton">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="Opacity" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RepeatButton">
+                        <Border Background="Transparent" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SettingsVerticalScrollBarStyle" TargetType="ScrollBar">
+            <Setter Property="Width" Value="10" />
+            <Setter Property="Background" Value="{DynamicResource SettingsWindowBackgroundBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Border Background="{TemplateBinding Background}">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageUpCommand"
+                                                  Style="{StaticResource SettingsScrollPageButtonStyle}" />
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb MinHeight="36" Style="{StaticResource SettingsScrollThumbStyle}" />
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageDownCommand"
+                                                  Style="{StaticResource SettingsScrollPageButtonStyle}" />
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -244,6 +311,9 @@
                       Grid.Row="2"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
+            <ScrollViewer.Resources>
+                <Style TargetType="ScrollBar" BasedOn="{StaticResource SettingsVerticalScrollBarStyle}" />
+            </ScrollViewer.Resources>
             <StackPanel Margin="20,16,20,20">
                 <Border Margin="0,0,0,12" Padding="1" Background="{DynamicResource OverlayBorderBrush}" CornerRadius="15">
                     <Border Padding="18" Background="{DynamicResource OverlaySurfaceBrush}" CornerRadius="14">
