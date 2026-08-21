@@ -16,23 +16,42 @@ if (-not $validationDirectory.StartsWith($requiredPrefix, [StringComparison]::Or
 
 $archiveName = "usage-overlay-v$Version-win-x64.zip"
 $archivePath = Join-Path $releaseDirectory $archiveName
+$installerName = "usage-overlay-v$Version-win-x64-setup.exe"
+$installerPath = Join-Path $releaseDirectory $installerName
 $checksumPath = Join-Path $releaseDirectory 'SHA256SUMS.txt'
 $manifestPath = Join-Path $releaseDirectory 'release-manifest.json'
 if (-not (Test-Path -LiteralPath $archivePath) -or
+    -not (Test-Path -LiteralPath $installerPath) -or
     -not (Test-Path -LiteralPath $checksumPath) -or
     -not (Test-Path -LiteralPath $manifestPath)) {
-    throw 'Release archive, checksum, or manifest is missing. Run package-release.ps1 first.'
+    throw 'Release installer, portable archive, checksum, or manifest is missing. Run package-release.ps1 first.'
 }
 
 $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
 if ($manifest.product -ne 'Usage Overlay' -or $manifest.publisher -ne 'Haroone.com') {
     throw 'Release manifest contains unexpected product or publisher metadata.'
 }
+if ($manifest.installer -ne $installerName -or $manifest.portableArchive -ne $archiveName) {
+    throw 'Release manifest contains unexpected artifact names.'
+}
 
-$expectedHash = ((Get-Content -LiteralPath $checksumPath -Raw).Trim() -split '\s+')[0]
-$actualHash = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash.ToLowerInvariant()
-if ($actualHash -ne $expectedHash) {
-    throw "SHA-256 mismatch. Expected $expectedHash, got $actualHash."
+$expectedHashes = @{}
+foreach ($line in Get-Content -LiteralPath $checksumPath) {
+    if ($line -match '^([0-9a-fA-F]{64})\s+(.+)$') {
+        $expectedHashes[$Matches[2]] = $Matches[1].ToLowerInvariant()
+    }
+}
+$actualArchiveHash = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash.ToLowerInvariant()
+$actualInstallerHash = (Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash.ToLowerInvariant()
+if ($expectedHashes[$archiveName] -ne $actualArchiveHash) {
+    throw "Portable archive SHA-256 mismatch. Expected $($expectedHashes[$archiveName]), got $actualArchiveHash."
+}
+if ($expectedHashes[$installerName] -ne $actualInstallerHash) {
+    throw "Installer SHA-256 mismatch. Expected $($expectedHashes[$installerName]), got $actualInstallerHash."
+}
+if ($manifest.portableArchiveSha256 -ne $actualArchiveHash -or
+    $manifest.installerSha256 -ne $actualInstallerHash) {
+    throw 'Release manifest SHA-256 values do not match the generated artifacts.'
 }
 
 if (Test-Path -LiteralPath $validationDirectory) {
@@ -73,9 +92,13 @@ if ($versionInfo.ProductName -ne 'Usage Overlay' -or $versionInfo.CompanyName -n
 }
 
 [pscustomobject]@{
+    Installer = $installerPath
+    InstallerSizeBytes = (Get-Item -LiteralPath $installerPath).Length
+    InstallerSHA256 = $actualInstallerHash
+    InstallerSignature = (Get-AuthenticodeSignature -LiteralPath $installerPath).Status
     Archive = $archivePath
     ArchiveSizeBytes = (Get-Item -LiteralPath $archivePath).Length
-    SHA256 = $actualHash
+    ArchiveSHA256 = $actualArchiveHash
     ExtractedDirectory = $packageDirectory
     ExtractedFileCount = (Get-ChildItem -LiteralPath $packageDirectory -Recurse -File).Count
     FileVersion = $versionInfo.FileVersion

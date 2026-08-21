@@ -82,6 +82,8 @@ Before tagging a release:
 2. Run `scripts\smoke-live.ps1` on a supported authenticated account.
 3. Inspect normal, warning, and critical demo states.
 4. Test Start-menu and Startup shortcut install/uninstall scripts.
-5. Run `scripts\package-release.ps1`.
-6. Extract the zip into a clean directory and run the executable.
-7. Verify the SHA-256 value in `SHA256SUMS.txt`.
+5. Install Inno Setup 6 or set `INNO_SETUP_COMPILER` to `ISCC.exe`.
+6. Run `scripts\package-release.ps1` and `scripts\validate-release.ps1`.
+7. Run `scripts\test-installer.ps1` to verify Installed apps registration, launch, and uninstall cleanup.
+8. Extract the portable zip into a clean directory and run the executable.
+9. Verify both SHA-256 values in `SHA256SUMS.txt`.

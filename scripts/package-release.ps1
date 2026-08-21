@@ -67,6 +67,8 @@ foreach ($document in @(
 }
 Copy-Item -LiteralPath (Join-Path $projectRoot 'assets') -Destination $packageDirectory -Recurse
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs') -Destination $packageDirectory -Recurse
+Copy-Item -LiteralPath (Join-Path $projectRoot 'src\UsageOverlay\Assets\UsageOverlay.ico') `
+    -Destination (Join-Path $packageDirectory 'assets\UsageOverlay.ico')
 foreach ($script in @(
     'install-start-menu.ps1',
     'uninstall-start-menu.ps1',
@@ -83,9 +85,20 @@ if (Test-Path -LiteralPath $archivePath) {
 }
 Compress-Archive -Path $packageDirectory -DestinationPath $archivePath -CompressionLevel Optimal
 
-$hash = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash.ToLowerInvariant()
+& (Join-Path $PSScriptRoot 'build-installer.ps1') `
+    -Version $Version `
+    -PackageDirectory $packageDirectory `
+    -OutputDirectory $releaseDirectory
+
+$installerName = "usage-overlay-v$Version-win-x64-setup.exe"
+$installerPath = Join-Path $releaseDirectory $installerName
+$archiveHash = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash.ToLowerInvariant()
+$installerHash = (Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash.ToLowerInvariant()
 $checksumPath = Join-Path $releaseDirectory 'SHA256SUMS.txt'
-Set-Content -LiteralPath $checksumPath -Value "$hash  $archiveName" -Encoding ascii
+@(
+    "$installerHash  $installerName",
+    "$archiveHash  $archiveName"
+) | Set-Content -LiteralPath $checksumPath -Encoding ascii
 
 $manifest = [ordered]@{
     product = 'Usage Overlay'
@@ -93,10 +106,14 @@ $manifest = [ordered]@{
     version = $Version
     runtime = 'win-x64'
     selfContained = $true
-    archive = $archiveName
-    sha256 = $hash
+    installer = $installerName
+    installerSha256 = $installerHash
+    portableArchive = $archiveName
+    portableArchiveSha256 = $archiveHash
 }
 $manifest | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $releaseDirectory 'release-manifest.json') -Encoding utf8
 
 Write-Host "Release package: $archivePath"
-Write-Host "SHA-256: $hash"
+Write-Host "Installer: $installerPath"
+Write-Host "Installer SHA-256: $installerHash"
+Write-Host "Portable SHA-256: $archiveHash"

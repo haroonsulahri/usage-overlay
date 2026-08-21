@@ -24,6 +24,10 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --version=6.7.1 --no-progress -y
+
       - name: Build release package
         shell: pwsh
         run: |

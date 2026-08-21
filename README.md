@@ -60,12 +60,18 @@ API-key-only and Bedrock authentication do not provide the account usage data th
 
 ### Download a release
 
-1. Download the Windows zip from the repository's **Releases** page.
-2. Extract the full zip to a directory you control.
-3. Run `UsageOverlay.exe`.
+1. Open the repository's **Releases** page.
+2. Download `usage-overlay-vX.Y.Z-win-x64-setup.exe`.
+3. Run the installer, then launch **Usage Overlay** from Windows Search.
 4. Focus the Codex desktop app. The rail will appear at its saved position.
 
 The app is not code-signed yet. Windows SmartScreen may show a warning on first launch. Review the published SHA-256 checksum before running the file.
+
+The installer is per-user, does not require administrator access, and registers Usage Overlay in **Settings → Apps → Installed apps**. A portable zip remains available for users who prefer not to install the app.
+
+### Portable version
+
+Download `usage-overlay-vX.Y.Z-win-x64.zip`, extract the full archive to a directory you control, and run `UsageOverlay.exe`. Portable copies are removed manually and do not appear in Windows Installed apps.
 
 ### Add Windows shortcuts
 
@@ -379,10 +385,21 @@ Pushing a semantic version tag such as `v0.1.0` runs the GitHub release workflow
 
 ## Uninstall
 
+### Installed version
+
+1. Quit Usage Overlay from the rail or tray menu.
+2. Open **Settings → Apps → Installed apps**.
+3. Find **Usage Overlay**, open its menu, and choose **Uninstall**.
+4. Optionally delete `%LOCALAPPDATA%\UsageOverlay` to remove saved settings and logs.
+
+The uninstaller removes the application and its Start Menu and startup shortcuts. It preserves settings and logs so an upgrade or reinstall can reuse them.
+
+### Portable version
+
 1. Quit Usage Overlay from the rail or tray menu.
 2. Run the two `uninstall-*.ps1` shortcut scripts if you installed the shortcuts.
 3. Delete the extracted application directory.
-4. Optionally delete `%LOCALAPPDATA%\UsageOverlay` to remove your saved settings and logs.
+4. Optionally delete `%LOCALAPPDATA%\UsageOverlay` to remove saved settings and logs.
 
 Usage Overlay does not install a Windows service, browser extension, driver, or background updater.
 

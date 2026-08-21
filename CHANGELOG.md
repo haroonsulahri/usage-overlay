@@ -4,7 +4,23 @@ All notable changes will be documented in this file.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
-## [0.1.0] - Unreleased
+## [0.1.1] - 2026-08-21
+
+### Added
+
+- Per-user Windows installer with Installed apps registration and a standard uninstaller
+- Start Menu registration and automatic shortcut cleanup during uninstall
+- Installer and portable archive checksums in every release
+
+### Changed
+
+- Made the installer the recommended download while keeping the portable zip available
+
+### Fixed
+
+- Added the missing Windows uninstall experience for public releases
+
+## [0.1.0] - 2026-08-20
 
 ### Added
 
