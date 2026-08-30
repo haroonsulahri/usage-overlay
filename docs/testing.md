@@ -22,7 +22,7 @@ Run this only on a Windows machine already signed in to Codex:
 .\scripts\smoke-live.ps1
 ```
 
-The smoke test starts App Server, waits up to 20 seconds for a real rate-limit snapshot, prints the remaining and used percentages, then shuts down its child process.
+The smoke test starts App Server, waits up to 20 seconds for a real rate-limit snapshot, prints every returned usage window, then shuts down its child process.
 
 ## UI preview
 
@@ -38,8 +38,8 @@ Recommended visual states:
 | Demo value | Expected state |
 | --- | --- |
 | `25` | Green rail, 75% left |
-| `75` | Amber rail, 25% left |
-| `92` | Red rail, 8% left |
+| `75` | Amber rail, 25% left, with the weekly detail row |
+| `92` | Red rail, 8% left, with the weekly detail row |
 
 ## Manual acceptance matrix
 
@@ -48,7 +48,10 @@ Recommended visual states:
 | Connecting | Empty neutral rail and non-blocking status |
 | Codex active | Rail appears at the saved or preset location |
 | Codex inactive or minimized | Overlay hides |
+| Codex file picker or Open/Save dialog | Overlay hides instead of attaching to the dialog |
 | Hover | Detail card opens without taking keyboard focus |
+| Multiple usage windows | The main Codex primary and secondary windows appear as separate labelled rows; model-specific buckets stay hidden |
+| View usage link | A compact link remains visible at the bottom of the detail card and opens the Codex usage page |
 | Click | Detail card pins or unpins |
 | Close button | Pinned detail card collapses; rail and process remain active |
 | Escape | Pinned detail card collapses; Settings window closes when it is active |
@@ -69,6 +72,10 @@ Recommended visual states:
 | Dark theme | Settings, rail, detail card, and menus use the dark palette |
 | Light theme | Settings, rail, detail card, and menus use the light palette with readable contrast |
 | App Server exit | Overlay reconnects after a bounded delay |
+| Disconnect Codex CLI | App Server child process exits, usage becomes unavailable, and the menu changes to Reconnect Codex CLI |
+| Reconnect Codex CLI | A fresh App Server child process starts and live usage returns |
+| Threshold notification | An enabled alert appears once when a returned window first crosses amber or red |
+| Manual update check | Latest GitHub release metadata is checked only after user action; the result is shown without installing anything |
 | Settings Save | Validated values persist to JSON and apply immediately when safe |
 | Save hover | Primary action stays green and shows a clear light border |
 | Settings Cancel | Unsaved changes are discarded |

@@ -521,6 +521,13 @@
                             <CheckBox x:Name="CompactPercentageCheckBox"
                                       Content="Show the percentage below the rail"
                                       Style="{StaticResource SettingsCheckStyle}" />
+                            <CheckBox x:Name="NotificationsCheckBox"
+                                      Content="Notify me when usage turns amber or red"
+                                      Style="{StaticResource SettingsCheckStyle}" />
+                            <TextBlock Margin="22,3,0,0"
+                                       Text="Alerts appear only when a limit crosses a colour threshold."
+                                       Foreground="{DynamicResource OverlayMutedBrush}"
+                                       FontSize="{StaticResource OverlayTextSmall}" />
                         </StackPanel>
                     </Border>
                 </Border>

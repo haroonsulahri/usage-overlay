@@ -48,6 +48,11 @@ Windows integration:
 2. It starts `codex app-server --stdio` with redirected standard streams.
 3. It sends `initialize`, `initialized`, and `account/rateLimits/read`.
 4. It listens for `account/rateLimits/updated` and polls every 60 seconds as a fallback.
+5. It renders the primary and secondary windows for the main Codex limit while keeping model-specific buckets out of the interface.
+
+The user can disconnect App Server from either context menu before upgrading an npm-installed Codex CLI. Disconnecting cancels the session and terminates only the process tree started by Usage Overlay. Reconnecting creates a fresh App Server session.
+
+Update checks are separate from account usage. They run only after the user selects **Check for updates** and request the latest public release metadata from GitHub.
 5. The parser clamps percentages, validates timestamps, and selects the primary `codex` bucket.
 6. The UI calculates remaining quota as `100 - usedPercent` and animates to the new value.
 

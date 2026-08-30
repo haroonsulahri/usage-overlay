@@ -58,6 +58,7 @@ public partial class SettingsWindow : Window
         HideFullscreenCheckBox.IsChecked = _settings.HideInFullscreen;
         AnimationsCheckBox.IsChecked = _settings.AnimationsEnabled;
         CompactPercentageCheckBox.IsChecked = _settings.ShowCompactPercentage;
+        NotificationsCheckBox.IsChecked = _settings.NotificationsEnabled;
         SystemThemeRadio.IsChecked = _settings.Theme == AppTheme.System;
         DarkThemeRadio.IsChecked = _settings.Theme == AppTheme.Dark;
         LightThemeRadio.IsChecked = _settings.Theme == AppTheme.Light;
@@ -209,6 +210,7 @@ public partial class SettingsWindow : Window
             CriticalThreshold = criticalThreshold,
             AnimationsEnabled = AnimationsCheckBox.IsChecked == true,
             ShowCompactPercentage = CompactPercentageCheckBox.IsChecked == true,
+            NotificationsEnabled = NotificationsCheckBox.IsChecked == true,
             CodexCliPath = cliPath,
             RefreshIntervalSeconds = interval,
             PausedUntil = _pendingPausedUntil

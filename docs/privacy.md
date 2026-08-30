@@ -31,7 +31,9 @@ Authentication is owned by Codex CLI and Codex services. The overlay does not re
 
 ## Network access
 
-The overlay does not open a network listener or make its own HTTP requests. The Codex App Server process uses the account's existing Codex connection to retrieve usage metadata.
+The overlay does not open a network listener. The Codex App Server process uses the account's existing Codex connection to retrieve usage metadata.
+
+When the user explicitly selects **Check for updates**, Usage Overlay makes one HTTPS request to the public GitHub Releases API for `haroonsulahri/usage-overlay`. The request contains the standard HTTP metadata required by GitHub and the installed Usage Overlay version in the user-agent. No settings, usage percentages, account data, logs, or identifiers are sent by Usage Overlay. It does not check for updates automatically.
 
 ## Telemetry
 

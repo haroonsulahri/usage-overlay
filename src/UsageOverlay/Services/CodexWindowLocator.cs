@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using CodexUsage.Core.Windows;
 
 namespace UsageOverlay.Services;
 
@@ -137,16 +138,8 @@ public sealed class CodexWindowLocator
         {
             using var process = Process.GetProcessById((int)processId);
             var executablePath = process.MainModule?.FileName ?? string.Empty;
-            if (executablePath.Contains("OpenAI.Codex_", StringComparison.OrdinalIgnoreCase) &&
-                executablePath.EndsWith("ChatGPT.exe", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-
             var title = GetTitle(window);
-            return string.Equals(process.ProcessName, "ChatGPT", StringComparison.OrdinalIgnoreCase) &&
-                   string.Equals(title, "ChatGPT", StringComparison.OrdinalIgnoreCase) &&
-                   executablePath.Contains("Codex", StringComparison.OrdinalIgnoreCase);
+            return CodexWindowIdentity.IsMainWindow(executablePath, process.ProcessName, title);
         }
         catch (Exception exception) when (
             exception is ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception)

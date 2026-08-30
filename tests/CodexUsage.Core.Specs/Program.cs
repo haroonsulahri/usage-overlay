@@ -4,6 +4,7 @@ using CodexUsage.Core.Models;
 using CodexUsage.Core.Protocol;
 using CodexUsage.Core.Settings;
 using CodexUsage.Core.Security;
+using CodexUsage.Core.Windows;
 using System.Text.Json;
 
 var specs = new (string Name, Action Run)[]
@@ -12,13 +13,16 @@ var specs = new (string Name, Action Run)[]
     ("Parses a rate-limit update notification", ParsesUpdateNotification),
     ("Clamps malformed percentage values", ClampsPercentage),
     ("Merges partial bucket updates", MergesPartialUpdate),
+    ("Builds display rows for every usage window", BuildsUsageWindowRows),
+    ("Deduplicates threshold notifications", DeduplicatesThresholdNotifications),
     ("Formats reset countdowns", FormatsResetCountdown),
     ("Resolves warning thresholds", ResolvesUsageLevels),
     ("Calculates remaining quota", CalculatesRemainingQuota),
     ("Normalizes persistent display settings", NormalizesDisplaySettings),
     ("Normalizes theme settings and preserves defaults", NormalizesThemeSettings),
     ("Redacts secrets from diagnostic logs", RedactsDiagnosticSecrets),
-    ("Loads legacy settings with new safe defaults", LoadsLegacySettings)
+    ("Loads legacy settings with new safe defaults", LoadsLegacySettings),
+    ("Recognizes only the main Codex window", RecognizesOnlyMainCodexWindow)
 };
 
 var failures = new List<string>();
@@ -127,6 +131,52 @@ static void MergesPartialUpdate()
     AssertEqual(65d, merged.Primary.Primary.UsedPercent);
     AssertEqual(1, merged.Additional.Count);
     AssertEqual(4d, merged.Additional[0].Primary.UsedPercent);
+}
+
+static void BuildsUsageWindowRows()
+{
+    var now = DateTimeOffset.UtcNow;
+    var primary = new RateLimitBucket(
+        "codex",
+        "All Codex models",
+        new QuotaWindow(20, 300, now.AddHours(2)),
+        new QuotaWindow(35, 10_080, now.AddDays(5)),
+        "pro");
+    var spark = new RateLimitBucket(
+        "codex_spark",
+        "GPT-5.3 Codex Spark",
+        new QuotaWindow(5, 10_080, now.AddDays(6)),
+        null,
+        "pro");
+
+    var rows = UsageWindowDisplayBuilder.Build(new UsageSnapshot(primary, new[] { spark }, now));
+
+    AssertEqual(2, rows.Count);
+    AssertEqual("5-hour limit", rows[0].Label);
+    AssertEqual("Weekly limit", rows[1].Label);
+    AssertEqual("codex:secondary", rows[1].Key);
+}
+
+static void DeduplicatesThresholdNotifications()
+{
+    var tracker = new UsageThresholdTracker();
+    var now = DateTimeOffset.UtcNow;
+
+    AssertEqual(0, tracker.Evaluate(SnapshotAt(60, now), 70, 90).Count);
+    var warning = tracker.Evaluate(SnapshotAt(72, now), 70, 90);
+    AssertEqual(1, warning.Count);
+    AssertEqual(UsageLevel.Warning, warning[0].Level);
+    AssertEqual(0, tracker.Evaluate(SnapshotAt(75, now), 70, 90).Count);
+    var critical = tracker.Evaluate(SnapshotAt(92, now), 70, 90);
+    AssertEqual(1, critical.Count);
+    AssertEqual(UsageLevel.Critical, critical[0].Level);
+    AssertEqual(0, tracker.Evaluate(SnapshotAt(5, now.AddDays(7)), 70, 90).Count);
+    AssertEqual(1, tracker.Evaluate(SnapshotAt(71, now.AddDays(7)), 70, 90).Count);
+}
+
+static UsageSnapshot SnapshotAt(double usedPercent, DateTimeOffset now)
+{
+    return new UsageSnapshot(Bucket("codex", usedPercent), Array.Empty<RateLimitBucket>(), now);
 }
 
 static void FormatsResetCountdown()
@@ -240,7 +290,30 @@ static void LoadsLegacySettings()
     AssertEqual(PrimaryUsageDisplay.Remaining, settings.PrimaryDisplay);
     Assert(settings.AnimationsEnabled, "Animation default was not preserved.");
     Assert(settings.ShowCompactPercentage, "Compact percentage default was not preserved.");
+    Assert(!settings.NotificationsEnabled, "Notifications must remain opt-in for legacy settings.");
     AssertEqual(60, settings.RefreshIntervalSeconds);
+}
+
+static void RecognizesOnlyMainCodexWindow()
+{
+    const string packagedPath =
+        @"C:\Program Files\WindowsApps\OpenAI.Codex_26.830.1000.0_x64__2p2nqsd0c76g0\ChatGPT.exe";
+
+    Assert(
+        CodexWindowIdentity.IsMainWindow(packagedPath, "ChatGPT", "ChatGPT"),
+        "The real packaged Codex main window should be recognized.");
+    Assert(
+        !CodexWindowIdentity.IsMainWindow(packagedPath, "ChatGPT", "Select files"),
+        "A Codex-owned file picker must not be treated as the main window.");
+    Assert(
+        !CodexWindowIdentity.IsMainWindow(packagedPath, "ChatGPT", "Open"),
+        "A Codex-owned Open dialog must not be treated as the main window.");
+    Assert(
+        !CodexWindowIdentity.IsMainWindow(packagedPath, "ChatGPT", "Save As"),
+        "A Codex-owned Save As dialog must not be treated as the main window.");
+    Assert(
+        !CodexWindowIdentity.IsMainWindow(@"C:\Windows\explorer.exe", "explorer", "ChatGPT"),
+        "An unrelated process must not be treated as Codex.");
 }
 
 static RateLimitBucket Bucket(string id, double usedPercent)

@@ -1,11 +1,14 @@
 using System.Windows;
 using System.Windows.Automation;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using System.Windows.Interop;
 using System.Diagnostics.CodeAnalysis;
+using System.Net.Http;
+using System.Text.Json;
 using CodexUsage.Core;
 using CodexUsage.Core.Formatting;
 using CodexUsage.Core.Models;
@@ -22,6 +25,8 @@ namespace UsageOverlay;
 public partial class MainWindow : Window
 {
     private const double CollapsedWidth = 34;
+    private const double CollapsedHeight = 190;
+    private const double MinimumExpandedHeight = 218;
     private const double ExpandedWidth = 254;
     private const double RightInset = 18;
     private const double BottomInset = 46;
@@ -30,6 +35,7 @@ public partial class MainWindow : Window
     private const int HotKeyMessage = 0x0312;
     private const int EscapeHotKeyIdentifier = 0x0C0D;
     private const int VirtualKeyEscape = 0x1B;
+    private static readonly Uri UsagePageUri = new("https://chatgpt.com/codex/settings/usage");
 
     public static readonly DependencyProperty AnimatedRemainingPercentProperty =
         DependencyProperty.Register(
@@ -43,12 +49,16 @@ public partial class MainWindow : Window
     private readonly OverlaySettingsStore _settingsStore;
     private readonly StartupShortcutManager _startupShortcutManager;
     private readonly AppServerClient _appServerClient;
+    private readonly ReleaseUpdateService _releaseUpdateService;
     private readonly DispatcherTimer _windowTrackingTimer;
     private readonly DispatcherTimer _collapseTimer;
     private readonly CancellationTokenSource _cancellation = new();
     private readonly System.Drawing.Icon _applicationIcon;
     private readonly System.Windows.Forms.NotifyIcon _notifyIcon;
     private System.Windows.Forms.ToolStripMenuItem _trayVisibilityMenuItem = null!;
+    private System.Windows.Forms.ToolStripMenuItem _trayConnectionMenuItem = null!;
+    private System.Windows.Forms.ToolStripMenuItem _trayUpdateMenuItem = null!;
+    private readonly UsageThresholdTracker _notificationTracker = new();
     private OverlaySettings _settings;
     private SettingsWindow? _settingsWindow;
     private UsageSnapshot? _lastUsageSnapshot;
@@ -68,6 +78,12 @@ public partial class MainWindow : Window
     private double _dragStartLeft;
     private double _dragStartTop;
     private WindowBounds? _lastBounds;
+    private CancellationTokenSource? _connectionCancellation;
+    private Task? _appServerTask;
+    private Task? _updateCheckTask;
+    private Uri? _pendingUpdateUri;
+    private double _expandedHeight = MinimumExpandedHeight;
+    private bool _isConnectionSuspended;
 
     public MainWindow(OverlayOptions options, AppLogger logger)
     {
@@ -84,6 +100,7 @@ public partial class MainWindow : Window
             logger,
             _settings.CodexCliPath,
             TimeSpan.FromSeconds(_settings.RefreshIntervalSeconds));
+        _releaseUpdateService = new ReleaseUpdateService();
         _appServerClient.SnapshotChanged += AppServerClient_OnSnapshotChanged;
         _appServerClient.StatusChanged += AppServerClient_OnStatusChanged;
 
@@ -148,7 +165,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        _ = _appServerClient.RunAsync(_cancellation.Token);
+        StartAppServerConnection();
         UpdateWindowPosition();
         ApplyInitialExpansion();
         ApplyInitialSettings();
@@ -168,12 +185,87 @@ public partial class MainWindow : Window
         NativeHotKey.Unregister(_windowHandle, EscapeHotKeyIdentifier);
         _windowSource?.RemoveHook(WindowProcedure);
         _settingsWindow?.Close();
+        _cancellation.Cancel();
+        _connectionCancellation?.Cancel();
+        if (_updateCheckTask is not null)
+        {
+            try
+            {
+                await _updateCheckTask;
+            }
+            catch (OperationCanceledException)
+            {
+                // Normal application shutdown during a manual update check.
+            }
+        }
         _notifyIcon.Visible = false;
         _notifyIcon.Dispose();
         _applicationIcon.Dispose();
-        _cancellation.Cancel();
+        if (_appServerTask is not null)
+        {
+            try
+            {
+                await _appServerTask;
+            }
+            catch (OperationCanceledException)
+            {
+                // Normal application shutdown.
+            }
+        }
+        _connectionCancellation?.Dispose();
         await _appServerClient.DisposeAsync();
+        _releaseUpdateService.Dispose();
         _cancellation.Dispose();
+    }
+
+    private void StartAppServerConnection()
+    {
+        if (_options.DemoPercent is not null || _appServerTask is { IsCompleted: false })
+        {
+            return;
+        }
+
+        _isConnectionSuspended = false;
+        _connectionCancellation?.Dispose();
+        _connectionCancellation = CancellationTokenSource.CreateLinkedTokenSource(_cancellation.Token);
+        _appServerTask = _appServerClient.RunAsync(_connectionCancellation.Token);
+        UpdateConnectionMenuLabels();
+    }
+
+    private async Task SetConnectionSuspendedAsync(bool suspended)
+    {
+        if (_options.DemoPercent is not null || suspended == _isConnectionSuspended)
+        {
+            return;
+        }
+
+        if (suspended)
+        {
+            _isConnectionSuspended = true;
+            _connectionCancellation?.Cancel();
+            if (_appServerTask is not null)
+            {
+                try
+                {
+                    await _appServerTask;
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected while releasing the CLI process.
+                }
+            }
+
+            _appServerStatus = "Disconnected";
+            _hasCurrentUsage = false;
+            StatusText.Text = _appServerStatus;
+            ApplyConnectionState(_appServerStatus);
+            _logger.Info("Disconnected from Codex CLI. The CLI can now be updated safely.");
+            UpdateConnectionMenuLabels();
+            return;
+        }
+
+        _logger.Info("Reconnecting to Codex CLI.");
+        StartAppServerConnection();
     }
 
     private IntPtr WindowProcedure(
@@ -571,6 +663,7 @@ public partial class MainWindow : Window
 
         _isExpanded = true;
         Width = ExpandedWidth;
+        Height = _expandedHeight;
         RepositionAfterWidthChange();
         DetailsPanel.Visibility = Visibility.Visible;
 
@@ -607,6 +700,7 @@ public partial class MainWindow : Window
             DetailsPanel.Opacity = 0;
             DetailsPanel.Visibility = Visibility.Collapsed;
             Width = CollapsedWidth;
+            Height = CollapsedHeight;
             _isExpanded = false;
             RepositionAfterWidthChange();
             return;
@@ -617,6 +711,7 @@ public partial class MainWindow : Window
         {
             DetailsPanel.Visibility = Visibility.Collapsed;
             Width = CollapsedWidth;
+            Height = CollapsedHeight;
             _isExpanded = false;
             RepositionAfterWidthChange();
         };
@@ -680,6 +775,13 @@ public partial class MainWindow : Window
         LeadingCap.Opacity = 0;
         RailRemainingText.Text = "--";
         BucketNameText.Text = "Codex usage";
+        AdditionalLimitsPanel.Children.Clear();
+        _expandedHeight = MinimumExpandedHeight;
+        if (_isExpanded)
+        {
+            Height = MinimumExpandedHeight;
+            RepositionAfterWidthChange();
+        }
 
         switch (status)
         {
@@ -691,6 +793,10 @@ public partial class MainWindow : Window
             case "Trying again…":
                 UsagePercentText.Text = "Usage unavailable";
                 ResetText.Text = "Couldn’t load limits. Retrying…";
+                break;
+            case "Disconnected":
+                UsagePercentText.Text = "CLI disconnected";
+                ResetText.Text = "Reconnect when the CLI update is finished.";
                 break;
             default:
                 UsagePercentText.Text = "Loading usage…";
@@ -720,10 +826,137 @@ public partial class MainWindow : Window
         RailRemainingText.Visibility = _settings.ShowCompactPercentage
             ? Visibility.Visible
             : Visibility.Collapsed;
+        RenderLimitRows(snapshot);
+        EvaluateNotifications(snapshot);
         AnimateUsageValue(primaryPercent, usedPercent);
         AutomationProperties.SetName(
             RailHitTarget,
             $"Codex limit: {Math.Round(primaryPercent)} percent {primaryLabel}. {ResetText.Text}");
+    }
+
+    private void RenderLimitRows(UsageSnapshot snapshot)
+    {
+        var rows = UsageWindowDisplayBuilder.Build(snapshot);
+        AdditionalLimitsPanel.Children.Clear();
+
+        if (rows.Count == 0)
+        {
+            _expandedHeight = MinimumExpandedHeight;
+            return;
+        }
+
+        BucketNameText.Text = rows[0].Label;
+        ResetText.Text = FormatSecondaryLine(rows[0].Window);
+
+        foreach (var row in rows.Skip(1))
+        {
+            AdditionalLimitsPanel.Children.Add(CreateLimitRow(row));
+        }
+
+        _expandedHeight = Math.Clamp(
+            MinimumExpandedHeight + Math.Max(0, rows.Count - 1) * 52,
+            MinimumExpandedHeight,
+            346);
+        if (_isExpanded)
+        {
+            Height = _expandedHeight;
+            RepositionAfterWidthChange();
+        }
+    }
+
+    private Border CreateLimitRow(UsageWindowDisplay row)
+    {
+        var used = UsageLevelResolver.Normalize(row.Window.UsedPercent);
+        var displayed = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used
+            ? used
+            : UsageLevelResolver.RemainingFromUsed(used);
+        var suffix = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used ? "used" : "left";
+        var colour = (System.Windows.Media.Color)FindResource(UsageLevelResolver.FromPercentage(
+            used,
+            _settings.WarningThreshold,
+            _settings.CriticalThreshold) switch
+        {
+            UsageLevel.Critical => "OverlayCriticalColor",
+            UsageLevel.Warning => "OverlayWarningColor",
+            _ => "OverlayNormalColor"
+        });
+
+        var header = new Grid();
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        header.Children.Add(new TextBlock
+        {
+            Text = row.Label,
+            Foreground = (System.Windows.Media.Brush)FindResource("OverlayMutedBrush"),
+            FontSize = (double)FindResource("OverlayTextSmall"),
+            TextTrimming = TextTrimming.CharacterEllipsis
+        });
+        var percentage = new TextBlock
+        {
+            Text = $"{Math.Round(displayed)}% {suffix}",
+            Foreground = new SolidColorBrush(colour),
+            FontSize = (double)FindResource("OverlayTextSmall"),
+            FontWeight = FontWeights.Medium,
+            Margin = new Thickness(8, 0, 0, 0)
+        };
+        Grid.SetColumn(percentage, 1);
+        header.Children.Add(percentage);
+
+        var content = new StackPanel();
+        content.Children.Add(header);
+        content.Children.Add(new TextBlock
+        {
+            Text = ResetTimeFormatter.Format(row.Window.ResetsAt, DateTimeOffset.Now),
+            Foreground = (System.Windows.Media.Brush)FindResource("OverlayMutedBrush"),
+            FontSize = (double)FindResource("OverlayTextSmall"),
+            Margin = new Thickness(0, 3, 0, 0)
+        });
+
+        return new Border
+        {
+            BorderBrush = (System.Windows.Media.Brush)FindResource("OverlayBorderBrush"),
+            BorderThickness = new Thickness(0, 1, 0, 0),
+            Margin = new Thickness(0, 10, 0, 0),
+            Padding = new Thickness(0, 9, 0, 0),
+            Child = content
+        };
+    }
+
+    private string FormatSecondaryLine(QuotaWindow window)
+    {
+        var used = UsageLevelResolver.Normalize(window.UsedPercent);
+        var secondaryPercent = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used
+            ? UsageLevelResolver.RemainingFromUsed(used)
+            : used;
+        var secondaryLabel = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used ? "left" : "used";
+        return $"{Math.Round(secondaryPercent)}% {secondaryLabel}  ·  " +
+               ResetTimeFormatter.Format(window.ResetsAt, DateTimeOffset.Now);
+    }
+
+    private void EvaluateNotifications(UsageSnapshot snapshot)
+    {
+        var alerts = _notificationTracker.Evaluate(
+            snapshot,
+            _settings.WarningThreshold,
+            _settings.CriticalThreshold);
+        if (!_settings.NotificationsEnabled)
+        {
+            return;
+        }
+
+        foreach (var alert in alerts)
+        {
+            var remaining = Math.Round(UsageLevelResolver.RemainingFromUsed(alert.Window.Window.UsedPercent));
+            _notifyIcon.BalloonTipTitle = alert.Level == UsageLevel.Critical
+                ? "Codex usage is nearly exhausted"
+                : "Codex usage is running low";
+            _notifyIcon.BalloonTipText =
+                $"{alert.Window.Label}: {remaining}% left. " +
+                ResetTimeFormatter.Format(alert.Window.Window.ResetsAt, DateTimeOffset.Now);
+            _notifyIcon.ShowBalloonTip(6000);
+            _logger.Info(
+                $"Displayed a {alert.Level.ToString().ToLowerInvariant()} usage alert for {alert.Window.Key}.");
+        }
     }
 
     private void AnimateUsageValue(double displayPercentage, double usedPercentage)
@@ -794,16 +1027,10 @@ public partial class MainWindow : Window
         var primary = new RateLimitBucket(
             "codex",
             "All Codex models",
-            new QuotaWindow(percentage, 10_080, DateTimeOffset.Now.AddDays(3).AddHours(2)),
-            null,
+            new QuotaWindow(percentage, 300, DateTimeOffset.Now.AddHours(2).AddMinutes(18)),
+            new QuotaWindow(Math.Max(0, percentage - 18), 10_080, DateTimeOffset.Now.AddDays(3).AddHours(2)),
             "pro");
-        var spark = new RateLimitBucket(
-            "codex_spark",
-            "GPT-5.3 Codex Spark",
-            new QuotaWindow(0, 10_080, DateTimeOffset.Now.AddDays(7)),
-            null,
-            "pro");
-        return new UsageSnapshot(primary, new[] { spark }, DateTimeOffset.Now);
+        return new UsageSnapshot(primary, Array.Empty<RateLimitBucket>(), DateTimeOffset.Now);
     }
 
     private System.Windows.Forms.NotifyIcon CreateNotifyIcon()
@@ -823,6 +1050,13 @@ public partial class MainWindow : Window
         menu.Items.Add("Open settings…", null, (_, _) => Dispatcher.Invoke(ShowSettings));
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         menu.Items.Add("Refresh usage", null, (_, _) => _ = _appServerClient.RefreshAsync());
+        _trayConnectionMenuItem = new System.Windows.Forms.ToolStripMenuItem("Disconnect Codex CLI");
+        _trayConnectionMenuItem.Click += async (_, _) =>
+            await Dispatcher.InvokeAsync(() => SetConnectionSuspendedAsync(!_isConnectionSuspended)).Task.Unwrap();
+        menu.Items.Add(_trayConnectionMenuItem);
+        _trayUpdateMenuItem = new System.Windows.Forms.ToolStripMenuItem("Check for updates");
+        _trayUpdateMenuItem.Click += async (_, _) => await CheckForUpdatesAsync();
+        menu.Items.Add(_trayUpdateMenuItem);
         menu.Items.Add("Open log file", null, (_, _) => OpenLog());
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         var exitItem = menu.Items.Add(
@@ -851,7 +1085,108 @@ public partial class MainWindow : Window
             ExpandDetails();
             UpdateEscapeHotKey();
         });
+        icon.BalloonTipClicked += (_, _) =>
+        {
+            if (_pendingUpdateUri is { } uri)
+            {
+                OpenUri(uri);
+            }
+        };
         return icon;
+    }
+
+    private void UpdateConnectionMenuLabels()
+    {
+        var label = _isConnectionSuspended ? "Reconnect Codex CLI" : "Disconnect Codex CLI";
+        if (_trayConnectionMenuItem is not null)
+        {
+            _trayConnectionMenuItem.Text = label;
+        }
+        ConnectionMenuItem.Header = label;
+    }
+
+    private Task CheckForUpdatesAsync()
+    {
+        if (_updateCheckTask is { IsCompleted: false })
+        {
+            return _updateCheckTask;
+        }
+
+        _updateCheckTask = CheckForUpdatesCoreAsync();
+        return _updateCheckTask;
+    }
+
+    private async Task CheckForUpdatesCoreAsync()
+    {
+        if (_isClosing || !_trayUpdateMenuItem.Enabled)
+        {
+            return;
+        }
+
+        _trayUpdateMenuItem.Enabled = false;
+        _trayUpdateMenuItem.Text = "Checking for updates…";
+        _pendingUpdateUri = null;
+
+        try
+        {
+            var result = await _releaseUpdateService.CheckAsync(_cancellation.Token);
+            if (_isClosing)
+            {
+                return;
+            }
+            if (result.IsUpdateAvailable)
+            {
+                _pendingUpdateUri = result.ReleaseUri;
+                _notifyIcon.BalloonTipTitle = $"Usage Overlay {result.LatestVersion} is available";
+                _notifyIcon.BalloonTipText = "Select this notification to open the verified GitHub release.";
+                _notifyIcon.ShowBalloonTip(8000);
+                _logger.Info($"Update available: {result.LatestVersion}.");
+            }
+            else
+            {
+                _notifyIcon.BalloonTipTitle = "Usage Overlay is up to date";
+                _notifyIcon.BalloonTipText = $"You are running version {result.CurrentVersion}.";
+                _notifyIcon.ShowBalloonTip(5000);
+                _logger.Info("Manual update check found no newer release.");
+            }
+        }
+        catch (OperationCanceledException) when (_cancellation.IsCancellationRequested)
+        {
+            // Normal application shutdown.
+        }
+        catch (Exception exception) when (
+            exception is HttpRequestException or TaskCanceledException or InvalidOperationException or JsonException)
+        {
+            _notifyIcon.BalloonTipTitle = "Couldn’t check for updates";
+            _notifyIcon.BalloonTipText = "Open the GitHub Releases page or try again later.";
+            _notifyIcon.ShowBalloonTip(6000);
+            _logger.Error($"Update check failed: {exception.Message}");
+        }
+        finally
+        {
+            if (!_isClosing)
+            {
+                _trayUpdateMenuItem.Text = "Check for updates";
+                _trayUpdateMenuItem.Enabled = true;
+            }
+        }
+    }
+
+    private void OpenUri(Uri uri)
+    {
+        try
+        {
+            _ = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = uri.AbsoluteUri,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception exception) when (
+            exception is InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            _logger.Error($"Could not open {uri.Host}: {exception.Message}");
+        }
     }
 
     private void UpdateTrayMenuTheme()
@@ -1054,6 +1389,7 @@ public partial class MainWindow : Window
         DetailsTranslate.X = 8;
         DetailsPanel.Visibility = Visibility.Collapsed;
         Width = CollapsedWidth;
+        Height = CollapsedHeight;
         RepositionAfterWidthChange();
         UpdateEscapeHotKey();
     }
@@ -1079,6 +1415,22 @@ public partial class MainWindow : Window
     private async void RefreshMenuItem_OnClick(object sender, RoutedEventArgs eventArgs)
     {
         await _appServerClient.RefreshAsync();
+    }
+
+    private async void ConnectionMenuItem_OnClick(object sender, RoutedEventArgs eventArgs)
+    {
+        await SetConnectionSuspendedAsync(!_isConnectionSuspended);
+    }
+
+    private async void CheckForUpdatesMenuItem_OnClick(object sender, RoutedEventArgs eventArgs)
+    {
+        await CheckForUpdatesAsync();
+    }
+
+    private void ViewUsageLink_OnClick(object sender, RoutedEventArgs eventArgs)
+    {
+        OpenUri(UsagePageUri);
+        eventArgs.Handled = true;
     }
 
     private void VisibilityMenuItem_OnClick(object sender, RoutedEventArgs eventArgs)

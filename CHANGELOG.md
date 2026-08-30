@@ -4,6 +4,30 @@ All notable changes will be documented in this file.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] - 2026-08-31
+
+### Added
+
+- Complete quota details for the primary and secondary windows of the main Codex limit
+- Optional Windows notifications when any displayed limit first crosses the configured amber or red threshold
+- Manual GitHub release checking from the rail and system-tray menus
+- A disconnect and reconnect control that releases the Codex CLI process before a CLI upgrade
+- A compact View usage link at the bottom of the detail card
+
+### Changed
+
+- Expanded details resize to fit the available usage windows while the collapsed rail keeps its original footprint
+- Demo and live-smoke modes now exercise and report multiple usage windows
+- App Server initialization now reports the real Usage Overlay assembly version
+
+### Fixed
+
+- Kept the overlay hidden on Codex-owned Open, Save, and file-picker dialogs instead of treating them as the main Codex window
+
+### Security
+
+- Update checks are user-initiated and contact only the repository's public GitHub Releases API
+
 ## [0.1.1] - 2026-08-21
 
 ### Added

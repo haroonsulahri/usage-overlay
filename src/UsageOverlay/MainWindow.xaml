@@ -105,6 +105,40 @@
                                Text="Connecting to Codex…"
                                Foreground="{DynamicResource OverlayMutedBrush}"
                                FontSize="{StaticResource OverlayTextSmall}" />
+                    <StackPanel x:Name="AdditionalLimitsPanel" />
+                    <Border Margin="0,10,0,0"
+                            Padding="0,9,0,0"
+                            BorderBrush="{DynamicResource OverlayBorderBrush}"
+                            BorderThickness="0,1,0,0">
+                        <Button HorizontalAlignment="Right"
+                                Padding="2,0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Cursor="Hand"
+                                FontSize="{StaticResource OverlayTextSmall}"
+                                AutomationProperties.Name="View full Codex usage"
+                                ToolTip="Open full Codex usage"
+                                Click="ViewUsageLink_OnClick">
+                            <Button.Foreground>
+                                <SolidColorBrush Color="{StaticResource OverlayNormalColor}" />
+                            </Button.Foreground>
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <TextBlock x:Name="LinkText"
+                                               Padding="{TemplateBinding Padding}"
+                                               Text="{TemplateBinding Content}"
+                                               Foreground="{TemplateBinding Foreground}"
+                                               TextDecorations="Underline" />
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="LinkText" Property="Opacity" Value="0.78" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                            View usage
+                        </Button>
+                    </Border>
                 </StackPanel>
 
             </Grid>
@@ -134,6 +168,13 @@
                     <MenuItem Header="Refresh usage"
                               Style="{StaticResource OverlayMenuItemStyle}"
                               Click="RefreshMenuItem_OnClick" />
+                    <MenuItem x:Name="ConnectionMenuItem"
+                              Header="Disconnect Codex CLI"
+                              Style="{StaticResource OverlayMenuItemStyle}"
+                              Click="ConnectionMenuItem_OnClick" />
+                    <MenuItem Header="Check for updates"
+                              Style="{StaticResource OverlayMenuItemStyle}"
+                              Click="CheckForUpdatesMenuItem_OnClick" />
                     <Separator Style="{StaticResource OverlayMenuSeparatorStyle}" />
                     <MenuItem Header="Quit Usage Overlay"
                               Tag="Destructive"

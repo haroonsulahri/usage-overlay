@@ -23,12 +23,14 @@ Hover over the rail to open the detail card. The card shows:
 - The reset countdown for the current limit window
 - Live, connecting, or unavailable connection status
 - Green, amber, or red status based on your configured thresholds
+- A small **View usage** link to the full Codex usage page
 
 If Codex has not returned a fresh limit yet, the rail shows `--`. The card says **Loading usage** while connecting and **Usage unavailable** if the limits cannot be read. It never presents an old percentage as a current reading after the connection is lost.
 
 ## Features
 
 - **Remaining usage first:** the default view answers the useful question: how much do I have left?
+- **Complete main-limit details:** inspect the primary and secondary usage windows for the main Codex limit without model-specific clutter.
 - **Compact detail card:** hover to inspect the limit or click to keep the card open.
 - **Reset countdown:** see when the current quota window resets.
 - **Live updates:** listen for App Server updates and poll at a configurable interval as a fallback.
@@ -41,6 +43,9 @@ If Codex has not returned a fresh limit yet, the rail shows `--`. The card says 
 - **Reduced motion support:** turn animations off, with Windows reduced-motion settings respected automatically.
 - **Native Settings window:** change behavior without editing configuration files.
 - **System tray access:** reopen the rail, refresh usage, open Settings, view logs, or quit.
+- **Optional low-usage alerts:** receive one Windows notification when a limit first turns amber or red.
+- **Safe CLI updates:** disconnect and release the Codex CLI process before upgrading it, then reconnect without quitting the overlay.
+- **Manual update checks:** check the official GitHub release from the rail or tray menu without background telemetry.
 - **Automatic startup:** optionally start Usage Overlay when Windows starts.
 - **Single instance:** opening the app again talks to the running process instead of creating a duplicate.
 - **Local by design:** no analytics, advertising, telemetry, or remote account system.
@@ -101,10 +106,12 @@ Remove either shortcut without touching the application files:
 | Click the card's close button | Closes only the detail card |
 | Press `Escape` | Closes pinned details without stopping the app |
 | Drag the rail | Saves a custom position |
-| Right-click the rail | Opens hide, refresh, Settings, and quit actions |
+| Right-click the rail | Opens visibility, Settings, refresh, CLI connection, update, and quit actions |
 | Double-click the tray icon | Restores a manually hidden rail |
 | Open Usage Overlay from Windows Search | Opens the native Settings window |
 | Launch the executable again | Restores the existing instance; no duplicate is created |
+| Disconnect Codex CLI | Releases the CLI process so the npm-installed CLI can be updated safely |
+| Check for updates | Checks the public GitHub Releases API for a newer stable version |
 
 Choosing **Hide usage rail** does not stop usage updates. Use the tray icon to show it again. Choose **Quit Usage Overlay** when you want to stop the process.
 
@@ -168,6 +175,7 @@ Custom positions are stored as relative coordinates, so the rail remains inside 
 - **Turn red at:** set the higher used percentage where the rail changes to red.
 - **Animate changes:** smoothly moves the rail when a fresh value arrives. Windows reduced-motion preferences are still respected.
 - **Show the percentage below the rail:** keeps the compact number visible while the detail card is closed.
+- **Notify me when usage turns amber or red:** sends one Windows notification when a returned limit crosses either configured threshold. Notifications are off by default.
 
 **Follow Codex** checks a few background pixels from the active Codex window to decide whether the surface is light or dark. It does not capture, save, or log screen content. Windows appearance is used as a fallback when Codex is unavailable.
 
@@ -177,6 +185,8 @@ Custom positions are stored as relative coordinates, so the rail remains inside 
 - **Codex CLI path:** optionally point directly to `codex.cmd` or `codex.exe` when the command is not available on `PATH`.
 - **Refresh every:** sets the fallback polling interval from 15 to 3,600 seconds. Live notifications can still update the rail sooner.
 - **Open logs:** opens the local redacted diagnostic log.
+- **Disconnect Codex CLI:** available from the rail and tray menus when you need to upgrade the npm-installed CLI. Choose Reconnect Codex CLI afterward.
+- **Check for updates:** manually checks the public GitHub release. Usage Overlay does not check automatically.
 - **Restore defaults:** stages the original settings. Choose Save to keep them.
 
 CLI path and refresh interval changes take effect after the app restarts.
@@ -196,6 +206,7 @@ CLI path and refresh interval changes take effect after the app restarts.
 | Red threshold | 90% used |
 | Animate changes | On |
 | Percentage below rail | On |
+| Threshold notifications | Off |
 | Custom CLI path | Empty; use `PATH` |
 | Refresh interval | 60 seconds |
 
@@ -208,6 +219,7 @@ CLI path and refresh interval changes take effect after the app restarts.
 | `Couldn’t connect` | Codex returned an error. The app keeps trying. |
 | `Trying again…` | App Server stopped or failed and will be restarted. |
 | `CLI not found` | Set the Codex CLI path in Settings or add it to `PATH`. |
+| `Disconnected` | Usage Overlay has released its App Server child process for a CLI update. Choose Reconnect Codex CLI when finished. |
 
 When no current limit is available, the rail remains neutral and shows `--` instead of a percentage.
 
@@ -244,7 +256,7 @@ Usage Overlay requests only Codex rate-limit metadata:
 
 It does not request prompts, responses, conversation history, repository files, browser activity, cookies, passwords, API keys, or Codex authentication files.
 
-The app does not make its own HTTP requests. Codex CLI owns authentication and network access. Usage Overlay has no telemetry or analytics endpoint.
+Codex CLI owns authentication and all account-data network access. Usage Overlay makes an HTTPS request to GitHub only when you explicitly choose **Check for updates**. It has no telemetry or analytics endpoint.
 
 Read the full [Privacy policy](docs/privacy.md) and [Security policy](SECURITY.md) before sharing logs or reporting a vulnerability.
 
@@ -332,7 +344,7 @@ Useful states:
 | Value | Expected result |
 | --- | --- |
 | `--demo=25` | Green rail, 75% left |
-| `--demo=75` | Amber rail, 25% left |
+| `--demo=75` | Amber rail, 25% left, plus the weekly detail row |
 | `--demo=92` | Red rail, 8% left |
 
 Open the Settings window directly:

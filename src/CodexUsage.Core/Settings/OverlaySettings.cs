@@ -50,6 +50,8 @@ public sealed record OverlaySettings
 
     public bool ShowCompactPercentage { get; init; } = true;
 
+    public bool NotificationsEnabled { get; init; }
+
     public string CodexCliPath { get; init; } = string.Empty;
 
     public int RefreshIntervalSeconds { get; init; } = 60;

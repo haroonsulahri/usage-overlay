@@ -35,6 +35,27 @@ public sealed class AppServerClient : IAsyncDisposable
 
     public event EventHandler<string>? StatusChanged;
 
+    public bool IsProcessRunning
+    {
+        get
+        {
+            var process = _process;
+            if (process is null)
+            {
+                return false;
+            }
+
+            try
+            {
+                return !process.HasExited;
+            }
+            catch (InvalidOperationException)
+            {
+                return false;
+            }
+        }
+    }
+
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
@@ -113,7 +134,7 @@ public sealed class AppServerClient : IAsyncDisposable
                     {
                         name = "usage_overlay",
                         title = "Usage Overlay",
-                        version = "0.1.0"
+                        version = AppVersion.Current
                     }
                 }
             },
