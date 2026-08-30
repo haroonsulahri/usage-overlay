@@ -23,6 +23,8 @@ The project follows [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - Kept the overlay hidden on Codex-owned Open, Save, and file-picker dialogs instead of treating them as the main Codex window
+- Kept a custom-positioned rail stationary while the detail card expands or collapses on hover
+- Aligned the detail card's bottom edge with the full rail, including its compact percentage label
 
 ### Security
 

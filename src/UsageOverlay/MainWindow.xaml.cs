@@ -415,8 +415,11 @@ public partial class MainWindow : Window
             maximumLeft);
 
         var baseTop = _settings.Placement == HorizontalPlacement.Custom
-            ? bounds.Top + (bounds.Bottom - bounds.Top) * _settings.CustomYRatio - Height / 2 -
-              _settings.VerticalOffset
+            ? OverlayPositionMath.CalculateCustomTop(
+                bounds.Top + (bounds.Bottom - bounds.Top) * _settings.CustomYRatio,
+                Height,
+                CollapsedHeight,
+                _settings.VerticalOffset)
             : bounds.Bottom - BottomInset - Height - _settings.VerticalOffset;
         var maximumTop = Math.Max(bounds.Top + WindowPadding, bounds.Bottom - Height - WindowPadding);
         Top = Math.Clamp(baseTop, bounds.Top + WindowPadding, maximumTop);
@@ -637,7 +640,7 @@ public partial class MainWindow : Window
         var width = Math.Max(1, bounds.Right - bounds.Left);
         var height = Math.Max(1, bounds.Bottom - bounds.Top);
         var railCenterX = Left + Width - CollapsedWidth / 2;
-        var windowCenterY = Top + Height / 2;
+        var customAnchorY = OverlayPositionMath.CalculateCustomAnchorY(Top, Height, CollapsedHeight);
 
         _settings = _settings with
         {
@@ -645,7 +648,7 @@ public partial class MainWindow : Window
             HorizontalOffset = 0,
             VerticalOffset = 0,
             CustomXRatio = Math.Clamp((railCenterX - bounds.Left) / width, 0, 1),
-            CustomYRatio = Math.Clamp((windowCenterY - bounds.Top) / height, 0, 1)
+            CustomYRatio = Math.Clamp((customAnchorY - bounds.Top) / height, 0, 1)
         };
         PersistSettings();
         _logger.Info(

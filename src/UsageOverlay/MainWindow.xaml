@@ -42,7 +42,7 @@
                 Opacity="0"
                 Visibility="Collapsed">
             <Border.RenderTransform>
-                <TranslateTransform x:Name="DetailsTranslate" X="8" />
+                <TranslateTransform x:Name="DetailsTranslate" X="8" Y="24" />
             </Border.RenderTransform>
             <Grid>
                 <Grid.RowDefinitions>

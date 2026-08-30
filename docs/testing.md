@@ -56,6 +56,7 @@ Recommended visual states:
 | Close button | Pinned detail card collapses; rail and process remain active |
 | Escape | Pinned detail card collapses; Settings window closes when it is active |
 | Drag | Custom relative position is saved and restored |
+| Custom-position hover | The rail stays fixed while the detail card expands upward and left |
 | Manual hide | Usage continues updating; tray shows Show overlay |
 | Relaunch while hidden | Existing instance becomes eligible to show; no duplicate remains |
 | Windows Search launch | Existing or new instance opens Settings; no duplicate remains |

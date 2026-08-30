@@ -22,7 +22,8 @@ var specs = new (string Name, Action Run)[]
     ("Normalizes theme settings and preserves defaults", NormalizesThemeSettings),
     ("Redacts secrets from diagnostic logs", RedactsDiagnosticSecrets),
     ("Loads legacy settings with new safe defaults", LoadsLegacySettings),
-    ("Recognizes only the main Codex window", RecognizesOnlyMainCodexWindow)
+    ("Recognizes only the main Codex window", RecognizesOnlyMainCodexWindow),
+    ("Keeps a custom-positioned rail fixed while expanding", KeepsCustomRailFixedWhileExpanding)
 };
 
 var failures = new List<string>();
@@ -314,6 +315,28 @@ static void RecognizesOnlyMainCodexWindow()
     Assert(
         !CodexWindowIdentity.IsMainWindow(@"C:\Windows\explorer.exe", "explorer", "ChatGPT"),
         "An unrelated process must not be treated as Codex.");
+}
+
+static void KeepsCustomRailFixedWhileExpanding()
+{
+    const double anchorY = 600;
+    const double collapsedHeight = 190;
+    const double expandedHeight = 218;
+    var collapsedTop = OverlayPositionMath.CalculateCustomTop(
+        anchorY,
+        collapsedHeight,
+        collapsedHeight,
+        verticalOffset: 0);
+    var expandedTop = OverlayPositionMath.CalculateCustomTop(
+        anchorY,
+        expandedHeight,
+        collapsedHeight,
+        verticalOffset: 0);
+
+    AssertEqual(collapsedTop + collapsedHeight, expandedTop + expandedHeight);
+    AssertEqual(
+        anchorY,
+        OverlayPositionMath.CalculateCustomAnchorY(expandedTop, expandedHeight, collapsedHeight));
 }
 
 static RateLimitBucket Bucket(string id, double usedPercent)
