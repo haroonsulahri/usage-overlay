@@ -42,8 +42,8 @@ Run the authenticated smoke test only when you are already signed in to Codex:
 
 - Keep the change scoped to one problem.
 - Add or update tests for parsing, calculations, settings, or security-sensitive behavior.
-- Preserve reduced-motion support, Codex-only visibility, single-instance behavior, and local-only data handling.
-- Do not add telemetry, remote analytics, private API calls, credential access, or background uploads.
+- Preserve reduced-motion support, Codex-only visibility, single-instance behavior, and local account-data handling.
+- Optional installation reporting is the only permitted background upload: explicit opt-in, random installation ID and app version only, bounded requests, immediate cancellation on opt-out. Do not expand its scope or add private API calls, credential access, advertising, analytics SDKs or account-data uploads.
 - Do not include generated binaries, logs, settings, screenshots with private content, or machine-specific paths.
 - Update README, CHANGELOG, SECURITY, or architecture documentation when behavior changes.
 - Run `scripts\build.ps1` before submitting.

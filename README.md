@@ -45,10 +45,10 @@ If Codex has not returned a fresh limit yet, the rail shows `--`. The card says 
 - **System tray access:** reopen the rail, refresh usage, open Settings, view logs, or quit.
 - **Optional low-usage alerts:** receive one Windows notification when a limit first turns amber or red.
 - **Safe CLI updates:** disconnect and release the Codex CLI process before upgrading it, then reconnect without quitting the overlay.
-- **Manual update checks:** check the official GitHub release from the rail or tray menu without background telemetry.
+- **Manual update checks:** check the official GitHub release from the rail or tray menu on demand.
 - **Automatic startup:** optionally start Usage Overlay when Windows starts.
 - **Single instance:** opening the app again talks to the running process instead of creating a duplicate.
-- **Local by design:** no analytics, advertising, telemetry, or remote account system.
+- **Optional usage reporting:** off by default; share only a random installation ID and app version with Haroone to measure adoption. No advertising or remote account system.
 
 Usage Overlay reads account state and limits through the officially documented [`account/read`, `account/updated`, `account/rateLimits/read`, and `account/rateLimits/updated`](https://developers.openai.com/codex/app-server) Codex App Server methods.
 
@@ -256,13 +256,13 @@ Usage Overlay requests only Codex rate-limit metadata:
 
 It does not request prompts, responses, conversation history, repository files, browser activity, cookies, passwords, API keys, or Codex authentication files.
 
-Codex CLI owns authentication and all account-data network access. Usage Overlay makes an HTTPS request to GitHub only when you explicitly choose **Check for updates**. It has no telemetry or analytics endpoint.
+Codex CLI owns authentication and all account-data network access. Usage Overlay makes an HTTPS request to GitHub only when you explicitly choose **Check for updates**. Separately, optional installation reporting is off by default. Enable **Share optional installation and activity reports** in Settings and select Save to send a random installation ID and app version to `https://haroone.com/api/usage-overlay.php`, at most once per UTC day while the app runs. Disable it and Save to cancel pending requests and stop future reporting. No account, quota, conversation, credentials or logs are included. Previously received reports expire under the retention policy.
 
 Read the full [Privacy policy](docs/privacy.md) and [Security policy](SECURITY.md) before sharing logs or reporting a vulnerability.
 
 ## Local files
 
-Usage Overlay stores two files on your computer:
+Usage Overlay stores settings and logs on your computer. Opting in also creates `reporting.json`, containing a random installation ID and the last attempted reporting date:
 
 ```text
 %LOCALAPPDATA%\UsageOverlay\settings.json

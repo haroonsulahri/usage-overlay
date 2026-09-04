@@ -13,6 +13,7 @@ using CodexUsage.Core;
 using CodexUsage.Core.Formatting;
 using CodexUsage.Core.Models;
 using CodexUsage.Core.Settings;
+using CodexUsage.Core.Reporting;
 using UsageOverlay.Infrastructure;
 using UsageOverlay.Services;
 
@@ -50,6 +51,14 @@ public partial class MainWindow : Window
     private readonly StartupShortcutManager _startupShortcutManager;
     private readonly AppServerClient _appServerClient;
     private readonly ReleaseUpdateService _releaseUpdateService;
+    private readonly HttpClient _reportingClient = new(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false })
+    {
+        Timeout = TimeSpan.FromSeconds(5)
+    };
+    private readonly UsageReporter _usageReporter;
+    private readonly DispatcherTimer _reportingTimer = new() { Interval = TimeSpan.FromHours(1) };
+    private CancellationTokenSource? _reportingCancellation;
+    private Task _reportingTask = Task.CompletedTask;
     private readonly DispatcherTimer _windowTrackingTimer;
     private readonly DispatcherTimer _collapseTimer;
     private readonly CancellationTokenSource _cancellation = new();
@@ -92,6 +101,10 @@ public partial class MainWindow : Window
         _logger = logger;
         _settingsStore = new OverlaySettingsStore(logger);
         _settings = _settingsStore.Load();
+        _usageReporter = new UsageReporter(_reportingClient,
+            new Uri("https://haroone.com/api/usage-overlay.php"),
+            System.IO.Path.Combine(System.IO.Path.GetDirectoryName(_settingsStore.Path)!, "reporting.json"), AppVersion.Current);
+        _reportingTimer.Tick += (_, _) => StartUsageReport();
         ThemeManager.Instance.Initialize(_settings.Theme);
         ThemeManager.Instance.ThemeApplied += ThemeManager_OnThemeApplied;
 
@@ -166,6 +179,7 @@ public partial class MainWindow : Window
         }
 
         StartAppServerConnection();
+        UpdateUsageReporting();
         UpdateWindowPosition();
         ApplyInitialExpansion();
         ApplyInitialSettings();
@@ -179,6 +193,11 @@ public partial class MainWindow : Window
         }
 
         _isClosing = true;
+        _reportingTimer.Stop();
+        _reportingCancellation?.Cancel();
+        await _reportingTask;
+        _reportingCancellation?.Dispose();
+        _reportingClient.Dispose();
         ThemeManager.Instance.ThemeApplied -= ThemeManager_OnThemeApplied;
         _windowTrackingTimer.Stop();
         _collapseTimer.Stop();
@@ -1356,6 +1375,7 @@ public partial class MainWindow : Window
         _ = _startupShortcutManager.SetEnabled(startAutomatically);
         _fixedPlacementBounds = _settings.FollowCodexAcrossMonitors ? null : _lastBounds;
         PersistSettings();
+        UpdateUsageReporting();
         RailRemainingText.Visibility = _settings.ShowCompactPercentage
             ? Visibility.Visible
             : Visibility.Collapsed;
@@ -1376,6 +1396,30 @@ public partial class MainWindow : Window
     {
         _settings = _settings.Normalize();
         _settingsStore.Save(_settings);
+    }
+
+    private void UpdateUsageReporting()
+    {
+        if (!_settings.UsageReportingEnabled || _options.DemoPercent is not null || _isClosing)
+        {
+            _reportingTimer.Stop();
+            _reportingCancellation?.Cancel();
+            return;
+        }
+        _reportingTimer.Start();
+        StartUsageReport();
+    }
+
+    private void StartUsageReport()
+    {
+        if (!_settings.UsageReportingEnabled || _options.DemoPercent is not null || _isClosing || !_reportingTask.IsCompleted)
+        {
+            return;
+        }
+        _reportingCancellation?.Dispose();
+        _reportingCancellation = new CancellationTokenSource();
+        var token = _reportingCancellation.Token;
+        _reportingTask = Task.Run(() => _usageReporter.ReportAsync(true, token));
     }
 
     private void UpdateVisibilityMenuLabels()

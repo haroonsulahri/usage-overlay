@@ -27,7 +27,7 @@ Usage Overlay:
 - Stores settings and redacted diagnostic logs under `%LOCALAPPDATA%\UsageOverlay`
 - Creates Start-menu or Startup shortcuts only when the user requests them
 
-It does not inject code into Codex, inspect conversation content, read cookies, expose a network listener, or send telemetry.
+It does not inject code into Codex, inspect conversation content, read cookies, expose a network listener, or send account data to the reporting service. Optional installation reporting is disabled by default; it sends only a random ID and app version to Haroone over HTTPS, without cookies or redirects, with a five-second timeout and at most one attempt per UTC day.
 
 ## Local attack considerations
 
