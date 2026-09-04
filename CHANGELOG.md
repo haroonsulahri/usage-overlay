@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0
+
+- Add optional installation and activity reporting, disabled by default for new and existing users.
+- Send only a random installation ID and app version at most once per UTC day, with bounded failures and cancellation on opt-out.
+- Document reporting consent, privacy boundaries and retention.
+
+
 All notable changes will be documented in this file.
 
 The project follows [Semantic Versioning](https://semver.org/).

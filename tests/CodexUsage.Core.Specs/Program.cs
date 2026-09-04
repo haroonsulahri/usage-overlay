@@ -9,6 +9,7 @@ using System.Text.Json;
 
 var specs = new (string Name, Action Run)[]
 {
+    ("Reports only with consent and bounds identity, retries and cancellation", ReportingSpecs.Run),
     ("Parses a multi-bucket response", ParsesMultiBucketResponse),
     ("Parses a rate-limit update notification", ParsesUpdateNotification),
     ("Recognizes signed-in account responses", RecognizesSignedInAccountResponse),

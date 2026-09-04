@@ -528,6 +528,13 @@
                                        Text="Alerts appear only when a limit crosses a colour threshold."
                                        Foreground="{DynamicResource OverlayMutedBrush}"
                                        FontSize="{StaticResource OverlayTextSmall}" />
+                            <CheckBox x:Name="UsageReportingCheckBox" Margin="0,16,0,0"
+                                      Content="Share optional installation and activity reports"
+                                      Style="{StaticResource SettingsCheckStyle}" />
+                            <TextBlock Margin="22,3,0,0" TextWrapping="Wrap"
+                                       Text="Off by default. Sends a random installation ID and app version to haroone.com at most once per UTC day while running. No account, conversation, quota or log data. Haroone records the reporting date and keeps reports for 90 days. Turn off and Save to stop future reports; previously received reports expire automatically."
+                                       Foreground="{DynamicResource OverlayMutedBrush}"
+                                       FontSize="{StaticResource OverlayTextSmall}" />
                         </StackPanel>
                     </Border>
                 </Border>

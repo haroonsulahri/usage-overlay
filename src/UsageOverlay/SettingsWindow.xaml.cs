@@ -59,6 +59,7 @@ public partial class SettingsWindow : Window
         AnimationsCheckBox.IsChecked = _settings.AnimationsEnabled;
         CompactPercentageCheckBox.IsChecked = _settings.ShowCompactPercentage;
         NotificationsCheckBox.IsChecked = _settings.NotificationsEnabled;
+        UsageReportingCheckBox.IsChecked = _settings.UsageReportingEnabled;
         SystemThemeRadio.IsChecked = _settings.Theme == AppTheme.System;
         DarkThemeRadio.IsChecked = _settings.Theme == AppTheme.Dark;
         LightThemeRadio.IsChecked = _settings.Theme == AppTheme.Light;
@@ -211,6 +212,7 @@ public partial class SettingsWindow : Window
             AnimationsEnabled = AnimationsCheckBox.IsChecked == true,
             ShowCompactPercentage = CompactPercentageCheckBox.IsChecked == true,
             NotificationsEnabled = NotificationsCheckBox.IsChecked == true,
+            UsageReportingEnabled = UsageReportingCheckBox.IsChecked == true,
             CodexCliPath = cliPath,
             RefreshIntervalSeconds = interval,
             PausedUntil = _pendingPausedUntil
