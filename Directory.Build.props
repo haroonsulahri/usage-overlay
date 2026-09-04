@@ -5,7 +5,7 @@
     <AnalysisLevel>latest-recommended</AnalysisLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Deterministic>true</Deterministic>
-    <VersionPrefix>0.2.0</VersionPrefix>
+    <VersionPrefix>0.2.1</VersionPrefix>
     <Authors>Haroone.com</Authors>
     <Company>Haroone.com</Company>
     <Copyright>Copyright (c) 2026 Haroone.com</Copyright>

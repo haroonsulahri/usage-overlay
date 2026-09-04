@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using System.Collections.Concurrent;
 using CodexUsage.Core.Models;
 using CodexUsage.Core.Protocol;
 using UsageOverlay.Infrastructure;
@@ -14,6 +15,7 @@ public sealed class AppServerClient : IAsyncDisposable
     private readonly SemaphoreSlim _writeGate = new(1, 1);
     private readonly string? _configuredCodexPath;
     private readonly TimeSpan _pollInterval;
+    private readonly ConcurrentDictionary<int, byte> _accountReadRequestIds = new();
     private Process? _process;
     private UsageSnapshot? _lastSnapshot;
     private int _nextRequestId;
@@ -91,9 +93,18 @@ public sealed class AppServerClient : IAsyncDisposable
 
     public Task RefreshAsync(CancellationToken cancellationToken = default)
     {
-        return _initialized
-            ? SendRequestAsync("account/rateLimits/read", null, cancellationToken)
-            : Task.CompletedTask;
+        return _initialized ? RefreshAccountAsync(cancellationToken) : Task.CompletedTask;
+    }
+
+    private Task RefreshAccountAsync(CancellationToken cancellationToken)
+    {
+        var requestId = NextRequestId();
+        _accountReadRequestIds.TryAdd(requestId, 0);
+        return SendRequestAsync(
+            requestId,
+            "account/read",
+            new { refreshToken = true },
+            cancellationToken);
     }
 
     private async Task RunSessionAsync(CancellationToken cancellationToken)
@@ -111,6 +122,7 @@ public sealed class AppServerClient : IAsyncDisposable
         var process = StartProcess(codexCommand);
         _process = process;
         _initialized = false;
+        _accountReadRequestIds.Clear();
         _sessionCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
         process.ErrorDataReceived += (_, eventArgs) =>
@@ -184,16 +196,52 @@ public sealed class AppServerClient : IAsyncDisposable
                     .ConfigureAwait(false);
                 await RefreshAsync(cancellationToken).ConfigureAwait(false);
                 _ = PollAsync(_sessionCancellation!.Token);
-                StatusChanged?.Invoke(this, "Live");
+                return;
+            }
+
+            if (root.TryGetProperty("id", out var accountReadIdElement) &&
+                accountReadIdElement.TryGetInt32(out var accountReadId) &&
+                _accountReadRequestIds.TryRemove(accountReadId, out _))
+            {
+                if (root.TryGetProperty("error", out var accountError))
+                {
+                    LogError(accountError);
+                    _lastSnapshot = null;
+                    StatusChanged?.Invoke(this, "Couldn’t connect");
+                    return;
+                }
+
+                if (AccountStateParser.TryParseReadResponse(root, out var accountState))
+                {
+                    if (accountState == CodexAccountState.SignedOut)
+                    {
+                        _lastSnapshot = null;
+                        StatusChanged?.Invoke(this, "Signed out");
+                        return;
+                    }
+
+                    await SendRequestAsync(
+                        NextRequestId(),
+                        "account/rateLimits/read",
+                        null,
+                        cancellationToken).ConfigureAwait(false);
+                    return;
+                }
+            }
+
+            if (AccountStateParser.TryParseUpdatedNotification(root, out var updatedState))
+            {
+                _lastSnapshot = null;
+                StatusChanged?.Invoke(
+                    this,
+                    updatedState == CodexAccountState.SignedOut ? "Signed out" : "Connecting…");
+                await RefreshAsync(cancellationToken).ConfigureAwait(false);
                 return;
             }
 
             if (root.TryGetProperty("error", out var error))
             {
-                var message = error.TryGetProperty("message", out var messageElement)
-                    ? messageElement.GetString() ?? "Unknown App Server error"
-                    : "Unknown App Server error";
-                _logger.Error(message);
+                LogError(error);
                 StatusChanged?.Invoke(this, "Couldn’t connect");
                 return;
             }
@@ -205,6 +253,7 @@ public sealed class AppServerClient : IAsyncDisposable
                     $"Usage updated: {Math.Round(_lastSnapshot.Primary.Primary.UsedPercent)}% " +
                     $"for {_lastSnapshot.Primary.Id}.");
                 SnapshotChanged?.Invoke(this, _lastSnapshot);
+                StatusChanged?.Invoke(this, "Live");
 
                 if (root.TryGetProperty("method", out var methodElement) &&
                     string.Equals(
@@ -235,16 +284,28 @@ public sealed class AppServerClient : IAsyncDisposable
         }
     }
 
-    private Task SendRequestAsync(string method, object? parameters, CancellationToken cancellationToken)
+    private Task SendRequestAsync(
+        int requestId,
+        string method,
+        object? parameters,
+        CancellationToken cancellationToken)
     {
         return SendAsync(
             new
             {
                 method,
-                id = NextRequestId(),
+                id = requestId,
                 @params = parameters
             },
             cancellationToken);
+    }
+
+    private void LogError(JsonElement error)
+    {
+        var message = error.TryGetProperty("message", out var messageElement)
+            ? messageElement.GetString() ?? "Unknown App Server error"
+            : "Unknown App Server error";
+        _logger.Error(message);
     }
 
     private async Task SendAsync(object message, CancellationToken cancellationToken)
@@ -316,6 +377,12 @@ public sealed class AppServerClient : IAsyncDisposable
             return Path.GetFullPath(configured);
         }
 
+        var desktopCommand = FindDesktopCodexCommand();
+        if (desktopCommand is not null)
+        {
+            return desktopCommand;
+        }
+
         var path = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
         foreach (var directory in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
         {
@@ -333,9 +400,26 @@ public sealed class AppServerClient : IAsyncDisposable
         return null;
     }
 
+    private static string? FindDesktopCodexCommand()
+    {
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var binRoot = Path.Combine(localAppData, "OpenAI", "Codex", "bin");
+        if (!Directory.Exists(binRoot))
+        {
+            return null;
+        }
+
+        return Directory.EnumerateFiles(binRoot, "codex.exe", SearchOption.AllDirectories)
+            .Select(path => new FileInfo(path))
+            .OrderByDescending(file => file.LastWriteTimeUtc)
+            .Select(file => file.FullName)
+            .FirstOrDefault();
+    }
+
     private void StopProcess()
     {
         _initialized = false;
+        _accountReadRequestIds.Clear();
         var sessionCancellation = Interlocked.Exchange(ref _sessionCancellation, null);
         sessionCancellation?.Cancel();
         sessionCancellation?.Dispose();

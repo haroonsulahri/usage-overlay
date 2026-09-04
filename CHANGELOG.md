@@ -4,6 +4,14 @@ All notable changes will be documented in this file.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [0.2.1] - 2026-09-04
+
+### Fixed
+
+- Refresh account state before reading usage so Codex sign-in, sign-out, and account switching are detected automatically
+- Prefer the working CLI bundled with Codex Desktop instead of getting stuck on a broken `codex.cmd` earlier on `PATH`
+- Clear usage from the previous account while Codex is signed out
+
 ## [0.2.0] - 2026-08-31
 
 ### Added

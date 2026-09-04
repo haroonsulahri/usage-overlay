@@ -44,10 +44,10 @@ Windows integration:
 
 ## Data flow
 
-1. The overlay locates `codex.cmd` or `codex.exe` on `PATH`, or uses `USAGE_OVERLAY_CODEX_PATH` when configured. The legacy `QUOTARAIL_CODEX_PATH` and `CODEX_USAGE_CODEX_PATH` variables are also accepted.
+1. The overlay uses an explicitly configured CLI path first, then the Codex Desktop bundled CLI when available, and finally `codex.cmd` or `codex.exe` on `PATH`. The legacy `QUOTARAIL_CODEX_PATH` and `CODEX_USAGE_CODEX_PATH` variables are also accepted.
 2. It starts `codex app-server --stdio` with redirected standard streams.
-3. It sends `initialize`, `initialized`, and `account/rateLimits/read`.
-4. It listens for `account/rateLimits/updated` and polls every 60 seconds as a fallback.
+3. It sends `initialize`, `initialized`, `account/read` with token refresh enabled, and then `account/rateLimits/read` for a signed-in ChatGPT account.
+4. It listens for `account/updated` and `account/rateLimits/updated`, and polls the account state every 60 seconds by default. This automatically clears stale usage after sign-out and loads the newly active account after sign-in or account switching.
 5. It renders the primary and secondary windows for the main Codex limit while keeping model-specific buckets out of the interface.
 
 The user can disconnect App Server from either context menu before upgrading an npm-installed Codex CLI. Disconnecting cancels the session and terminates only the process tree started by Usage Overlay. Reconnecting creates a fresh App Server session.
