@@ -50,14 +50,14 @@ If Codex has not returned a fresh limit yet, the rail shows `--`. The card says 
 - **Single instance:** opening the app again talks to the running process instead of creating a duplicate.
 - **Local by design:** no analytics, advertising, telemetry, or remote account system.
 
-Usage Overlay reads limits through the officially documented [`account/rateLimits/read`](https://developers.openai.com/codex/app-server) and `account/rateLimits/updated` Codex App Server methods.
+Usage Overlay reads account state and limits through the officially documented [`account/read`, `account/updated`, `account/rateLimits/read`, and `account/rateLimits/updated`](https://developers.openai.com/codex/app-server) Codex App Server methods.
 
 ## Requirements
 
 - Windows 10 or Windows 11 on x64
 - The Microsoft Store Codex desktop app
-- Codex CLI installed and available on `PATH`
-- Codex CLI signed in with ChatGPT-backed authentication
+- Codex Desktop, or a separately installed Codex CLI available on `PATH`
+- Codex signed in with ChatGPT-backed authentication
 
 API-key-only and Bedrock authentication do not provide the account usage data this app displays.
 
@@ -291,7 +291,7 @@ Run this in PowerShell:
 codex --version
 ```
 
-If Windows cannot find the command, install Codex CLI or provide its full path under **Settings > Connection and diagnostics**.
+Usage Overlay automatically prefers the CLI bundled with Codex Desktop. If neither that executable nor a working command on `PATH` is available, install Codex CLI or provide its full path under **Settings > Connection and diagnostics**.
 
 ### The card says `Usage unavailable`
 
@@ -300,7 +300,7 @@ If Windows cannot find the command, install Codex CLI or provide its full path u
 - Open the diagnostic log from Settings.
 - Restart Usage Overlay after changing the CLI path.
 
-The app retries connection failures automatically.
+The app retries connection failures automatically. It also refreshes account state after Codex sign-in, sign-out, or account switching without reading authentication files.
 
 ### The overlay uses the wrong theme
 
@@ -419,7 +419,7 @@ Usage Overlay does not install a Windows service, browser extension, driver, or 
 
 - Windows x64 only for this preview.
 - Designed for the Microsoft Store Codex desktop package.
-- Requires a separately installed and authenticated Codex CLI.
+- Uses the Codex Desktop bundled CLI when available; otherwise requires a separately installed CLI.
 - Usage is near-real-time, not token-by-token.
 - The executable is not code-signed yet, so SmartScreen may warn on first launch.
 - Follow Codex infers light or dark from the rendered window because the desktop app does not expose a public theme integration for companion tools.

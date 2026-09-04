@@ -11,6 +11,8 @@ var specs = new (string Name, Action Run)[]
 {
     ("Parses a multi-bucket response", ParsesMultiBucketResponse),
     ("Parses a rate-limit update notification", ParsesUpdateNotification),
+    ("Recognizes signed-in account responses", RecognizesSignedInAccountResponse),
+    ("Recognizes signed-out account updates", RecognizesSignedOutAccountUpdate),
     ("Clamps malformed percentage values", ClampsPercentage),
     ("Merges partial bucket updates", MergesPartialUpdate),
     ("Builds display rows for every usage window", BuildsUsageWindowRows),
@@ -102,6 +104,46 @@ static void ParsesUpdateNotification()
 
     Assert(RateLimitParser.TryParse(json, out var snapshot), "Expected notification to parse.");
     AssertEqual(64d, snapshot!.Primary.Primary.UsedPercent);
+}
+
+static void RecognizesSignedInAccountResponse()
+{
+    using var document = JsonDocument.Parse(
+        """
+        {
+          "id": 8,
+          "result": {
+            "account": { "type": "chatgpt", "email": "person@example.com", "planType": "pro" },
+            "requiresOpenaiAuth": true
+          }
+        }
+        """);
+
+    Assert(
+        AccountStateParser.TryParseReadResponse(document.RootElement, out var state),
+        "Expected account/read response to parse.");
+    AssertEqual(CodexAccountState.SignedIn, state);
+}
+
+static void RecognizesSignedOutAccountUpdate()
+{
+    using var response = JsonDocument.Parse(
+        """
+        { "id": 8, "result": { "account": null, "requiresOpenaiAuth": true } }
+        """);
+    Assert(
+        AccountStateParser.TryParseReadResponse(response.RootElement, out var responseState),
+        "Expected signed-out account/read response to parse.");
+    AssertEqual(CodexAccountState.SignedOut, responseState);
+
+    using var notification = JsonDocument.Parse(
+        """
+        { "method": "account/updated", "params": { "authMode": null, "planType": null } }
+        """);
+    Assert(
+        AccountStateParser.TryParseUpdatedNotification(notification.RootElement, out var notificationState),
+        "Expected account/updated notification to parse.");
+    AssertEqual(CodexAccountState.SignedOut, notificationState);
 }
 
 static void ClampsPercentage()

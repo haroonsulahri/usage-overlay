@@ -757,7 +757,7 @@ public partial class MainWindow : Window
                 : new SolidColorBrush((System.Windows.Media.Color)FindResource("OverlayMutedColor"));
 
             if (status == "Connecting…" || status == "Trying again…" ||
-                status == "Couldn’t connect" || status == "CLI not found")
+                status == "Couldn’t connect" || status == "CLI not found" || status == "Signed out")
             {
                 _hasCurrentUsage = false;
             }
@@ -800,6 +800,10 @@ public partial class MainWindow : Window
             case "Disconnected":
                 UsagePercentText.Text = "CLI disconnected";
                 ResetText.Text = "Reconnect when the CLI update is finished.";
+                break;
+            case "Signed out":
+                UsagePercentText.Text = "Signed out";
+                ResetText.Text = "Sign in to Codex. Usage will refresh automatically.";
                 break;
             default:
                 UsagePercentText.Text = "Loading usage…";
