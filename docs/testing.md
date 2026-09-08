@@ -13,6 +13,7 @@ It performs:
 - Release restore and build
 - Compiler and analyzer checks with warnings treated as errors
 - Dependency-free specifications for parsing, calculations, settings, and log redaction
+- Process-level checks using an isolated fake App Server and temporary `CODEX_HOME`: initial usage, external logout, login to a second account, direct account switching, late replies and child-process cancellation. The fake server also rejects any routine request that forces token refresh.
 
 ## Authenticated smoke test
 
@@ -22,7 +23,7 @@ Run this only on a Windows machine already signed in to Codex:
 .\scripts\smoke-live.ps1
 ```
 
-The smoke test starts App Server, waits up to 20 seconds for a real rate-limit snapshot, prints every returned usage window, then shuts down its child process.
+The smoke test starts App Server, reads a real rate-limit snapshot, verifies disconnect/reconnect and checks the public release endpoint within a 30-second deadline.
 
 ## UI preview
 
@@ -73,6 +74,10 @@ Recommended visual states:
 | Dark theme | Settings, rail, detail card, and menus use the dark palette |
 | Light theme | Settings, rail, detail card, and menus use the light palette with readable contrast |
 | App Server exit | Overlay reconnects after a bounded delay |
+| Logout saved by Codex | Old usage clears when login-file metadata changes; the overlay reconnects automatically |
+| Login or direct account switch saved by Codex | New account usage loads without restarting the overlay; previous-account replies are rejected |
+| Credential manager without an observable login file | Overlay-owned session is renewed every minute to reload credentials |
+| Revoked refresh token | Usage is unavailable until Codex is signed in again; saving the new login triggers reconnection |
 | Disconnect Codex CLI | App Server child process exits, usage becomes unavailable, and the menu changes to Reconnect Codex CLI |
 | Reconnect Codex CLI | A fresh App Server child process starts and live usage returns |
 | Threshold notification | An enabled alert appears once when a returned window first crosses amber or red |

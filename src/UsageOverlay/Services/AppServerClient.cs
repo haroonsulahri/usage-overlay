@@ -16,12 +16,17 @@ public sealed class AppServerClient : IAsyncDisposable
     private readonly string? _configuredCodexPath;
     private readonly TimeSpan _pollInterval;
     private readonly ConcurrentDictionary<int, byte> _accountReadRequestIds = new();
+    private readonly ConcurrentDictionary<int, byte> _rateReadRequestIds = new();
+    private readonly string _authPath = AuthFileRevision.ResolvePath();
+    private bool _accountValidated;
+    private string? _accountIdentity;
+    private int _refreshPending;
+    private DateTimeOffset _requestStarted;
     private Process? _process;
     private UsageSnapshot? _lastSnapshot;
     private int _nextRequestId;
     private int _initializeRequestId;
     private bool _initialized;
-    private CancellationTokenSource? _sessionCancellation;
 
     public AppServerClient(
         AppLogger logger,
@@ -77,6 +82,8 @@ public sealed class AppServerClient : IAsyncDisposable
             }
             finally
             {
+                if (!cancellationToken.IsCancellationRequested)
+                    StatusChanged?.Invoke(this, "Connecting…");
                 StopProcess();
             }
 
@@ -98,12 +105,18 @@ public sealed class AppServerClient : IAsyncDisposable
 
     private Task RefreshAccountAsync(CancellationToken cancellationToken)
     {
+        if (Interlocked.CompareExchange(ref _refreshPending, 1, 0) != 0)
+        {
+            return Task.CompletedTask;
+        }
+
+        _requestStarted = DateTimeOffset.UtcNow;
         var requestId = NextRequestId();
         _accountReadRequestIds.TryAdd(requestId, 0);
         return SendRequestAsync(
             requestId,
             "account/read",
-            new { refreshToken = true },
+            new { refreshToken = false },
             cancellationToken);
     }
 
@@ -119,11 +132,17 @@ public sealed class AppServerClient : IAsyncDisposable
 
         _logger.Info($"Starting App Server through {codexCommand}.");
         StatusChanged?.Invoke(this, "Connecting…");
+        var authRevision = AuthFileRevision.Read(_authPath);
+        var sessionStarted = DateTimeOffset.UtcNow;
         var process = StartProcess(codexCommand);
         _process = process;
         _initialized = false;
         _accountReadRequestIds.Clear();
-        _sessionCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        _rateReadRequestIds.Clear();
+        _accountValidated = false;
+        _lastSnapshot = null;
+        _accountIdentity = null;
+        Interlocked.Exchange(ref _refreshPending, 0);
 
         process.ErrorDataReceived += (_, eventArgs) =>
         {
@@ -152,15 +171,65 @@ public sealed class AppServerClient : IAsyncDisposable
             },
             cancellationToken).ConfigureAwait(false);
 
-        while (!cancellationToken.IsCancellationRequested && !process.HasExited)
+        using var readCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(2));
+        var read = process.StandardOutput.ReadLineAsync(readCancellation.Token).AsTask();
+        var tick = timer.WaitForNextTickAsync(readCancellation.Token).AsTask();
+        var nextPoll = DateTimeOffset.UtcNow + _pollInterval;
+        try
         {
-            var line = await process.StandardOutput.ReadLineAsync(cancellationToken).ConfigureAwait(false);
-            if (line is null)
+            while (!cancellationToken.IsCancellationRequested && !process.HasExited)
             {
-                break;
-            }
+                await Task.WhenAny(read, tick).ConfigureAwait(false);
+                // Check before processing stdout as well as on the timer: an old-account
+                // response must never repaint the rail after credentials change.
+                if (AuthFileRevision.Read(_authPath) != authRevision)
+                {
+                    _logger.Info("Codex credentials changed. Reconnecting the usage session.");
+                    return;
+                }
 
-            await HandleMessageAsync(line, cancellationToken).ConfigureAwait(false);
+                if (tick.IsCompleted)
+                {
+                    await tick.ConfigureAwait(false);
+                    var now = DateTimeOffset.UtcNow;
+                    if ((!_initialized && now - sessionStarted > TimeSpan.FromSeconds(30)) ||
+                        (_refreshPending != 0 && now - _requestStarted > TimeSpan.FromSeconds(30)))
+                    {
+                        throw new TimeoutException("Codex usage request timed out.");
+                    }
+
+                    // A credential manager may not write auth.json. Reload its state
+                    // periodically by renewing only the overlay-owned app server.
+                    if ((authRevision is "missing" or "unavailable") &&
+                        now - sessionStarted >= TimeSpan.FromSeconds(60))
+                    {
+                        return;
+                    }
+
+                    if (now >= nextPoll)
+                    {
+                        await RefreshAsync(cancellationToken).ConfigureAwait(false);
+                        nextPoll = now + _pollInterval;
+                    }
+
+                    tick = timer.WaitForNextTickAsync(readCancellation.Token).AsTask();
+                }
+
+                if (read.IsCompleted)
+                {
+                    var line = await read.ConfigureAwait(false);
+                    if (line is null) break;
+                    await HandleMessageAsync(line, cancellationToken).ConfigureAwait(false);
+                    read = process.StandardOutput.ReadLineAsync(readCancellation.Token).AsTask();
+                }
+            }
+        }
+        finally
+        {
+            readCancellation.Cancel();
+            try { await Task.WhenAll(read, tick).ConfigureAwait(false); }
+            catch (OperationCanceledException) { }
         }
 
         if (!cancellationToken.IsCancellationRequested)
@@ -195,7 +264,6 @@ public sealed class AppServerClient : IAsyncDisposable
                 await SendAsync(new { method = "initialized", @params = new { } }, cancellationToken)
                     .ConfigureAwait(false);
                 await RefreshAsync(cancellationToken).ConfigureAwait(false);
-                _ = PollAsync(_sessionCancellation!.Token);
                 return;
             }
 
@@ -207,6 +275,8 @@ public sealed class AppServerClient : IAsyncDisposable
                 {
                     LogError(accountError);
                     _lastSnapshot = null;
+                    _accountValidated = false;
+                    Interlocked.Exchange(ref _refreshPending, 0);
                     StatusChanged?.Invoke(this, "Couldn’t connect");
                     return;
                 }
@@ -216,28 +286,65 @@ public sealed class AppServerClient : IAsyncDisposable
                     if (accountState == CodexAccountState.SignedOut)
                     {
                         _lastSnapshot = null;
+                        _accountValidated = false;
+                        _rateReadRequestIds.Clear();
+                        Interlocked.Exchange(ref _refreshPending, 0);
                         StatusChanged?.Invoke(this, "Signed out");
                         return;
                     }
 
+                    var identity = root.GetProperty("result").GetProperty("account").GetRawText();
+                    if (_accountIdentity != identity)
+                    {
+                        _lastSnapshot = null;
+                        _accountIdentity = identity;
+                        StatusChanged?.Invoke(this, "Connecting…");
+                    }
+                    _accountValidated = true;
+                    var rateRequestId = NextRequestId();
+                    _rateReadRequestIds.TryAdd(rateRequestId, 0);
                     await SendRequestAsync(
-                        NextRequestId(),
+                        rateRequestId,
                         "account/rateLimits/read",
                         null,
                         cancellationToken).ConfigureAwait(false);
                     return;
                 }
+                Interlocked.Exchange(ref _refreshPending, 0);
+                return;
             }
 
             if (AccountStateParser.TryParseUpdatedNotification(root, out var updatedState))
             {
                 _lastSnapshot = null;
+                _accountValidated = false;
+                _accountReadRequestIds.Clear();
+                _rateReadRequestIds.Clear();
+                Interlocked.Exchange(ref _refreshPending, 0);
                 StatusChanged?.Invoke(
                     this,
                     updatedState == CodexAccountState.SignedOut ? "Signed out" : "Connecting…");
                 await RefreshAsync(cancellationToken).ConfigureAwait(false);
                 return;
             }
+
+            // Notifications do not identify their account. Request a correlated
+            // snapshot rather than applying a potentially stale notification.
+            if (root.TryGetProperty("method", out var method) &&
+                method.GetString() == "account/rateLimits/updated")
+            {
+                await RefreshAsync(cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
+            // Ignore late replies invalidated by logout/account updates.
+            if (!root.TryGetProperty("id", out var rateId) || !rateId.TryGetInt32(out var rateRequest) ||
+                !_rateReadRequestIds.TryRemove(rateRequest, out _))
+            {
+                return;
+            }
+            Interlocked.Exchange(ref _refreshPending, 0);
+            if (!_accountValidated) return;
 
             if (root.TryGetProperty("error", out var error))
             {
@@ -255,32 +362,7 @@ public sealed class AppServerClient : IAsyncDisposable
                 SnapshotChanged?.Invoke(this, _lastSnapshot);
                 StatusChanged?.Invoke(this, "Live");
 
-                if (root.TryGetProperty("method", out var methodElement) &&
-                    string.Equals(
-                        methodElement.GetString(),
-                        "account/rateLimits/updated",
-                        StringComparison.Ordinal))
-                {
-                    await RefreshAsync(cancellationToken).ConfigureAwait(false);
-                }
             }
-        }
-    }
-
-    private async Task PollAsync(CancellationToken cancellationToken)
-    {
-        using var timer = new PeriodicTimer(_pollInterval);
-
-        try
-        {
-            while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
-            {
-                await RefreshAsync(cancellationToken).ConfigureAwait(false);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Normal session shutdown.
         }
     }
 
@@ -420,10 +502,10 @@ public sealed class AppServerClient : IAsyncDisposable
     {
         _initialized = false;
         _accountReadRequestIds.Clear();
-        var sessionCancellation = Interlocked.Exchange(ref _sessionCancellation, null);
-        sessionCancellation?.Cancel();
-        sessionCancellation?.Dispose();
-
+        _rateReadRequestIds.Clear();
+        _accountValidated = false;
+        _lastSnapshot = null;
+        Interlocked.Exchange(ref _refreshPending, 0);
         var process = Interlocked.Exchange(ref _process, null);
         if (process is null)
         {

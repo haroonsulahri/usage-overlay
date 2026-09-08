@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.1] - 2026-09-08
+
+### Fixed
+
+- Detect external Codex credential changes and restart the overlay-owned connection automatically after logout, login, or an account switch.
+- Stop forcing OAuth token refreshes during routine usage polling.
+- Reject invalidated usage replies, clear old account data during reconnect, and recover stalled requests after 30 seconds.
+- Add isolated process-level logout/login and direct account-switch regression checks to the build.
+- Observe credential-file metadata only, without reading or writing authentication contents.
+
 ## 0.3.0
 
 - Add optional installation and activity reporting, disabled by default for new and existing users.

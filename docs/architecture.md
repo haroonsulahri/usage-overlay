@@ -46,9 +46,11 @@ Windows integration:
 
 1. The overlay uses an explicitly configured CLI path first, then the Codex Desktop bundled CLI when available, and finally `codex.cmd` or `codex.exe` on `PATH`. The legacy `QUOTARAIL_CODEX_PATH` and `CODEX_USAGE_CODEX_PATH` variables are also accepted.
 2. It starts `codex app-server --stdio` with redirected standard streams.
-3. It sends `initialize`, `initialized`, `account/read` with token refresh enabled, and then `account/rateLimits/read` for a signed-in ChatGPT account.
-4. It listens for `account/updated` and `account/rateLimits/updated`, and polls the account state every 60 seconds by default. This automatically clears stale usage after sign-out and loads the newly active account after sign-in or account switching.
+3. It sends `initialize`, `initialized`, `account/read` with `refreshToken: false`, and then `account/rateLimits/read` for a signed-in ChatGPT account. Codex retains responsibility for authentication refresh when needed.
+4. It listens for `account/updated` and `account/rateLimits/updated`, and polls the account state every 60 seconds by default. Notifications trigger a correlated usage request; late responses invalidated by account changes are ignored.
 5. It renders the primary and secondary windows for the main Codex limit while keeping model-specific buckets out of the interface.
+6. Every two seconds, and before processing a response, it checks only the existence, creation/modification timestamps and size of the effective `CODEX_HOME/auth.json`. A change clears the displayed usage and renews the overlay-owned App Server session after a five-second delay. Credential contents are never read or written.
+7. When that file is absent or inaccessible, the session is renewed every minute so a credential manager can be reloaded. Initialization and outstanding account/usage requests have a 30-second timeout. Logins held only in another process, and file replacements preserving all monitored metadata, are outside this detection mechanism.
 
 The user can disconnect App Server from either context menu before upgrading an npm-installed Codex CLI. Disconnecting cancels the session and terminates only the process tree started by Usage Overlay. Reconnecting creates a fresh App Server session.
 
