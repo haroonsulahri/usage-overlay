@@ -757,9 +757,9 @@ public partial class MainWindow : Window
 
     private void AppServerClient_OnSnapshotChanged(object? sender, UsageSnapshot snapshot)
     {
-        _lastUsageSnapshot = snapshot;
         _ = Dispatcher.InvokeAsync(() =>
         {
+            _lastUsageSnapshot = snapshot;
             _hasCurrentUsage = true;
             ApplySnapshot(snapshot);
         });
@@ -779,6 +779,7 @@ public partial class MainWindow : Window
                 status == "Couldn’t connect" || status == "CLI not found" || status == "Signed out")
             {
                 _hasCurrentUsage = false;
+                _lastUsageSnapshot = null;
             }
 
             if (!_hasCurrentUsage)

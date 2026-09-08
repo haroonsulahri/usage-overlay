@@ -417,6 +417,10 @@ Usage Overlay does not install a Windows service, browser extension, driver, or 
 
 ## Limitations
 
+- Changes to the timestamps and size of `CODEX_HOME/auth.json` (or the default user `.codex` directory) are checked every two seconds. The overlay clears displayed usage and reconnects its own Codex process after a change, normally within about seven seconds plus the usage request time. It never reads or writes credential contents. File changes that preserve all monitored metadata cannot be detected by this check.
+- When the credential file is absent or inaccessible, the overlay renews its connection every minute to reload credential-manager state. A login stored only inside another application's process cannot be detected through this mechanism.
+- A revoked refresh token still requires signing into Codex again. After that login is saved, the overlay reconnects automatically. Network failures cannot provide fresh usage.
+
 - Windows x64 only for this preview.
 - Designed for the Microsoft Store Codex desktop package.
 - Uses the Codex Desktop bundled CLI when available; otherwise requires a separately installed CLI.

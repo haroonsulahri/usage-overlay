@@ -11,3 +11,4 @@ dotnet restore $overlayProject
 dotnet restore $specProject
 dotnet build $overlayProject --configuration Release --no-restore
 dotnet run --project $specProject --configuration Release --no-restore
+dotnet run --project (Join-Path $projectRoot 'tests\UsageOverlay.AccountSwitch.Specs') --configuration Release

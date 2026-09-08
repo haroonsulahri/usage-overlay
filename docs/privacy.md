@@ -27,7 +27,7 @@ For backward compatibility, the first launch may read `%LOCALAPPDATA%\QuotaRail\
 
 ## Authentication
 
-Authentication is owned by Codex CLI and Codex services. The overlay asks the supported Codex App Server `account/read` method to refresh account state, but it does not read authentication files, cookies, passwords, or API keys.
+Authentication is owned by Codex CLI and Codex services. The overlay asks the supported Codex App Server `account/read` method for account state without forcing an OAuth token refresh. It checks only the existence, timestamps and size of `CODEX_HOME/auth.json` (or the default user `.codex` directory) to detect a login saved by another Codex process. It never reads or writes credential-file contents, cookies, passwords, or API keys. The observed metadata stays in memory and is not logged or reported.
 
 ## Network access
 
