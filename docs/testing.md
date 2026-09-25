@@ -14,6 +14,7 @@ It performs:
 - Compiler and analyzer checks with warnings treated as errors
 - Dependency-free specifications for parsing, calculations, settings, and log redaction
 - Process-level checks using an isolated fake App Server and temporary `CODEX_HOME`: initial usage, external logout, login to a second account, direct account switching, late replies and child-process cancellation. The fake server also rejects any routine request that forces token refresh.
+- Claude Code status-line integration checks: preservation/restoration of an existing custom status line, filtering to rate-limit values, process association, and parsing the resulting local snapshot.
 
 ## Authenticated smoke test
 
@@ -53,6 +54,11 @@ Recommended visual states:
 | Hover | Detail card opens without taking keyboard focus |
 | Multiple usage windows | The main Codex primary and secondary windows appear as separate labelled rows; model-specific buckets stay hidden |
 | View usage link | A compact link remains visible at the bottom of the detail card and opens the Codex usage page |
+| Claude Code active | Rail shows Claude Code's 5-hour and 7-day plan windows without reusing Codex usage values |
+| Claude Code plan limits unavailable | Details explain that supported Claude Code version and Pro/Max plan usage data are required |
+| Claude custom status line exists | Enabling Claude Code preserves and displays the existing status-line output alongside usage values |
+| Claude provider disabled | The prior Claude status-line settings are restored if the managed command is still configured |
+| Claude View usage link | Opens Claude's in-app usage settings URI |
 | Click | Detail card pins or unpins |
 | Close button | Pinned detail card collapses; rail and process remain active |
 | Escape | Pinned detail card collapses; Settings window closes when it is active |
@@ -64,11 +70,11 @@ Recommended visual states:
 | Automatic startup | Overlay starts without opening Settings |
 | Settings title bar | Minus hides Settings, Close closes Settings, and maximize is unavailable |
 | Visibility controls | Codex-only and fullscreen choices appear together near the top |
-| Visibility scope | Only in Codex and Across Windows map to the saved visibility setting |
+| Visibility scope | Only in Codex or Claude Code and Across Windows map to the saved visibility setting |
 | Connection details | Technical fields are collapsed by default and can be expanded |
 | Settings initial scroll | General and Visibility are shown when the window opens |
 | Pause | Overlay hides for 15 minutes, then resumes automatically |
-| Fullscreen exclusion | Overlay hides only while Codex is fullscreen |
+| Fullscreen exclusion | Overlay hides only while the active supported app is fullscreen |
 | Reduced motion | Values update without animated interpolation |
 | Follow Codex theme | Overlay matches the active Codex light/dark surface and uses Windows as fallback |
 | Dark theme | Settings, rail, detail card, and menus use the dark palette |

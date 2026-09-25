@@ -296,7 +296,7 @@
                 <TextBlock Margin="0,5,0,0"
                            Foreground="{DynamicResource OverlayMutedBrush}"
                            FontSize="{StaticResource OverlayTextBody}">
-                    <Run Text="Your Codex usage at a glance. Built by " />
+                    <Run Text="Your AI coding usage at a glance. Built by " />
                     <Hyperlink NavigateUri="https://haroone.com"
                                Foreground="{DynamicResource OverlayNormalBrush}"
                                RequestNavigate="HarooneLink_OnRequestNavigate"
@@ -329,6 +329,58 @@
                 <Border Margin="0,0,0,12" Padding="1" Background="{DynamicResource OverlayBorderBrush}" CornerRadius="15">
                     <Border Padding="18" Background="{DynamicResource OverlaySurfaceBrush}" CornerRadius="14">
                         <StackPanel>
+                            <TextBlock Text="Usage providers" Style="{StaticResource SectionTitleStyle}" />
+                            <TextBlock Margin="0,6,0,2"
+                                       Text="Choose which coding assistant limits the rail can show."
+                                       Foreground="{DynamicResource OverlayMutedBrush}"
+                                       FontSize="{StaticResource OverlayTextSmall}" />
+                            <Border Margin="0,8,0,0"
+                                    Padding="12"
+                                    Background="{DynamicResource OverlaySurfaceRaisedBrush}"
+                                    BorderBrush="{DynamicResource OverlayBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="10">
+                                <StackPanel>
+                                    <TextBlock Text="Codex"
+                                               Foreground="{DynamicResource OverlayTextBrush}"
+                                               FontSize="{StaticResource OverlayTextBody}" />
+                                    <TextBlock Margin="0,5,0,0"
+                                               Text="Reads rate limits from your signed-in Codex account."
+                                               TextWrapping="Wrap"
+                                               Foreground="{DynamicResource OverlayMutedBrush}"
+                                               FontSize="{StaticResource OverlayTextSmall}" />
+                                </StackPanel>
+                            </Border>
+                            <Border Margin="0,8,0,0"
+                                    Padding="12"
+                                    Background="{DynamicResource OverlaySurfaceRaisedBrush}"
+                                    BorderBrush="{DynamicResource OverlayBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="10">
+                                <StackPanel>
+                                    <CheckBox x:Name="ClaudeCodeUsageCheckBox"
+                                              Content="Claude Code"
+                                              Style="{StaticResource SettingsCheckStyle}"
+                                              Margin="0" />
+                                    <TextBlock Margin="0,5,0,0"
+                                               Text="Optional. Shows Claude’s 5-hour and 7-day plan limits using its local status-line feature. Your existing status-line output is retained."
+                                               TextWrapping="Wrap"
+                                               Foreground="{DynamicResource OverlayMutedBrush}"
+                                               FontSize="{StaticResource OverlayTextSmall}" />
+                                    <TextBlock x:Name="ClaudeCodeStatusText"
+                                               Margin="0,5,0,0"
+                                               TextWrapping="Wrap"
+                                               Foreground="{DynamicResource OverlayMutedBrush}"
+                                               FontSize="{StaticResource OverlayTextSmall}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </Border>
+
+                <Border Margin="0,0,0,12" Padding="1" Background="{DynamicResource OverlayBorderBrush}" CornerRadius="15">
+                    <Border Padding="18" Background="{DynamicResource OverlaySurfaceBrush}" CornerRadius="14">
+                        <StackPanel>
                             <TextBlock Text="Visibility" Style="{StaticResource SectionTitleStyle}" />
                             <TextBlock Margin="0,6,0,2"
                                        Text="Choose when the usage rail appears."
@@ -338,7 +390,7 @@
                             <StackPanel Orientation="Horizontal">
                                 <RadioButton x:Name="CodexOnlyVisibilityRadio"
                                              GroupName="VisibilityScope"
-                                             Content="Only in Codex"
+                                             Content="Only in Codex or Claude Code"
                                              Style="{StaticResource SettingsRadioStyle}" />
                                 <RadioButton x:Name="AcrossWindowsVisibilityRadio"
                                              Margin="18,7,0,0"
@@ -351,7 +403,7 @@
                                        Foreground="{DynamicResource OverlayMutedBrush}"
                                        FontSize="{StaticResource OverlayTextSmall}" />
                             <CheckBox x:Name="HideFullscreenCheckBox"
-                                      Content="Hide while Codex is fullscreen"
+                                      Content="Hide while the active app is fullscreen"
                                       Style="{StaticResource SettingsCheckStyle}" />
                             <Grid Margin="0,12,0,0">
                                 <Grid.ColumnDefinitions>

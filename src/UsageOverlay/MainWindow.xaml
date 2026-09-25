@@ -56,7 +56,8 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Codex usage"
+                    <TextBlock x:Name="DetailsTitleText"
+                               Text="Codex usage"
                                VerticalAlignment="Center"
                                Foreground="{DynamicResource OverlayTextBrush}"
                                FontSize="{StaticResource OverlayTextBody}"
@@ -110,14 +111,15 @@
                             Padding="0,9,0,0"
                             BorderBrush="{DynamicResource OverlayBorderBrush}"
                             BorderThickness="0,1,0,0">
-                        <Button HorizontalAlignment="Right"
+                        <Button x:Name="ViewUsageButton"
+                                HorizontalAlignment="Right"
                                 Padding="2,0"
                                 Background="Transparent"
                                 BorderThickness="0"
                                 Cursor="Hand"
                                 FontSize="{StaticResource OverlayTextSmall}"
-                                AutomationProperties.Name="View full Codex usage"
-                                ToolTip="Open full Codex usage"
+                                AutomationProperties.Name="View provider usage"
+                                ToolTip="Open provider usage"
                                 Click="ViewUsageLink_OnClick">
                             <Button.Foreground>
                                 <SolidColorBrush Color="{StaticResource OverlayNormalColor}" />

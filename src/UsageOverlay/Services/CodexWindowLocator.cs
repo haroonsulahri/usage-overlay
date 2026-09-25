@@ -17,11 +17,22 @@ public sealed class CodexWindowLocator
 
     public static bool TryGetActiveBounds(out WindowBounds bounds, out bool? isLightTheme)
     {
+        return TryGetActiveBounds(out bounds, out isLightTheme, out _);
+    }
+
+    public static bool TryGetActiveBounds(
+        out WindowBounds bounds,
+        out bool? isLightTheme,
+        out UsageHostApplication hostApplication,
+        Func<uint, bool>? isClaudeCodeProcess = null)
+    {
         bounds = default;
         isLightTheme = null;
+        hostApplication = UsageHostApplication.None;
         var window = GetAncestor(GetForegroundWindow(), GetAncestorRoot);
 
-        if (window == IntPtr.Zero || !IsWindowVisible(window) || IsIconic(window) || !IsCodexWindow(window))
+        if (window == IntPtr.Zero || !IsWindowVisible(window) || IsIconic(window) ||
+            !TryGetHostApplication(window, isClaudeCodeProcess, out hostApplication))
         {
             return false;
         }
@@ -127,8 +138,12 @@ public sealed class CodexWindowLocator
                Math.Abs(windowRectangle.Bottom - monitorInfo.Monitor.Bottom) <= tolerance;
     }
 
-    private static bool IsCodexWindow(IntPtr window)
+    private static bool TryGetHostApplication(
+        IntPtr window,
+        Func<uint, bool>? isClaudeCodeProcess,
+        out UsageHostApplication hostApplication)
     {
+        hostApplication = UsageHostApplication.None;
         if (GetWindowThreadProcessId(window, out var processId) == 0)
         {
             return false;
@@ -139,7 +154,19 @@ public sealed class CodexWindowLocator
             using var process = Process.GetProcessById((int)processId);
             var executablePath = process.MainModule?.FileName ?? string.Empty;
             var title = GetTitle(window);
-            return CodexWindowIdentity.IsMainWindow(executablePath, process.ProcessName, title);
+            if (CodexWindowIdentity.IsMainWindow(executablePath, process.ProcessName, title))
+            {
+                hostApplication = UsageHostApplication.Codex;
+                return true;
+            }
+
+            if (isClaudeCodeProcess?.Invoke(processId) == true)
+            {
+                hostApplication = UsageHostApplication.ClaudeCode;
+                return true;
+            }
+
+            return false;
         }
         catch (Exception exception) when (
             exception is ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception)

@@ -4,15 +4,17 @@ Usage Overlay is designed to keep its data surface narrow.
 
 ## Data read
 
-The overlay requests Codex account rate-limit metadata:
+The overlay requests Codex account rate-limit metadata. When Claude Code is enabled, its official local status-line feature provides Claude subscription rate-limit metadata:
 
 - Used percentage
 - Quota window duration
 - Reset timestamp
 - Limit identifier and optional display name
 - Plan type when returned by the service
+- Claude Code 5-hour and 7-day usage percentages and reset timestamps
+- A local update time and terminal process IDs for associating the current Claude session with its window
 
-It does not request or inspect prompts, responses, files, repository content, browser activity, or conversation history.
+The Claude status-line command receives the session JSON locally but extracts only the values above. It does not save the full input. The overlay does not inspect prompts, responses, files, repository content, browser activity, or conversation history.
 
 ## Data stored
 
@@ -20,6 +22,9 @@ Local files may be created under `%LOCALAPPDATA%\UsageOverlay`:
 
 - `settings.json` stores display preferences.
 - `overlay.log` stores redacted and truncated diagnostic messages.
+- `claude-usage.json` stores the latest supported Claude rate-limit values and process IDs when that provider is enabled.
+- `claude-statusline-backup.json` stores the prior Claude status-line setting so the provider can restore it when disabled.
+- `claude-statusline.sh` and `ClaudeUsageStatusLine.ps1` are the local relay scripts configured by the optional Claude integration.
 
 Neither file is uploaded by this application. After opting in, `reporting.json` stores a random installation ID and the last attempted reporting date. This identity survives upgrades and disabling/re-enabling reporting; deleting the local state may create a new reporting installation.
 

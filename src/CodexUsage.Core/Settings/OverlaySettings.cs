@@ -38,6 +38,8 @@ public sealed record OverlaySettings
 
     public bool ShowOnlyWhenCodexActive { get; init; } = true;
 
+    public bool ClaudeCodeUsageEnabled { get; init; }
+
     public bool FollowCodexAcrossMonitors { get; init; } = true;
 
     public PrimaryUsageDisplay PrimaryDisplay { get; init; } = PrimaryUsageDisplay.Remaining;

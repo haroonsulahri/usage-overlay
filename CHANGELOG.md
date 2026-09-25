@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Add optional Claude Code usage rail support for official five-hour and seven-day Pro/Max rate-limit data.
+- Preserve an existing Claude Code status-line command and restore it when the integration is disabled.
+- Show provider-specific usage details and open the active app's usage settings from the detail card.
+
 ## [0.3.1] - 2026-09-08
 
 ### Fixed

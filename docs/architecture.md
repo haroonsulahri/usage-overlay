@@ -6,17 +6,10 @@ Usage Overlay is a Windows-only companion process. It does not modify the Codex 
 
 ```text
 Codex services
-      │
-      │ existing Codex authentication
-      ▼
-codex app-server --stdio
-      │
-      │ JSON-RPC / JSONL
-      ▼
-AppServerClient ──► RateLimitParser ──► UsageSnapshot
-                                             │
-                                             ▼
-CodexWindowLocator ───────────────────► WPF overlay
+Codex App Server ──► AppServerClient ──► UsageSnapshot ─┐
+                                                       ├─► WPF usage rail
+Claude Code status line ──► local relay ──► snapshot ──┘
+CodexWindowLocator ────────────────────────────────► active app selection
 ```
 
 ## Projects
@@ -36,7 +29,8 @@ Platform-neutral logic:
 Windows integration:
 
 - App Server process lifecycle and JSON-RPC transport
-- Active Codex window detection
+- Claude Code status-line integration and local snapshot reader
+- Active Codex and Claude Code window detection
 - WPF rail, detail card, animation, menus, and drag behavior
 - Native Settings window and appearance application
 - Settings persistence and Windows shortcuts
@@ -55,6 +49,8 @@ Windows integration:
 The user can disconnect App Server from either context menu before upgrading an npm-installed Codex CLI. Disconnecting cancels the session and terminates only the process tree started by Usage Overlay. Reconnecting creates a fresh App Server session.
 
 Update checks are separate from account usage. They run only after the user selects **Check for updates** and request the latest public release metadata from GitHub.
+
+Claude Code is optional. When enabled in settings, Usage Overlay inserts a managed command into the user-level Claude `settings.json`. The generated wrapper retains and runs the previous custom `statusLine.command`, then appends its output. It restores the previous `statusLine` object when disabled, but only if the current command still matches the managed command. The PowerShell relay receives the official status-line JSON, persists only the five-hour and seven-day percentages/resets, update time, and the parent process IDs needed to match a foreground terminal. The overlay accepts snapshots for up to three minutes; Claude Code refreshes the status-line command on events and every 60 seconds.
 5. The parser clamps percentages, validates timestamps, and selects the primary `codex` bucket.
 6. The UI calculates remaining quota as `100 - usedPercent` and animates to the new value.
 
@@ -71,7 +67,7 @@ The WPF tool window is topmost and non-activating. It can receive pointer input 
 %LOCALAPPDATA%\UsageOverlay\overlay.log
 ```
 
-Settings contain theme, placement, offsets, fullscreen preference, and pause expiry. Logs contain redacted, truncated status and error messages.
+Settings contain theme, placement, offsets, fullscreen preference, pause expiry, and whether Claude Code integration is enabled. Logs contain redacted, truncated status and error messages. Claude rate-limit snapshots and the saved previous status-line setting are kept separately in the same per-user data directory.
 
 Additional settings control Codex-only visibility, monitor following, Follow Codex/Dark/Light appearance, remaining-versus-used display, colour thresholds, animation, compact labels, CLI path, and polling interval. Follow Codex samples only a few active-window background pixels to infer light or dark; it does not store or log screen content. Existing settings files remain compatible because missing fields receive bounded defaults. On first launch, Usage Overlay imports settings from `%LOCALAPPDATA%\QuotaRail\settings.json` or the older `%LOCALAPPDATA%\CodexUsageOverlay\settings.json` location when no Usage Overlay settings file exists.
 

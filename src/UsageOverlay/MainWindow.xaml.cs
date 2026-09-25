@@ -8,6 +8,7 @@ using System.Windows.Threading;
 using System.Windows.Interop;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
+using CodexUsage.Core.Windows;
 using System.Text.Json;
 using CodexUsage.Core;
 using CodexUsage.Core.Formatting;
@@ -37,6 +38,7 @@ public partial class MainWindow : Window
     private const int EscapeHotKeyIdentifier = 0x0C0D;
     private const int VirtualKeyEscape = 0x1B;
     private static readonly Uri UsagePageUri = new("https://chatgpt.com/codex/settings/usage");
+    private static readonly Uri ClaudeUsagePageUri = new("https://claude.ai/settings/usage");
 
     public static readonly DependencyProperty AnimatedRemainingPercentProperty =
         DependencyProperty.Register(
@@ -50,6 +52,8 @@ public partial class MainWindow : Window
     private readonly OverlaySettingsStore _settingsStore;
     private readonly StartupShortcutManager _startupShortcutManager;
     private readonly AppServerClient _appServerClient;
+    private readonly ClaudeUsageStatusLineIntegration _claudeIntegration;
+    private readonly ClaudeUsageClient _claudeUsageClient;
     private readonly ReleaseUpdateService _releaseUpdateService;
     private readonly HttpClient _reportingClient = new(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false })
     {
@@ -60,6 +64,7 @@ public partial class MainWindow : Window
     private CancellationTokenSource? _reportingCancellation;
     private Task _reportingTask = Task.CompletedTask;
     private readonly DispatcherTimer _windowTrackingTimer;
+    private readonly DispatcherTimer _claudeUsageTimer = new() { Interval = TimeSpan.FromSeconds(2) };
     private readonly DispatcherTimer _collapseTimer;
     private readonly CancellationTokenSource _cancellation = new();
     private readonly System.Drawing.Icon _applicationIcon;
@@ -71,6 +76,8 @@ public partial class MainWindow : Window
     private OverlaySettings _settings;
     private SettingsWindow? _settingsWindow;
     private UsageSnapshot? _lastUsageSnapshot;
+    private ClaudeUsageSnapshot? _claudeUsageSnapshot;
+    private UsageHostApplication _activeHostApplication;
     private WindowBounds? _fixedPlacementBounds;
     private HwndSource? _windowSource;
     private IntPtr _windowHandle;
@@ -101,10 +108,13 @@ public partial class MainWindow : Window
         _logger = logger;
         _settingsStore = new OverlaySettingsStore(logger);
         _settings = _settingsStore.Load();
+        _claudeIntegration = new ClaudeUsageStatusLineIntegration(logger);
+        _claudeUsageClient = new ClaudeUsageClient(_claudeIntegration.SnapshotPath);
         _usageReporter = new UsageReporter(_reportingClient,
             new Uri("https://haroone.com/api/usage-overlay.php"),
             System.IO.Path.Combine(System.IO.Path.GetDirectoryName(_settingsStore.Path)!, "reporting.json"), AppVersion.Current);
         _reportingTimer.Tick += (_, _) => StartUsageReport();
+        _claudeUsageTimer.Tick += (_, _) => RefreshClaudeUsage();
         ThemeManager.Instance.Initialize(_settings.Theme);
         ThemeManager.Instance.ThemeApplied += ThemeManager_OnThemeApplied;
 
@@ -157,6 +167,8 @@ public partial class MainWindow : Window
     private void Window_OnLoaded(object sender, RoutedEventArgs eventArgs)
     {
         _windowTrackingTimer.Start();
+        _claudeUsageTimer.Start();
+        RefreshClaudeUsage();
 
         if (_isManuallyHidden)
         {
@@ -200,6 +212,7 @@ public partial class MainWindow : Window
         _reportingClient.Dispose();
         ThemeManager.Instance.ThemeApplied -= ThemeManager_OnThemeApplied;
         _windowTrackingTimer.Stop();
+        _claudeUsageTimer.Stop();
         _collapseTimer.Stop();
         NativeHotKey.Unregister(_windowHandle, EscapeHotKeyIdentifier);
         _windowSource?.RemoveHook(WindowProcedure);
@@ -363,7 +376,15 @@ public partial class MainWindow : Window
             return;
         }
 
-        var hasActiveCodex = CodexWindowLocator.TryGetActiveBounds(out var bounds, out var codexIsLightTheme);
+        var hasActiveCodex = CodexWindowLocator.TryGetActiveBounds(
+            out var bounds,
+            out var codexIsLightTheme,
+            out var hostApplication,
+            IsClaudeCodeWindowProcess);
+        if (hasActiveCodex)
+        {
+            SetActiveHostApplication(hostApplication);
+        }
         if (codexIsLightTheme is { } isLightTheme)
         {
             ThemeManager.Instance.RefreshFromCodexTheme(isLightTheme);
@@ -761,7 +782,10 @@ public partial class MainWindow : Window
         {
             _lastUsageSnapshot = snapshot;
             _hasCurrentUsage = true;
-            ApplySnapshot(snapshot);
+            if (_activeHostApplication != UsageHostApplication.ClaudeCode)
+            {
+                ApplySnapshot(snapshot);
+            }
         });
     }
 
@@ -770,10 +794,13 @@ public partial class MainWindow : Window
         _ = Dispatcher.InvokeAsync(() =>
         {
             _appServerStatus = status;
-            StatusText.Text = status;
-            LiveDot.Fill = status == "Live"
-                ? new SolidColorBrush((System.Windows.Media.Color)FindResource("OverlayNormalColor"))
-                : new SolidColorBrush((System.Windows.Media.Color)FindResource("OverlayMutedColor"));
+            if (_activeHostApplication != UsageHostApplication.ClaudeCode)
+            {
+                StatusText.Text = status;
+                LiveDot.Fill = status == "Live"
+                    ? new SolidColorBrush((System.Windows.Media.Color)FindResource("OverlayNormalColor"))
+                    : new SolidColorBrush((System.Windows.Media.Color)FindResource("OverlayMutedColor"));
+            }
 
             if (status == "Connecting…" || status == "Trying again…" ||
                 status == "Couldn’t connect" || status == "CLI not found" || status == "Signed out")
@@ -782,7 +809,7 @@ public partial class MainWindow : Window
                 _lastUsageSnapshot = null;
             }
 
-            if (!_hasCurrentUsage)
+            if (!_hasCurrentUsage && _activeHostApplication != UsageHostApplication.ClaudeCode)
             {
                 ApplyConnectionState(status);
             }
@@ -797,6 +824,7 @@ public partial class MainWindow : Window
         UsageFillBrush.Color = (System.Windows.Media.Color)FindResource("OverlayMutedColor");
         LeadingCap.Opacity = 0;
         RailRemainingText.Text = "--";
+        DetailsTitleText.Text = "Codex usage";
         BucketNameText.Text = "Codex usage";
         AdditionalLimitsPanel.Children.Clear();
         _expandedHeight = MinimumExpandedHeight;
@@ -836,7 +864,7 @@ public partial class MainWindow : Window
             $"Codex usage unavailable. {ResetText.Text}");
     }
 
-    private void ApplySnapshot(UsageSnapshot snapshot)
+    private void ApplySnapshot(UsageSnapshot snapshot, bool animate = true)
     {
         var primary = snapshot.Primary;
         var usedPercent = UsageLevelResolver.Normalize(primary.Primary.UsedPercent);
@@ -855,11 +883,144 @@ public partial class MainWindow : Window
             : Visibility.Collapsed;
         RenderLimitRows(snapshot);
         EvaluateNotifications(snapshot);
-        AnimateUsageValue(primaryPercent, usedPercent);
+        DetailsTitleText.Text = "Codex usage";
+        AnimateUsageValue(primaryPercent, usedPercent, animate);
         AutomationProperties.SetName(
             RailHitTarget,
             $"Codex limit: {Math.Round(primaryPercent)} percent {primaryLabel}. {ResetText.Text}");
     }
+
+    private void SetActiveHostApplication(UsageHostApplication hostApplication)
+    {
+        if (hostApplication == UsageHostApplication.None || hostApplication == _activeHostApplication)
+        {
+            return;
+        }
+
+        _activeHostApplication = hostApplication;
+        var provider = hostApplication == UsageHostApplication.ClaudeCode ? "Claude Code" : "Codex";
+        AutomationProperties.SetName(ViewUsageButton, $"View {provider} usage");
+        ViewUsageButton.ToolTip = $"Open {provider} usage";
+        if (hostApplication == UsageHostApplication.ClaudeCode)
+        {
+            if (_claudeUsageSnapshot is not null)
+            {
+                ApplyClaudeSnapshot(_claudeUsageSnapshot);
+            }
+            else
+            {
+                ApplyClaudeConnectionState();
+            }
+        }
+        else if (_lastUsageSnapshot is not null)
+        {
+            StatusText.Text = _appServerStatus;
+            ApplySnapshot(_lastUsageSnapshot, animate: false);
+        }
+        else
+        {
+            ApplyConnectionState(_appServerStatus);
+        }
+    }
+
+    private void RefreshClaudeUsage()
+    {
+        if (!_settings.ClaudeCodeUsageEnabled || !_claudeUsageClient.TryReadSnapshot(out var snapshot) || snapshot is null)
+        {
+            if (_claudeUsageSnapshot is not null)
+            {
+                _claudeUsageSnapshot = null;
+                if (_activeHostApplication == UsageHostApplication.ClaudeCode)
+                {
+                    ApplyClaudeConnectionState();
+                }
+            }
+
+            return;
+        }
+
+        var changed = _claudeUsageSnapshot?.UpdatedAt != snapshot.UpdatedAt;
+        _claudeUsageSnapshot = snapshot;
+        if (changed && _activeHostApplication == UsageHostApplication.ClaudeCode)
+        {
+            ApplyClaudeSnapshot(snapshot);
+        }
+    }
+
+    private bool IsClaudeCodeWindowProcess(uint processId) =>
+        _settings.ClaudeCodeUsageEnabled &&
+        _claudeUsageSnapshot is { } snapshot &&
+        snapshot.ProcessIds.Contains((int)processId);
+
+    private void ApplyClaudeConnectionState(bool planUsageUnavailable = false)
+    {
+        DetailsTitleText.Text = "Claude Code usage";
+        StatusText.Text = _settings.ClaudeCodeUsageEnabled ? "Waiting" : "Off";
+        LiveDot.Fill = new SolidColorBrush((System.Windows.Media.Color)FindResource("OverlayMutedColor"));
+        BeginAnimation(AnimatedRemainingPercentProperty, null);
+        AnimatedRemainingPercent = 0;
+        UsageFillBrush.BeginAnimation(SolidColorBrush.ColorProperty, null);
+        UsageFillBrush.Color = (System.Windows.Media.Color)FindResource("OverlayMutedColor");
+        LeadingCap.Opacity = 0;
+        RailRemainingText.Text = "--";
+        BucketNameText.Text = "Claude plan limits";
+        UsagePercentText.Text = !_settings.ClaudeCodeUsageEnabled
+            ? "Claude Code is off"
+            : planUsageUnavailable ? "Plan usage unavailable" : "Waiting for usage…";
+        ResetText.Text = !_settings.ClaudeCodeUsageEnabled
+            ? "Enable Claude Code in Usage Overlay settings."
+            : planUsageUnavailable
+                ? "Pro/Max plan limits require Claude Code v2.1.251 or later."
+                : "Start Claude Code. Limits appear after its first response.";
+        AdditionalLimitsPanel.Children.Clear();
+        _expandedHeight = MinimumExpandedHeight;
+        if (_isExpanded)
+        {
+            Height = MinimumExpandedHeight;
+            RepositionAfterWidthChange();
+        }
+
+        AutomationProperties.SetName(RailHitTarget, $"Claude Code usage unavailable. {ResetText.Text}");
+    }
+
+    private void ApplyClaudeSnapshot(ClaudeUsageSnapshot snapshot, bool animate = true)
+    {
+        var primaryWindow = snapshot.FiveHour ?? snapshot.SevenDay;
+        if (primaryWindow is null)
+        {
+            ApplyClaudeConnectionState(planUsageUnavailable: true);
+            return;
+        }
+
+        StatusText.Text = "Live";
+        DetailsTitleText.Text = "Claude Code usage";
+        LiveDot.Fill = new SolidColorBrush((System.Windows.Media.Color)FindResource("OverlayNormalColor"));
+
+        var secondaryWindow = snapshot.FiveHour is not null ? snapshot.SevenDay : null;
+        var primaryDuration = snapshot.FiveHour is not null ? 300 : 10_080;
+        var rateLimit = new RateLimitBucket(
+            "claude_code",
+            "Claude Code",
+            ToQuotaWindow(primaryWindow, primaryDuration),
+            secondaryWindow is null ? null : ToQuotaWindow(secondaryWindow, 10_080),
+            null);
+        var displaySnapshot = new UsageSnapshot(rateLimit, Array.Empty<RateLimitBucket>(), snapshot.UpdatedAt);
+        var primaryUsed = UsageLevelResolver.Normalize(primaryWindow.UsedPercent);
+        var primaryDisplay = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used
+            ? primaryUsed
+            : UsageLevelResolver.RemainingFromUsed(primaryUsed);
+
+        RenderLimitRows(displaySnapshot);
+        RailRemainingText.Visibility = _settings.ShowCompactPercentage ? Visibility.Visible : Visibility.Collapsed;
+        AnimateUsageValue(primaryDisplay, primaryUsed, animate);
+        AutomationProperties.SetName(
+            RailHitTarget,
+            $"Claude Code rate limit: {Math.Round(primaryDisplay)} percent " +
+            $"{(_settings.PrimaryDisplay == PrimaryUsageDisplay.Used ? "used" : "left")}. {ResetText.Text}");
+    }
+
+    private static QuotaWindow ToQuotaWindow(ClaudeUsageWindow window, int durationMinutes) =>
+        new(window.UsedPercent, durationMinutes, window.ResetsAt);
 
     private void RenderLimitRows(UsageSnapshot snapshot)
     {
@@ -986,7 +1147,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void AnimateUsageValue(double displayPercentage, double usedPercentage)
+    private void AnimateUsageValue(double displayPercentage, double usedPercentage, bool animate = true)
     {
         var normalizedUsed = UsageLevelResolver.Normalize(usedPercentage);
         var normalizedDisplay = UsageLevelResolver.Normalize(displayPercentage);
@@ -1000,7 +1161,7 @@ public partial class MainWindow : Window
             _ => "OverlayNormalColor"
         });
 
-        if (!_settings.AnimationsEnabled || !SystemParameters.ClientAreaAnimation)
+        if (!animate || !_settings.AnimationsEnabled || !SystemParameters.ClientAreaAnimation)
         {
             BeginAnimation(AnimatedRemainingPercentProperty, null);
             AnimatedRemainingPercent = normalizedDisplay;
@@ -1348,6 +1509,7 @@ public partial class MainWindow : Window
             _startupShortcutManager.IsEnabled,
             _startupShortcutManager.IsSupported,
             cliStatus,
+            _claudeIntegration.SetEnabled,
             ApplySettingsFromWindow,
             OpenLog)
         {
@@ -1377,11 +1539,23 @@ public partial class MainWindow : Window
         _fixedPlacementBounds = _settings.FollowCodexAcrossMonitors ? null : _lastBounds;
         PersistSettings();
         UpdateUsageReporting();
+        RefreshClaudeUsage();
         RailRemainingText.Visibility = _settings.ShowCompactPercentage
             ? Visibility.Visible
             : Visibility.Collapsed;
 
-        if (_hasCurrentUsage && _lastUsageSnapshot is not null)
+        if (_activeHostApplication == UsageHostApplication.ClaudeCode)
+        {
+            if (_claudeUsageSnapshot is not null)
+            {
+                ApplyClaudeSnapshot(_claudeUsageSnapshot, animate: false);
+            }
+            else
+            {
+                ApplyClaudeConnectionState();
+            }
+        }
+        else if (_hasCurrentUsage && _lastUsageSnapshot is not null)
         {
             ApplySnapshot(_lastUsageSnapshot);
         }
@@ -1481,7 +1655,7 @@ public partial class MainWindow : Window
 
     private void ViewUsageLink_OnClick(object sender, RoutedEventArgs eventArgs)
     {
-        OpenUri(UsagePageUri);
+        OpenUri(_activeHostApplication == UsageHostApplication.ClaudeCode ? ClaudeUsagePageUri : UsagePageUri);
         eventArgs.Handled = true;
     }
 

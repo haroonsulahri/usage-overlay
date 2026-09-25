@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text.Json;
 using UsageOverlay.Infrastructure;
 using UsageOverlay.Services;
@@ -72,6 +73,90 @@ finally
     await run;
     Environment.SetEnvironmentVariable("CODEX_HOME", oldHome);
     Directory.Delete(directory, recursive: true);
+}
+
+var claudeTestRoot = Path.Combine(Path.GetTempPath(), "usage-overlay-claude-spec-" + Guid.NewGuid().ToString("N"));
+var claudeAppData = Path.Combine(claudeTestRoot, "appdata");
+var claudeConfig = Path.Combine(claudeTestRoot, "claude");
+Directory.CreateDirectory(claudeConfig);
+var claudeSettingsPath = Path.Combine(claudeConfig, "settings.json");
+File.WriteAllText(
+    claudeSettingsPath,
+    """
+    { "env": { "CUSTOM": "keep" }, "statusLine": { "type": "command", "command": "printf 'my status'", "padding": 2 } }
+    """);
+try
+{
+    var claudeIntegration = new ClaudeUsageStatusLineIntegration(claudeAppData, claudeConfig);
+    var enableResult = claudeIntegration.SetEnabled(true);
+    Assert(enableResult.Success, "Claude status-line integration enables successfully.");
+    using (var installedSettings = JsonDocument.Parse(File.ReadAllText(claudeSettingsPath)))
+    {
+        var installed = installedSettings.RootElement;
+        Assert(installed.GetProperty("env").GetProperty("CUSTOM").GetString() == "keep", "Unrelated Claude environment settings are preserved.");
+        Assert(installed.GetProperty("statusLine").GetProperty("command").GetString()!.Contains("claude-statusline.sh", StringComparison.Ordinal), "Claude command points to the managed relay.");
+    }
+
+    var relayScript = File.ReadAllText(Path.Combine(claudeAppData, "claude-statusline.sh"));
+    Assert(relayScript.Contains("my status", StringComparison.Ordinal), "The prior custom status-line command is retained by the wrapper.");
+
+    var gitBash = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Git", "bin", "bash.exe");
+    if (File.Exists(gitBash))
+    {
+        var relayProcess = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = gitBash,
+                UseShellExecute = false,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            }
+        };
+        relayProcess.StartInfo.ArgumentList.Add(Path.Combine(claudeAppData, "claude-statusline.sh"));
+        Assert(relayProcess.Start(), "Claude status-line relay starts.");
+        var relayOutputTask = relayProcess.StandardOutput.ReadToEndAsync();
+        var relayErrorTask = relayProcess.StandardError.ReadToEndAsync();
+        await relayProcess.StandardInput.WriteAsync(
+            """
+            {"session_id":"private-session","transcript_path":"private-transcript","rate_limits":{"five_hour":{"used_percentage":63.2,"resets_at":1900000000},"seven_day":{"used_percentage":22,"resets_at":1900500000}}}
+            """);
+        relayProcess.StandardInput.Close();
+        await relayProcess.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(20));
+        var relayOutput = await relayOutputTask;
+        var relayError = await relayErrorTask;
+        Assert(relayProcess.ExitCode == 0, "Claude status-line relay exits successfully: " + relayError);
+        Assert(relayOutput.Contains("my status | 5h 63% | 7d 22%", StringComparison.Ordinal), $"Custom status-line output and Claude limits are combined. Output was: {relayOutput}");
+        var claudeClient = new ClaudeUsageClient(claudeIntegration.SnapshotPath);
+        Assert(claudeClient.TryReadSnapshot(out var claudeSnapshot) && claudeSnapshot is not null, "Claude status-line rate-limit snapshot is readable.");
+        Assert(claudeSnapshot!.FiveHour!.UsedPercent == 63.2d && claudeSnapshot.SevenDay!.UsedPercent == 22d, "Five-hour and seven-day percentages are stored correctly.");
+        using var savedSnapshot = JsonDocument.Parse(File.ReadAllText(claudeIntegration.SnapshotPath));
+        Assert(!savedSnapshot.RootElement.TryGetProperty("session_id", out _) &&
+               !savedSnapshot.RootElement.TryGetProperty("transcript_path", out _),
+            "Session IDs and transcript paths are not persisted.");
+    }
+    else
+    {
+        Console.WriteLine("SKIP Git Bash unavailable; Claude relay process check not run.");
+    }
+
+    var disableResult = claudeIntegration.SetEnabled(false);
+    Assert(disableResult.Success, "Claude status-line integration disables successfully.");
+    using (var restoredSettings = JsonDocument.Parse(File.ReadAllText(claudeSettingsPath)))
+    {
+        var restored = restoredSettings.RootElement;
+        Assert(restored.GetProperty("env").GetProperty("CUSTOM").GetString() == "keep", "Unrelated Claude settings stay unchanged after disconnect.");
+        Assert(restored.GetProperty("statusLine").GetProperty("command").GetString() == "printf 'my status'", "The original custom status-line command is restored.");
+        Assert(restored.GetProperty("statusLine").GetProperty("padding").GetInt32() == 2, "The original status-line options are restored.");
+    }
+
+    Console.WriteLine("PASS Claude status-line setup preserves and restores existing settings.");
+}
+finally
+{
+    if (Directory.Exists(claudeTestRoot)) Directory.Delete(claudeTestRoot, recursive: true);
 }
 
 static void Reply(object value) => Console.WriteLine(JsonSerializer.Serialize(value));

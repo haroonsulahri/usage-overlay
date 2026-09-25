@@ -17,6 +17,7 @@ public partial class SettingsWindow : Window
     private const double NudgeAmount = 20;
 
     private readonly Action<OverlaySettings, bool> _saveSettings;
+    private readonly Func<bool, ClaudeIntegrationResult> _configureClaudeUsage;
     private readonly Action _openLogs;
     private readonly bool _startupSupported;
     private OverlaySettings _settings;
@@ -32,6 +33,7 @@ public partial class SettingsWindow : Window
         bool startAutomatically,
         bool startupSupported,
         string codexCliStatus,
+        Func<bool, ClaudeIntegrationResult> configureClaudeUsage,
         Action<OverlaySettings, bool> saveSettings,
         Action openLogs)
     {
@@ -43,6 +45,7 @@ public partial class SettingsWindow : Window
         _pendingHorizontalOffset = _settings.HorizontalOffset;
         _pendingVerticalOffset = _settings.VerticalOffset;
         _saveSettings = saveSettings;
+        _configureClaudeUsage = configureClaudeUsage;
         _openLogs = openLogs;
         CodexCliStatusText.Text = codexCliStatus;
         LoadControls();
@@ -52,6 +55,7 @@ public partial class SettingsWindow : Window
     {
         StartAutomaticallyCheckBox.IsChecked = _startAutomatically;
         StartAutomaticallyCheckBox.IsEnabled = _startupSupported;
+        ClaudeCodeUsageCheckBox.IsChecked = _settings.ClaudeCodeUsageEnabled;
         CodexOnlyVisibilityRadio.IsChecked = _settings.ShowOnlyWhenCodexActive;
         AcrossWindowsVisibilityRadio.IsChecked = !_settings.ShowOnlyWhenCodexActive;
         FollowMonitorsCheckBox.IsChecked = _settings.FollowCodexAcrossMonitors;
@@ -182,6 +186,15 @@ public partial class SettingsWindow : Window
             return;
         }
 
+        var claudeEnabled = ClaudeCodeUsageCheckBox.IsChecked == true;
+        var claudeResult = _configureClaudeUsage(claudeEnabled);
+        ClaudeCodeStatusText.Text = claudeResult.Message;
+        if (!claudeResult.Success)
+        {
+            ValidationText.Text = claudeResult.Message;
+            return;
+        }
+
         var placement = LeftEdgeRadio.IsChecked == true
             ? HorizontalPlacement.LeftEdge
             : CustomPositionRadio.IsChecked == true
@@ -205,6 +218,7 @@ public partial class SettingsWindow : Window
             VerticalOffset = _pendingVerticalOffset,
             HideInFullscreen = HideFullscreenCheckBox.IsChecked == true,
             ShowOnlyWhenCodexActive = CodexOnlyVisibilityRadio.IsChecked == true,
+            ClaudeCodeUsageEnabled = claudeEnabled,
             FollowCodexAcrossMonitors = FollowMonitorsCheckBox.IsChecked == true,
             PrimaryDisplay = primaryDisplay,
             WarningThreshold = warningThreshold,

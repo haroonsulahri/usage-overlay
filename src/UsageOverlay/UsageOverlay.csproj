@@ -14,7 +14,7 @@
     <Company>Haroone.com</Company>
     <Authors>Haroone.com</Authors>
     <Copyright>Copyright (c) 2026 Haroone.com</Copyright>
-    <Description>Unofficial Windows usage overlay for Codex.</Description>
+    <Description>Unofficial Windows usage overlay for Codex and Claude Code.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
@@ -24,5 +24,6 @@
 
   <ItemGroup>
     <Resource Include="Assets\UsageOverlay.ico" />
+    <EmbeddedResource Include="Services\ClaudeUsageStatusLine.ps1" />
   </ItemGroup>
 </Project>

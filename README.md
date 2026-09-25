@@ -2,9 +2,9 @@
 
 ![Usage Overlay showing remaining Codex usage beside the desktop app](docs/images/usage-overlay-readme-banner.png)
 
-**See your remaining Codex usage without leaving the desktop app.**
+**See your Codex and Claude Code limits at a glance.**
 
-Usage Overlay is a small, open-source Windows companion for the Codex desktop app. It places a slim usage rail beside Codex and opens a compact detail card when you need the numbers. You can see how much usage is left and when the main Codex limit resets.
+Usage Overlay is a small, open-source Windows companion for Codex and Claude Code. It places a slim usage rail beside the active supported app and opens a compact detail card when you need the numbers. Codex usage connects automatically; Claude Code support is an optional local integration.
 
 It runs as its own process. It does not modify Codex, inject code into the app, read conversations, or handle your credentials.
 
@@ -23,9 +23,10 @@ Hover over the rail to open the detail card. The card shows:
 - The reset countdown for the current limit window
 - Live, connecting, or unavailable connection status
 - Green, amber, or red status based on your configured thresholds
-- A small **View usage** link to the full Codex usage page
+- A **View usage** link that opens the active provider’s usage page
+- Claude Code’s 5-hour and 7-day Pro/Max rate limits when its local status-line integration is enabled
 
-If Codex has not returned a fresh limit yet, the rail shows `--`. The card says **Loading usage** while connecting and **Usage unavailable** if the limits cannot be read. It never presents an old percentage as a current reading after the connection is lost.
+If the active provider has not returned a fresh limit yet, the rail shows `--`. The card says **Loading usage** while connecting and **Usage unavailable** if the limits cannot be read. It never presents an old percentage as a current reading after the connection is lost.
 
 ## Features
 
@@ -34,8 +35,9 @@ If Codex has not returned a fresh limit yet, the rail shows `--`. The card says 
 - **Compact detail card:** hover to inspect the limit or click to keep the card open.
 - **Reset countdown:** see when the current quota window resets.
 - **Live updates:** listen for App Server updates and poll at a configurable interval as a fallback.
+- **Claude Code support:** read the official Claude Code status-line rate-limit fields and show its current 5-hour and 7-day plan windows.
 - **Three visual states:** green for normal usage, amber for warning, and red for critical.
-- **Flexible placement:** use the right edge, left edge, position nudges, or drag the rail anywhere inside Codex.
+- **Flexible placement:** use the right edge, left edge, position nudges, or drag the rail anywhere inside the active supported app.
 - **Monitor-aware positioning:** follow Codex when the app moves between monitors.
 - **Visibility control:** show the overlay only with Codex or keep it available across Windows.
 - **Fullscreen control:** optionally hide the rail while Codex is fullscreen.
@@ -50,7 +52,7 @@ If Codex has not returned a fresh limit yet, the rail shows `--`. The card says 
 - **Single instance:** opening the app again talks to the running process instead of creating a duplicate.
 - **Optional usage reporting:** off by default; share only a random installation ID and app version with Haroone to measure adoption. No advertising or remote account system.
 
-Usage Overlay reads account state and limits through the officially documented [`account/read`, `account/updated`, `account/rateLimits/read`, and `account/rateLimits/updated`](https://developers.openai.com/codex/app-server) Codex App Server methods.
+Usage Overlay reads Codex limits through the officially documented [`account/read`, `account/updated`, `account/rateLimits/read`, and `account/rateLimits/updated`](https://developers.openai.com/codex/app-server) Codex App Server methods. Claude Code limits come from the official [status-line session data](https://code.claude.com/docs/en/statusline), which includes subscription rate limits for supported Pro and Max sessions.
 
 ## Requirements
 
@@ -58,6 +60,7 @@ Usage Overlay reads account state and limits through the officially documented [
 - The Microsoft Store Codex desktop app
 - Codex Desktop, or a separately installed Codex CLI available on `PATH`
 - Codex signed in with ChatGPT-backed authentication
+- Claude Code is optional and requires version 2.1.251 or later and a Claude.ai Pro or Max subscription for plan-limit values
 
 API-key-only and Bedrock authentication do not provide the account usage data this app displays.
 
@@ -69,6 +72,8 @@ API-key-only and Bedrock authentication do not provide the account usage data th
 2. Download `usage-overlay-vX.Y.Z-win-x64-setup.exe`.
 3. Run the installer, then launch **Usage Overlay** from Windows Search.
 4. Focus the Codex desktop app. The rail will appear at its saved position.
+
+To enable Claude Code, open Usage Overlay **Settings → Usage providers**, select **Claude Code**, and Save. Usage Overlay adds a local status-line relay to your Claude Code user settings. It preserves any existing status-line command and its output; turning Claude Code off in Usage Overlay restores the saved status-line configuration. Values appear after Claude Code’s first response. API Console authentication does not expose Pro/Max plan limits.
 
 The app is not code-signed yet. Windows SmartScreen may show a warning on first launch. Review the published SHA-256 checksum before running the file.
 
@@ -149,9 +154,9 @@ The validation message appears at the bottom of the window and moves focus to th
 
 ### Visibility
 
-- **Only in Codex:** shows the rail while the Codex window is active and hides it when you switch away. This is the default.
+- **Only in Codex or Claude Code:** shows the rail while either supported app is active and hides it when you switch away. This is the default.
 - **Across Windows:** keeps the rail at its last position when you switch to another application.
-- **Hide while Codex is fullscreen:** removes the rail only while the active Codex window fills its monitor.
+- **Hide while the active app is fullscreen:** removes the rail only while the active supported window fills its monitor.
 - **Pause 15 min:** stages a 15-minute pause. Save to start the pause. Reopen Settings and choose **Resume now** to end it early.
 
 Pausing or hiding the rail does not disconnect App Server. Usage can continue updating in the background.
@@ -191,12 +196,19 @@ Custom positions are stored as relative coordinates, so the rail remains inside 
 
 CLI path and refresh interval changes take effect after the app restarts.
 
+### Usage providers
+
+- **Codex** reads limits from the Codex App Server session.
+- **Claude Code** is off by default. When enabled, Claude Code runs a local status-line relay that writes only the 5-hour and 7-day limit percentages, reset timestamps, update time, and process IDs to `%LOCALAPPDATA%\UsageOverlay\claude-usage.json`.
+- The Claude integration uses Claude Code’s supported status-line configuration. Its user settings are updated only when you select the provider and Save. Existing status-line output is run and kept in front of the overlay’s usage values; disabling the provider restores the previous status-line configuration if it has not been changed since setup.
+- Plan-limit values are available for Claude.ai Pro/Max sessions on Claude Code 2.1.251 or later, after the first API response. Other authentication types may show that plan usage is unavailable.
+
 ### Default settings
 
 | Setting | Default |
 | --- | --- |
 | Start with Windows | Off |
-| Visibility | Only in Codex |
+| Visibility | Only in Codex or Claude Code |
 | Hide in fullscreen | Off |
 | Position | Right edge |
 | Follow Codex between monitors | On |
@@ -246,15 +258,17 @@ See [Architecture](docs/architecture.md) for the component map, data flow, Windo
 
 ## Privacy
 
-Usage Overlay requests only Codex rate-limit metadata:
+Usage Overlay requests only Codex rate-limit metadata. If Claude Code support is enabled, its local status-line command receives Claude Code’s session JSON and saves only:
 
 - Used percentage
 - Window duration
 - Reset timestamp
 - Limit identifier and display name
 - Plan type when returned
+- Claude Code’s 5-hour and 7-day used percentages and reset timestamps
+- A local update timestamp and process IDs to match a Claude terminal to its foreground window
 
-It does not request prompts, responses, conversation history, repository files, browser activity, cookies, passwords, API keys, or Codex authentication files.
+Claude status-line input is processed on the PC. The overlay does not save the full input, prompts, responses, conversation history, repository files, cookies, passwords, API keys, or Claude/Codex authentication files. The existing Claude status-line command is retained and its output is still displayed.
 
 Codex CLI owns authentication and all account-data network access. Usage Overlay makes an HTTPS request to GitHub only when you explicitly choose **Check for updates**. Separately, optional installation reporting is off by default. Enable **Share optional installation and activity reports** in Settings and select Save to send a random installation ID and app version to `https://haroone.com/api/usage-overlay.php`, at most once per UTC day while the app runs. Disable it and Save to cancel pending requests and stop future reporting. No account, quota, conversation, credentials or logs are included. Previously received reports expire under the retention policy.
 
@@ -267,9 +281,11 @@ Usage Overlay stores settings and logs on your computer. Opting in also creates 
 ```text
 %LOCALAPPDATA%\UsageOverlay\settings.json
 %LOCALAPPDATA%\UsageOverlay\overlay.log
+%LOCALAPPDATA%\UsageOverlay\claude-usage.json
+%LOCALAPPDATA%\UsageOverlay\claude-statusline-backup.json
 ```
 
-`settings.json` contains display preferences. `overlay.log` contains redacted and truncated connection messages. Neither file is uploaded by the app.
+`settings.json` contains display preferences. `overlay.log` contains redacted and truncated connection messages. The Claude files are created only when Claude Code integration is enabled. They stay on the PC and are not uploaded by the app.
 
 Older settings from `%LOCALAPPDATA%\QuotaRail` or `%LOCALAPPDATA%\CodexUsageOverlay` are imported once when no current settings file exists. The old files are left unchanged.
 

@@ -12,6 +12,8 @@ var specs = new (string Name, Action Run)[]
     ("Reports only with consent and bounds identity, retries and cancellation", ReportingSpecs.Run),
     ("Parses a multi-bucket response", ParsesMultiBucketResponse),
     ("Parses a rate-limit update notification", ParsesUpdateNotification),
+    ("Parses Claude Code five-hour and seven-day limits", ParsesClaudeUsage),
+    ("Keeps Claude Code session identity when plan limits are unavailable", ParsesClaudeUsageWithoutPlanLimits),
     ("Recognizes signed-in account responses", RecognizesSignedInAccountResponse),
     ("Recognizes signed-out account updates", RecognizesSignedOutAccountUpdate),
     ("Clamps malformed percentage values", ClampsPercentage),
@@ -105,6 +107,36 @@ static void ParsesUpdateNotification()
 
     Assert(RateLimitParser.TryParse(json, out var snapshot), "Expected notification to parse.");
     AssertEqual(64d, snapshot!.Primary.Primary.UsedPercent);
+}
+
+static void ParsesClaudeUsage()
+{
+    const string json = """
+        {
+          "rate_limits": {
+            "five_hour": { "used_percentage": 82.5, "resets_at": 1900000000 },
+            "seven_day": { "used_percentage": 40, "resets_at": 1900500000 }
+          }
+        }
+        """;
+    var receivedAt = DateTimeOffset.FromUnixTimeSeconds(1899999000);
+    Assert(ClaudeUsageParser.TryParseStatusLine(json, receivedAt, [10, 20], out var snapshot), "Expected Claude usage to parse.");
+    Assert(snapshot is not null, "Claude snapshot should not be null.");
+    AssertEqual(82.5d, snapshot!.FiveHour!.UsedPercent);
+    AssertEqual(40d, snapshot.SevenDay!.UsedPercent);
+    AssertEqual(receivedAt, snapshot.UpdatedAt);
+    AssertEqual(2, snapshot.ProcessIds.Length);
+}
+
+static void ParsesClaudeUsageWithoutPlanLimits()
+{
+    const string json = """
+        { "session_id": "opaque-session", "rate_limits": null }
+        """;
+    Assert(ClaudeUsageParser.TryParseStatusLine(json, DateTimeOffset.UtcNow, [42], out var snapshot), "Expected session status without plan limits to parse.");
+    Assert(snapshot is not null, "Claude snapshot should not be null.");
+    Assert(snapshot!.FiveHour is null && snapshot.SevenDay is null, "Plan limits should remain unavailable.");
+    AssertEqual(42, snapshot.ProcessIds.Single());
 }
 
 static void RecognizesSignedInAccountResponse()
