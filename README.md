@@ -6,7 +6,7 @@
 
 Usage Overlay is a small, open-source Windows companion for AI coding apps. It places a slim usage rail beside **Codex**, **Claude** (the desktop app and Claude Code terminals) and **Cursor**, and opens a compact detail card when you need the numbers. The rail follows whichever app is in front, so you always see the limit that matters right now.
 
-It runs as its own process. It does not modify these apps, inject code into them or read conversations. Codex and Claude support never handles your credentials.
+It runs as its own process. It does not modify these apps, inject code into them or read conversations. By default it never handles your credentials; the optional unofficial account sources described below read the sign-in Claude Code or Cursor saved on your PC.
 
 Built by [Haroone.com](https://haroone.com).
 
@@ -18,12 +18,19 @@ Built by [Haroone.com](https://haroone.com).
 | App | Where the rail appears | Where the numbers come from | Setup |
 | --- | --- | --- | --- |
 | **Codex** | The Codex desktop app | The documented Codex App Server `account/rateLimits/*` methods, through the Codex CLI already signed in on your PC | On by default |
-| **Claude** | The Claude desktop app, and any terminal or editor window running Claude Code | Your Pro or Max plan's 5-hour and weekly limits, which Claude Code passes to its status line | Turn on **Claude** in Settings |
-| **Cursor** *(experimental)* | The Cursor editor | Your spend this billing cycle from Cursor's official Admin API (`POST /teams/spend`) | Turn on **Cursor**, enter your email and a team Admin API key |
+| **Claude** | The Claude desktop app, and any terminal or editor window running Claude Code | Your Pro or Max plan's 5-hour and weekly limits, which Claude Code passes to its status line. Optionally (unofficial) read from your Claude sign-in | Turn on **Claude** in Settings |
+| **Cursor** *(experimental)* | The Cursor editor | Your plan usage from your Cursor sign-in (unofficial), or your spend from the official team Admin API | Turn on **Cursor** and choose a source |
 
 Claude's plan limits are shared across Claude.ai, the desktop app and Claude Code, so one reading serves all of them. It refreshes whenever Claude Code replies; between replies the card shows how old the reading is.
 
-Cursor support needs a Cursor team plan whose admin can create an Admin API key. Cursor doesn't offer an official usage API for individual plans, and Usage Overlay won't read Cursor's private session data.
+### Unofficial account sources
+
+Neither the Claude desktop app nor individual Cursor plans offer an official usage API. Two opt-in options fill that gap:
+
+- **Read usage from my Claude sign-in:** uses the OAuth sign-in Claude Code saved in `~\.claude\.credentials.json` to call `https://api.anthropic.com/api/oauth/usage` every 5 minutes, the endpoint behind Claude's usage page. Use this if you mostly work in the Claude desktop app. Claude Code must have been signed in on this PC once.
+- **Read usage from my Cursor sign-in:** reads the access token the Cursor editor saved in `%APPDATA%\Cursor\User\globalStorage\state.vscdb` (opened read-only) and calls `https://cursor.com/api/usage-summary`, the endpoint behind Cursor's usage dashboard, every 5 minutes.
+
+Both are off by default. The tokens are only read when needed, sent only to their own service, and never stored, refreshed or logged by Usage Overlay. These endpoints are undocumented and may change or stop working. Anthropic's consumer terms also restrict how Claude sign-ins may be used, so turn the Claude option on only if you accept that risk.
 
 ## What it shows
 

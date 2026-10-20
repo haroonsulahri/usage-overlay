@@ -18,6 +18,11 @@ For Claude (off by default), Claude Code passes a JSON description of the sessio
 
 For Cursor (off by default, experimental), the overlay sends the email you enter as a search term to Cursor's Admin API and reads that member's spend, spend limit and billing-cycle start.
 
+Two unofficial sources are separately opt-in:
+
+- **Claude sign-in:** reads the OAuth access token from Claude Code's `.credentials.json` and sends it only to `api.anthropic.com/api/oauth/usage`, every 5 minutes, to read the 5-hour and weekly utilization. The token is not refreshed, copied, stored or logged.
+- **Cursor sign-in:** opens Cursor's `state.vscdb` read-only to read `cursorAuth/accessToken`, and sends it only to `cursor.com` (and, as a fallback, `api2.cursor.sh`) every 5 minutes to read plan usage. The token is not stored or logged.
+
 ## Data stored
 
 Local files may be created under `%LOCALAPPDATA%\UsageOverlay`:

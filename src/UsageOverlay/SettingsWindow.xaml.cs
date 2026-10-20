@@ -53,7 +53,7 @@ public partial class SettingsWindow : Window
         ClaudeStatusText.Text = providerStatus.Claude;
         CursorStatusText.Text = providerStatus.Cursor;
         ClaudeSettingsPathText.Text =
-            $"Updates {providerStatus.ClaudeSettingsPath}. An existing status line keeps working, and turning this off restores it.";
+            $"Updates Claude Code’s status line in {providerStatus.ClaudeSettingsPath} after each reply. An existing status line keeps working, and turning this off restores it.";
         LoadControls();
     }
 
@@ -63,6 +63,9 @@ public partial class SettingsWindow : Window
         StartAutomaticallyCheckBox.IsEnabled = _startupSupported;
         CodexEnabledCheckBox.IsChecked = _settings.CodexEnabled;
         ClaudeEnabledCheckBox.IsChecked = _settings.ClaudeEnabled;
+        ClaudeStatusLineCheckBox.IsChecked = _settings.ClaudeStatusLineEnabled;
+        ClaudeAccountUsageCheckBox.IsChecked = _settings.ClaudeAccountUsageEnabled;
+        CursorAccountUsageCheckBox.IsChecked = _settings.CursorAccountUsageEnabled;
         CursorEnabledCheckBox.IsChecked = _settings.CursorEnabled;
         CursorEmailTextBox.Text = _settings.CursorAccountEmail;
         CursorKeyPasswordBox.Clear();
@@ -177,8 +180,19 @@ public partial class SettingsWindow : Window
         SavedStatusText.Text = string.Empty;
 
         var cursorEnabled = CursorEnabledCheckBox.IsChecked == true;
+        var cursorAccountUsage = CursorAccountUsageCheckBox.IsChecked == true;
         var cursorEmail = CursorEmailTextBox.Text.Trim();
-        if (cursorEnabled && (cursorEmail.Length == 0 || !cursorEmail.Contains('@', StringComparison.Ordinal)))
+        if (ClaudeEnabledCheckBox.IsChecked == true &&
+            ClaudeStatusLineCheckBox.IsChecked != true &&
+            ClaudeAccountUsageCheckBox.IsChecked != true)
+        {
+            ValidationText.Text = "Choose at least one way to read Claude usage.";
+            ClaudeStatusLineCheckBox.Focus();
+            return;
+        }
+
+        if (cursorEnabled && !cursorAccountUsage &&
+            (cursorEmail.Length == 0 || !cursorEmail.Contains('@', StringComparison.Ordinal)))
         {
             ValidationText.Text = "Enter the email address of your Cursor account.";
             CursorEmailTextBox.Focus();
@@ -243,6 +257,9 @@ public partial class SettingsWindow : Window
             ShowOnlyWhenCodexActive = CodexOnlyVisibilityRadio.IsChecked == true,
             CodexEnabled = CodexEnabledCheckBox.IsChecked == true,
             ClaudeEnabled = ClaudeEnabledCheckBox.IsChecked == true,
+            ClaudeStatusLineEnabled = ClaudeStatusLineCheckBox.IsChecked == true,
+            ClaudeAccountUsageEnabled = ClaudeAccountUsageCheckBox.IsChecked == true,
+            CursorAccountUsageEnabled = cursorAccountUsage,
             CursorEnabled = cursorEnabled,
             CursorAccountEmail = cursorEmail,
             FollowCodexAcrossMonitors = FollowMonitorsCheckBox.IsChecked == true,
@@ -300,6 +317,8 @@ public partial class SettingsWindow : Window
 
     private void CursorEnabledCheckBox_OnChanged(object sender, RoutedEventArgs eventArgs) => UpdateCursorControls();
 
+    private void ProviderCheckBox_OnChanged(object sender, RoutedEventArgs eventArgs) => UpdateCursorControls();
+
     private void RemoveCursorKeyButton_OnClick(object sender, RoutedEventArgs eventArgs)
     {
         _removeCursorKeyPending = true;
@@ -309,9 +328,15 @@ public partial class SettingsWindow : Window
 
     private void UpdateCursorControls()
     {
+        ClaudeOptionsPanel.Visibility = ClaudeEnabledCheckBox.IsChecked == true
+            ? Visibility.Visible
+            : Visibility.Collapsed;
         CursorDetailsPanel.Visibility = CursorEnabledCheckBox.IsChecked == true
             ? Visibility.Visible
             : Visibility.Collapsed;
+        CursorAdminPanel.Visibility = CursorAccountUsageCheckBox.IsChecked == true
+            ? Visibility.Collapsed
+            : Visibility.Visible;
         RemoveCursorKeyButton.IsEnabled = _hasCursorKey && !_removeCursorKeyPending;
         CursorKeyStatusText.Text = _removeCursorKeyPending
             ? "The saved key will be removed when you save."

@@ -367,10 +367,23 @@
                             <CheckBox x:Name="ClaudeEnabledCheckBox"
                                       Margin="0,14,0,0"
                                       Content="Claude"
-                                      Style="{StaticResource SettingsCheckStyle}" />
-                            <TextBlock Text="Connects Claude Code’s status line to read your Pro or Max plan limits. They’re shared with the Claude desktop app, so the rail appears beside it and beside terminals running Claude Code."
+                                      Style="{StaticResource SettingsCheckStyle}"
+                                      Checked="ProviderCheckBox_OnChanged"
+                                      Unchecked="ProviderCheckBox_OnChanged" />
+                            <TextBlock Text="Shows your Pro or Max plan’s 5-hour and weekly limits beside the Claude desktop app and terminals running Claude Code."
                                        Style="{StaticResource HelpTextStyle}" />
-                            <TextBlock x:Name="ClaudeSettingsPathText" Style="{StaticResource HelpTextStyle}" />
+                            <StackPanel x:Name="ClaudeOptionsPanel" Margin="22,0,0,0" Visibility="Collapsed">
+                                <CheckBox x:Name="ClaudeStatusLineCheckBox"
+                                          Content="Connect Claude Code’s status line (official)"
+                                          Style="{StaticResource SettingsCheckStyle}" />
+                                <TextBlock x:Name="ClaudeSettingsPathText" Margin="22,3,0,0" Style="{StaticResource HelpTextStyle}" />
+                                <CheckBox x:Name="ClaudeAccountUsageCheckBox"
+                                          Content="Read usage from my Claude sign-in (unofficial)"
+                                          Style="{StaticResource SettingsCheckStyle}" />
+                                <TextBlock Margin="22,3,0,0"
+                                           Text="Works when you only use the Claude desktop app. Every 5 minutes it uses the sign-in Claude Code saved on this PC to call the private endpoint behind Claude’s usage page. Anthropic may change or restrict this, and its terms limit how that sign-in may be used."
+                                           Style="{StaticResource HelpTextStyle}" />
+                            </StackPanel>
                             <TextBlock x:Name="ClaudeStatusText" Style="{StaticResource HelpTextStyle}" />
 
                             <CheckBox x:Name="CursorEnabledCheckBox"
@@ -379,30 +392,40 @@
                                       Style="{StaticResource SettingsCheckStyle}"
                                       Checked="CursorEnabledCheckBox_OnChanged"
                                       Unchecked="CursorEnabledCheckBox_OnChanged" />
-                            <TextBlock Text="Uses Cursor’s official Admin API, available to team admins. Shows your spend this billing cycle against your spend limit."
+                            <TextBlock Text="Shows how much of your Cursor plan you’ve used this billing cycle."
                                        Style="{StaticResource HelpTextStyle}" />
                             <StackPanel x:Name="CursorDetailsPanel" Margin="22,0,0,0" Visibility="Collapsed">
-                                <TextBlock Text="Your Cursor account email" Style="{StaticResource FieldLabelStyle}" />
-                                <TextBox x:Name="CursorEmailTextBox"
-                                         AutomationProperties.Name="Cursor account email"
-                                         Style="{StaticResource SettingsTextBoxStyle}" />
-                                <TextBlock Text="Team Admin API key" Style="{StaticResource FieldLabelStyle}" />
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <PasswordBox x:Name="CursorKeyPasswordBox"
-                                                 AutomationProperties.Name="Cursor Admin API key"
-                                                 Style="{StaticResource SettingsPasswordBoxStyle}" />
-                                    <Button x:Name="RemoveCursorKeyButton"
-                                            Grid.Column="1"
-                                            Margin="8,0,0,0"
-                                            Content="Remove key"
-                                            Style="{StaticResource SettingsButtonStyle}"
-                                            Click="RemoveCursorKeyButton_OnClick" />
-                                </Grid>
-                                <TextBlock x:Name="CursorKeyStatusText" Margin="0,5,0,0" Style="{StaticResource HelpTextStyle}" />
+                                <CheckBox x:Name="CursorAccountUsageCheckBox"
+                                          Content="Read usage from my Cursor sign-in (unofficial)"
+                                          Style="{StaticResource SettingsCheckStyle}"
+                                          Checked="CursorEnabledCheckBox_OnChanged"
+                                          Unchecked="CursorEnabledCheckBox_OnChanged" />
+                                <TextBlock Margin="22,3,0,0"
+                                           Text="Works with individual plans. Every 5 minutes it reads the sign-in the Cursor editor saved on this PC and calls the private endpoint behind Cursor’s usage dashboard. Cursor may change this without notice."
+                                           Style="{StaticResource HelpTextStyle}" />
+                                <StackPanel x:Name="CursorAdminPanel">
+                                    <TextBlock Text="Or use a team Admin API key (official, for team admins). Your Cursor account email:" TextWrapping="Wrap" Style="{StaticResource FieldLabelStyle}" />
+                                    <TextBox x:Name="CursorEmailTextBox"
+                                             AutomationProperties.Name="Cursor account email"
+                                             Style="{StaticResource SettingsTextBoxStyle}" />
+                                    <TextBlock Text="Team Admin API key" Style="{StaticResource FieldLabelStyle}" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <PasswordBox x:Name="CursorKeyPasswordBox"
+                                                     AutomationProperties.Name="Cursor Admin API key"
+                                                     Style="{StaticResource SettingsPasswordBoxStyle}" />
+                                        <Button x:Name="RemoveCursorKeyButton"
+                                                Grid.Column="1"
+                                                Margin="8,0,0,0"
+                                                Content="Remove key"
+                                                Style="{StaticResource SettingsButtonStyle}"
+                                                Click="RemoveCursorKeyButton_OnClick" />
+                                    </Grid>
+                                    <TextBlock x:Name="CursorKeyStatusText" Margin="0,5,0,0" Style="{StaticResource HelpTextStyle}" />
+                                </StackPanel>
                                 <TextBlock x:Name="CursorStatusText" Margin="0,3,0,0" Style="{StaticResource HelpTextStyle}" />
                             </StackPanel>
                         </StackPanel>

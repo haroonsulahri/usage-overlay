@@ -244,7 +244,7 @@ public sealed class ClaudeCodeIntegration
     private static string BashQuote(string value) =>
         "'" + value.Replace("'", "'\\''", StringComparison.Ordinal) + "'";
 
-    private static string ResolveClaudeConfigDirectory()
+    internal static string ResolveClaudeConfigDirectory()
     {
         var configured = Environment.GetEnvironmentVariable("CLAUDE_CONFIG_DIR");
         return string.IsNullOrWhiteSpace(configured)

@@ -16,7 +16,6 @@ internal static class ClaudeStatusLineRelay
 {
     public const string Argument = "--claude-statusline";
     public const string QuietArgument = "--quiet";
-    private const string SnapshotMutexName = "Local\\UsageOverlay.ClaudeSnapshot";
 
     public static int Run(IReadOnlyList<string> arguments)
     {
@@ -29,7 +28,7 @@ internal static class ClaudeStatusLineRelay
             }
 
             var ancestors = ProcessAncestry.GetAncestors(Environment.ProcessId);
-            var snapshot = Record(
+            var snapshot = ClaudeSnapshotStore.Update(
                 limits,
                 sessionId,
                 ancestors.Select(ancestor => ancestor.ProcessId).ToArray(),
@@ -78,47 +77,6 @@ internal static class ClaudeStatusLineRelay
                 string.Equals(ancestor.ExecutableName, "node.exe", StringComparison.OrdinalIgnoreCase)) is { ProcessId: > 0 } node
                 ? node.ProcessId
                 : null;
-
-    private static ClaudeUsageSnapshot Record(
-        ClaudeRateLimits limits,
-        string? sessionId,
-        IReadOnlyCollection<int> processIds,
-        int? ownerProcessId)
-    {
-        using var mutex = new Mutex(false, SnapshotMutexName);
-        var ownsMutex = false;
-        try
-        {
-            try
-            {
-                ownsMutex = mutex.WaitOne(TimeSpan.FromSeconds(2));
-            }
-            catch (AbandonedMutexException)
-            {
-                ownsMutex = true;
-            }
-
-            var path = AppPaths.ClaudeSnapshotPath;
-            var current = File.Exists(path) &&
-                          ClaudeUsageSnapshot.TryDeserialize(File.ReadAllText(path), out var existing)
-                ? existing
-                : ClaudeUsageSnapshot.Empty;
-            var updated = current.Apply(limits, sessionId, processIds, DateTimeOffset.UtcNow, ownerProcessId);
-            if (ownsMutex)
-            {
-                AppPaths.WriteAtomically(path, updated.Serialize());
-            }
-
-            return updated;
-        }
-        finally
-        {
-            if (ownsMutex)
-            {
-                mutex.ReleaseMutex();
-            }
-        }
-    }
 
     private static string ReadInput()
     {

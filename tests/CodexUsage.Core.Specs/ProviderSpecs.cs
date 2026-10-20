@@ -191,6 +191,9 @@ internal static class ProviderSpecs
         Assert(!legacy.ClaudeEnabled, "Claude Code integration must be opt-in.");
         Assert(!legacy.CursorEnabled, "Cursor must be opt-in.");
         Assert(!legacy.ShowOtherApps, "The card shows only the app in front by default.");
+        Assert(legacy.ClaudeStatusLineEnabled, "The official Claude source stays the default.");
+        Assert(!legacy.ClaudeAccountUsageEnabled, "Unofficial Claude usage must be opt-in.");
+        Assert(!legacy.CursorAccountUsageEnabled, "Unofficial Cursor usage must be opt-in.");
         AssertEqual(string.Empty, legacy.CursorAccountEmail);
 
         var padded = new OverlaySettings { CursorAccountEmail = "  dev@example.com  " }.Normalize();
@@ -206,6 +209,69 @@ internal static class ProviderSpecs
         var alerts = tracker.Evaluate([Window("codex:a", 10), Window("claude:a", 75)], 70, 90);
         AssertEqual(1, alerts.Count);
         AssertEqual("claude:a", alerts[0].Window.Key);
+    }
+
+    public static void ParsesClaudeAccountUsage()
+    {
+        Assert(
+            ClaudeAccountUsageParser.TryReadCredentials(
+                """{ "claudeAiOauth": { "accessToken": "sk-ant-oat01-abc", "refreshToken": "r", "expiresAt": 1789900000000 } }""",
+                out var token,
+                out var expiresAt),
+            "Claude Code credentials should parse.");
+        AssertEqual("sk-ant-oat01-abc", token);
+        AssertEqual(DateTimeOffset.FromUnixTimeMilliseconds(1789900000000), expiresAt);
+        Assert(!ClaudeAccountUsageParser.TryReadCredentials("{}", out _, out _), "Missing tokens are rejected.");
+
+        const string usage = """
+            {
+              "five_hour": { "utilization": 33.0, "resets_at": "2026-10-20T15:00:00.528743+00:00" },
+              "seven_day": { "utilization": 13.0, "resets_at": "2026-10-24T00:59:59.951713+00:00" },
+              "seven_day_opus": null,
+              "extra_usage": { "is_enabled": false, "utilization": null }
+            }
+            """;
+        Assert(ClaudeAccountUsageParser.TryParseUsage(usage, out var limits), "Account usage should parse.");
+        AssertEqual(33d, limits.FiveHour!.UsedPercent);
+        AssertEqual(13d, limits.SevenDay!.UsedPercent);
+        AssertEqual(new DateTimeOffset(2026, 10, 24, 0, 59, 59, 951, TimeSpan.Zero).AddTicks(7130), limits.SevenDay.ResetsAt);
+        Assert(!ClaudeAccountUsageParser.TryParseUsage("{}", out _), "Responses without limits are rejected.");
+    }
+
+    public static void ParsesCursorAccountUsage()
+    {
+        const string summary = """
+            {
+              "billingCycleStart": "2026-10-01T00:00:00.000Z",
+              "billingCycleEnd": "2026-11-01T00:00:00.000Z",
+              "membershipType": "pro",
+              "isUnlimited": false,
+              "individualUsage": {
+                "plan": { "enabled": true, "used": 1200, "limit": 2000, "autoPercentUsed": 30, "apiPercentUsed": 12, "totalPercentUsed": 42 },
+                "onDemand": { "enabled": false, "used": 0, "limit": null }
+              }
+            }
+            """;
+        Assert(CursorAccountUsageParser.TryParse(summary, Now, out var state), "Usage summary should parse.");
+        AssertEqual(42d, state.Lead!.Window.UsedPercent);
+        AssertEqual(new DateTimeOffset(2026, 11, 1, 0, 0, 0, TimeSpan.Zero), state.Lead.Window.ResetsAt);
+        AssertEqual("Auto 30%  ·  API 12%", state.Summary);
+
+        const string editor = """{ "billingCycleStart": "1790000000000", "planUsage": { "totalSpend": 900, "limit": 2000, "used": 900 } }""";
+        Assert(CursorAccountUsageParser.TryParse(editor, Now, out var fallback), "Editor usage should parse.");
+        AssertEqual(45d, fallback.Lead!.Window.UsedPercent);
+        Assert(!CursorAccountUsageParser.TryParse("{}", Now, out _), "Unexpected payloads are rejected.");
+    }
+
+    public static void ReadsJwtClaims()
+    {
+        static string Encode(string json) =>
+            Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json)).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        var token = $"{Encode("{\"alg\":\"none\"}")}.{Encode("{\"sub\":\"auth0|user_01ABC\",\"exp\":1790000000}")}.sig";
+        Assert(JwtClaims.TryRead(token, out var subject, out var expiresAt), "JWT claims should parse.");
+        AssertEqual("auth0|user_01ABC", subject);
+        AssertEqual(DateTimeOffset.FromUnixTimeSeconds(1790000000), expiresAt);
+        Assert(!JwtClaims.TryRead("not-a-jwt", out _, out _), "Malformed tokens are rejected.");
     }
 
     private static void Assert(bool condition, string message)
