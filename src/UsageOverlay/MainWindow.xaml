@@ -56,13 +56,16 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="HeaderText"
-                               Text="Codex usage"
-                               VerticalAlignment="Center"
-                               TextTrimming="CharacterEllipsis"
-                               Foreground="{DynamicResource OverlayTextBrush}"
-                               FontSize="{StaticResource OverlayTextBody}"
-                               FontWeight="Medium" />
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border x:Name="HeaderBadgeHost" Margin="0,0,7,0" VerticalAlignment="Center" />
+                        <TextBlock x:Name="HeaderText"
+                                   Text="Codex usage"
+                                   VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{DynamicResource OverlayTextBrush}"
+                                   FontSize="{StaticResource OverlayTextBody}"
+                                   FontWeight="Medium" />
+                    </StackPanel>
                     <StackPanel Grid.Column="1"
                                 Margin="0,0,10,0"
                                 Orientation="Horizontal"

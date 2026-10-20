@@ -820,6 +820,7 @@ public partial class MainWindow : Window
     {
         var state = CurrentState;
         HeaderText.Text = $"{state.DisplayName} usage";
+        HeaderBadgeHost.Child = ProviderBadge.Create(state.Provider, 18);
         StatusText.Text = _options.DemoPercent is null ? state.StatusText : "Demo";
         LiveDot.Fill = new SolidColorBrush((System.Windows.Media.Color)FindResource(state.Connection switch
         {
@@ -856,6 +857,7 @@ public partial class MainWindow : Window
         LeadingCap.Opacity = 0;
         RailRemainingText.Text = "--";
         BucketNameText.Text = state.DisplayName;
+        BucketNameText.Visibility = Visibility.Collapsed;
         AdditionalLimitsPanel.Children.Clear();
         SummaryText.Visibility = Visibility.Collapsed;
 
@@ -866,6 +868,7 @@ public partial class MainWindow : Window
             ProviderConnection.SignedOut => "Signed out",
             ProviderConnection.Disconnected => "CLI disconnected",
             ProviderConnection.Unavailable => "Usage unavailable",
+            _ when state.Provider == UsageProviderKind.Claude && state.StatusText == "Waiting" => "Waiting for Claude Code",
             _ => "Loading usage…"
         };
         ResetText.Text = state.Detail;
@@ -873,7 +876,6 @@ public partial class MainWindow : Window
 
         var summary = $"{state.DisplayName}: {UsagePercentText.Text}. {state.Detail}".Trim();
         AutomationProperties.SetName(RailHitTarget, summary);
-        RailHitTarget.ToolTip = summary;
     }
 
     private void ApplyUsage(ProviderUsageState state)
@@ -885,6 +887,7 @@ public partial class MainWindow : Window
         var primaryPercent = showingUsed ? usedPercent : remainingPercent;
         var primaryLabel = showingUsed ? "used" : "left";
         BucketNameText.Text = lead.Label;
+        BucketNameText.Visibility = Visibility.Visible;
         ResetText.Text = FormatSecondaryLine(lead.Window);
         ResetText.Visibility = Visibility.Visible;
 
@@ -904,7 +907,6 @@ public partial class MainWindow : Window
         var summary =
             $"{state.DisplayName} {lead.Label.ToLowerInvariant()}: {Math.Round(primaryPercent)} percent {primaryLabel}. {ResetText.Text}";
         AutomationProperties.SetName(RailHitTarget, summary);
-        RailHitTarget.ToolTip = summary;
     }
 
     private void RenderOtherApps()
@@ -950,13 +952,19 @@ public partial class MainWindow : Window
         var row = new Grid();
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        row.Children.Add(new TextBlock
+        var name = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+        var badge = ProviderBadge.Create(state.Provider, 14);
+        badge.Margin = new Thickness(0, 0, 6, 0);
+        name.Children.Add(badge);
+        name.Children.Add(new TextBlock
         {
             Text = state.DisplayName,
+            VerticalAlignment = VerticalAlignment.Center,
             Foreground = (System.Windows.Media.Brush)FindResource("OverlayTextBrush"),
             FontSize = (double)FindResource("OverlayTextSmall"),
             TextTrimming = TextTrimming.CharacterEllipsis
         });
+        row.Children.Add(name);
 
         string valueText;
         System.Windows.Media.Brush valueBrush;
@@ -976,6 +984,7 @@ public partial class MainWindow : Window
 
         var value = new TextBlock
         {
+            VerticalAlignment = VerticalAlignment.Center,
             Text = valueText,
             Foreground = valueBrush,
             FontSize = (double)FindResource("OverlayTextSmall"),
@@ -1599,8 +1608,9 @@ public partial class MainWindow : Window
         var codexStatus = _codex.ResolvedCliPath is null
             ? $"Codex CLI wasn’t found. {Describe(UsageProviderKind.Codex)}"
             : $"Codex CLI is ready. {Describe(UsageProviderKind.Codex)}";
-        var claudeStatus = _claude.IntegrationMessage.Length > 0 && _settings.ClaudeEnabled
-            ? $"{_claude.IntegrationMessage} {Describe(UsageProviderKind.Claude)}"
+        // Setup failures matter more than the usage state; otherwise show the state alone.
+        var claudeStatus = _settings.ClaudeEnabled && !_claude.IsRunning && _claude.IntegrationMessage.Length > 0
+            ? _claude.IntegrationMessage
             : Describe(UsageProviderKind.Claude);
         return new ProviderSettingsStatus(
             codexStatus,
