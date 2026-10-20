@@ -915,7 +915,7 @@ public partial class MainWindow : Window
         var others = UsageProviderCatalog.All
             .Where(provider => provider != _displayedProvider && IsProviderEnabled(provider))
             .ToArray();
-        if (others.Length == 0)
+        if (others.Length == 0 || !_settings.ShowOtherApps)
         {
             OtherAppsPanel.Visibility = Visibility.Collapsed;
             return;

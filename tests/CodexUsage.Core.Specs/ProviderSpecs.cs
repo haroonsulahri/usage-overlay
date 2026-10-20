@@ -182,6 +182,7 @@ internal static class ProviderSpecs
         Assert(legacy.CodexEnabled, "Codex stays on for existing users.");
         Assert(!legacy.ClaudeEnabled, "Claude Code integration must be opt-in.");
         Assert(!legacy.CursorEnabled, "Cursor must be opt-in.");
+        Assert(!legacy.ShowOtherApps, "The card shows only the app in front by default.");
         AssertEqual(string.Empty, legacy.CursorAccountEmail);
 
         var padded = new OverlaySettings { CursorAccountEmail = "  dev@example.com  " }.Normalize();

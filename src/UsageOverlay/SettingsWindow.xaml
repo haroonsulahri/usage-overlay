@@ -604,6 +604,13 @@
                             <CheckBox x:Name="CompactPercentageCheckBox"
                                       Content="Show the percentage below the rail"
                                       Style="{StaticResource SettingsCheckStyle}" />
+                            <CheckBox x:Name="ShowOtherAppsCheckBox"
+                                      Content="List my other apps in the detail card"
+                                      Style="{StaticResource SettingsCheckStyle}" />
+                            <TextBlock Margin="22,3,0,0"
+                                       Text="Off: the card shows only the app in front."
+                                       Foreground="{DynamicResource OverlayMutedBrush}"
+                                       FontSize="{StaticResource OverlayTextSmall}" />
                             <CheckBox x:Name="NotificationsCheckBox"
                                       Content="Notify me when usage turns amber or red"
                                       Style="{StaticResource SettingsCheckStyle}" />

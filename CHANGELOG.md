@@ -6,7 +6,7 @@
 
 - Claude support: the rail appears beside the Claude desktop app and beside terminals and editors running Claude Code, showing the 5-hour and weekly plan limits that Claude Code passes to its status line. It's opt-in, keeps an existing status line working, and restores it when turned off or uninstalled.
 - Experimental Cursor support through Cursor's official team Admin API, with the key stored encrypted with Windows DPAPI.
-- An **Other apps** section in the detail card, and a tray tooltip summarising every enabled app.
+- An optional **Other apps** section in the detail card, and a tray tooltip summarising every enabled app.
 - An **Apps** section in Settings to turn Codex, Claude and Cursor on or off.
 - `--provider=` demo option for previewing each app.
 
