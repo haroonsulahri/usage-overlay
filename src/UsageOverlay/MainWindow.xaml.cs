@@ -12,6 +12,7 @@ using System.Text.Json;
 using CodexUsage.Core;
 using CodexUsage.Core.Formatting;
 using CodexUsage.Core.Models;
+using CodexUsage.Core.Providers;
 using CodexUsage.Core.Settings;
 using CodexUsage.Core.Reporting;
 using UsageOverlay.Infrastructure;
@@ -28,7 +29,11 @@ public partial class MainWindow : Window
     private const double CollapsedWidth = 34;
     private const double CollapsedHeight = 190;
     private const double MinimumExpandedHeight = 218;
+    private const double MaximumExpandedHeight = 560;
     private const double ExpandedWidth = 254;
+    private const double DetailsColumnWidth = 220;
+    // The detail card is drawn 24px lower than its layout slot to line up with the rail.
+    private const double DetailsVerticalShift = 24;
     private const double RightInset = 18;
     private const double BottomInset = 46;
     private const double RailUsableHeight = 134;
@@ -36,7 +41,6 @@ public partial class MainWindow : Window
     private const int HotKeyMessage = 0x0312;
     private const int EscapeHotKeyIdentifier = 0x0C0D;
     private const int VirtualKeyEscape = 0x1B;
-    private static readonly Uri UsagePageUri = new("https://chatgpt.com/codex/settings/usage");
 
     public static readonly DependencyProperty AnimatedRemainingPercentProperty =
         DependencyProperty.Register(
@@ -49,7 +53,11 @@ public partial class MainWindow : Window
     private readonly AppLogger _logger;
     private readonly OverlaySettingsStore _settingsStore;
     private readonly StartupShortcutManager _startupShortcutManager;
-    private readonly AppServerClient _appServerClient;
+    private readonly CodexUsageProvider _codex;
+    private readonly ClaudeUsageProvider _claude;
+    private readonly CursorUsageProvider _cursor;
+    private readonly CursorCredentialStore _cursorCredentials = new();
+    private readonly Dictionary<UsageProviderKind, ProviderUsageState> _states = new();
     private readonly ReleaseUpdateService _releaseUpdateService;
     private readonly HttpClient _reportingClient = new(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false })
     {
@@ -70,12 +78,12 @@ public partial class MainWindow : Window
     private readonly UsageThresholdTracker _notificationTracker = new();
     private OverlaySettings _settings;
     private SettingsWindow? _settingsWindow;
-    private UsageSnapshot? _lastUsageSnapshot;
+    private UsageProviderKind _displayedProvider = UsageProviderKind.Codex;
+    private UsageProviderKind? _hostProvider;
+    private double? _animationTarget;
     private WindowBounds? _fixedPlacementBounds;
     private HwndSource? _windowSource;
     private IntPtr _windowHandle;
-    private string _appServerStatus = "Connecting";
-    private bool _hasCurrentUsage;
     private bool _isExpanded;
     private bool _isPinned;
     private bool _isManuallyHidden;
@@ -87,12 +95,8 @@ public partial class MainWindow : Window
     private double _dragStartLeft;
     private double _dragStartTop;
     private WindowBounds? _lastBounds;
-    private CancellationTokenSource? _connectionCancellation;
-    private Task? _appServerTask;
     private Task? _updateCheckTask;
     private Uri? _pendingUpdateUri;
-    private double _expandedHeight = MinimumExpandedHeight;
-    private bool _isConnectionSuspended;
 
     public MainWindow(OverlayOptions options, AppLogger logger)
     {
@@ -109,13 +113,22 @@ public partial class MainWindow : Window
         ThemeManager.Instance.ThemeApplied += ThemeManager_OnThemeApplied;
 
         _startupShortcutManager = new StartupShortcutManager(logger);
-        _appServerClient = new AppServerClient(
+        _codex = new CodexUsageProvider(
             logger,
             _settings.CodexCliPath,
             TimeSpan.FromSeconds(_settings.RefreshIntervalSeconds));
+        _claude = new ClaudeUsageProvider(logger, ClaudeCodeIntegration.CreateDefault());
+        _cursor = new CursorUsageProvider(logger, _cursorCredentials, _settings.CursorAccountEmail);
+        foreach (var provider in Providers)
+        {
+            _states[provider.Kind] = IsProviderEnabled(provider.Kind)
+                ? ProviderUsageState.Connecting(provider.Kind, "Loading usage…")
+                : provider.State;
+            provider.StateChanged += Provider_OnStateChanged;
+        }
+
+        _displayedProvider = UsageProviderCatalog.All.FirstOrDefault(IsProviderEnabled, UsageProviderKind.Codex);
         _releaseUpdateService = new ReleaseUpdateService();
-        _appServerClient.SnapshotChanged += AppServerClient_OnSnapshotChanged;
-        _appServerClient.StatusChanged += AppServerClient_OnStatusChanged;
 
         _windowTrackingTimer = new DispatcherTimer(DispatcherPriority.Background)
         {
@@ -139,6 +152,8 @@ public partial class MainWindow : Window
             UpdateVisibilityMenuLabels();
         }
     }
+
+    private IEnumerable<UsageProvider> Providers => [_codex, _claude, _cursor];
 
     public double AnimatedRemainingPercent
     {
@@ -165,10 +180,15 @@ public partial class MainWindow : Window
 
         if (_options.DemoPercent is { } demoPercent)
         {
-            _hasCurrentUsage = true;
-            ApplySnapshot(CreateDemoSnapshot(demoPercent));
+            foreach (var state in CreateDemoStates(demoPercent))
+            {
+                _states[state.Provider] = state;
+            }
+
+            _displayedProvider = _options.DemoProvider ?? UsageProviderKind.Codex;
+            Render();
+            UpdateTrayText();
             PositionForDemo();
-            StatusText.Text = "Demo";
             if (!_isManuallyHidden)
             {
                 Show();
@@ -178,7 +198,8 @@ public partial class MainWindow : Window
             return;
         }
 
-        StartAppServerConnection();
+        StartProviders();
+        Render();
         UpdateUsageReporting();
         UpdateWindowPosition();
         ApplyInitialExpansion();
@@ -205,7 +226,6 @@ public partial class MainWindow : Window
         _windowSource?.RemoveHook(WindowProcedure);
         _settingsWindow?.Close();
         _cancellation.Cancel();
-        _connectionCancellation?.Cancel();
         if (_updateCheckTask is not null)
         {
             try
@@ -220,72 +240,70 @@ public partial class MainWindow : Window
         _notifyIcon.Visible = false;
         _notifyIcon.Dispose();
         _applicationIcon.Dispose();
-        if (_appServerTask is not null)
+        foreach (var provider in Providers)
         {
-            try
-            {
-                await _appServerTask;
-            }
-            catch (OperationCanceledException)
-            {
-                // Normal application shutdown.
-            }
+            provider.StateChanged -= Provider_OnStateChanged;
+            await provider.DisposeAsync();
         }
-        _connectionCancellation?.Dispose();
-        await _appServerClient.DisposeAsync();
+
         _releaseUpdateService.Dispose();
         _cancellation.Dispose();
     }
 
-    private void StartAppServerConnection()
+    private void StartProviders()
     {
-        if (_options.DemoPercent is not null || _appServerTask is { IsCompleted: false })
+        if (_options.DemoPercent is not null)
         {
             return;
         }
 
-        _isConnectionSuspended = false;
-        _connectionCancellation?.Dispose();
-        _connectionCancellation = CancellationTokenSource.CreateLinkedTokenSource(_cancellation.Token);
-        _appServerTask = _appServerClient.RunAsync(_connectionCancellation.Token);
+        if (_settings.CodexEnabled)
+        {
+            _codex.Start();
+        }
+
+        // Reconnecting is idempotent and repairs the command if this executable moved.
+        if (_settings.ClaudeEnabled)
+        {
+            _ = _claude.Enable();
+        }
+
+        if (_settings.CursorEnabled)
+        {
+            _cursor.Start();
+        }
+
         UpdateConnectionMenuLabels();
     }
 
-    private async Task SetConnectionSuspendedAsync(bool suspended)
+    private async Task ToggleCodexConnectionAsync()
     {
-        if (_options.DemoPercent is not null || suspended == _isConnectionSuspended)
+        if (_options.DemoPercent is not null || !_settings.CodexEnabled)
         {
             return;
         }
 
-        if (suspended)
+        if (_codex.IsSuspended)
         {
-            _isConnectionSuspended = true;
-            _connectionCancellation?.Cancel();
-            if (_appServerTask is not null)
-            {
-                try
-                {
-                    await _appServerTask;
-                }
-                catch (OperationCanceledException)
-                {
-                    // Expected while releasing the CLI process.
-                }
-            }
-
-            _appServerStatus = "Disconnected";
-            _hasCurrentUsage = false;
-            StatusText.Text = _appServerStatus;
-            ApplyConnectionState(_appServerStatus);
+            _logger.Info("Reconnecting to Codex CLI.");
+            _codex.Resume();
+        }
+        else
+        {
+            await _codex.SuspendAsync();
             _logger.Info("Disconnected from Codex CLI. The CLI can now be updated safely.");
-            UpdateConnectionMenuLabels();
-            return;
         }
 
-        _logger.Info("Reconnecting to Codex CLI.");
-        StartAppServerConnection();
+        UpdateConnectionMenuLabels();
     }
+
+    private bool IsProviderEnabled(UsageProviderKind provider) =>
+        _options.DemoPercent is not null || provider switch
+        {
+            UsageProviderKind.Claude => _settings.ClaudeEnabled,
+            UsageProviderKind.Cursor => _settings.CursorEnabled,
+            _ => _settings.CodexEnabled
+        };
 
     private IntPtr WindowProcedure(
         IntPtr window,
@@ -363,11 +381,23 @@ public partial class MainWindow : Window
             return;
         }
 
-        var hasActiveCodex = CodexWindowLocator.TryGetActiveBounds(out var bounds, out var codexIsLightTheme);
-        if (codexIsLightTheme is { } isLightTheme)
+        var hasActiveCodex = HostWindowLocator.TryGetActiveHost(IsProviderEnabled, _claude.IsClaudeCodeHost, out var host);
+        var bounds = host.Bounds;
+        if (hasActiveCodex)
         {
-            ThemeManager.Instance.RefreshFromCodexTheme(isLightTheme);
+            if (host.IsLightTheme is { } isLightTheme)
+            {
+                ThemeManager.Instance.RefreshFromCodexTheme(isLightTheme);
+            }
+
+            // Follow the app in front; a manual choice in the card lasts until it changes.
+            if (host.Provider != _hostProvider)
+            {
+                _hostProvider = host.Provider;
+                ShowProvider(host.Provider);
+            }
         }
+
         if (!hasActiveCodex && _settings.ShowOnlyWhenCodexActive)
         {
             if (IsVisible)
@@ -685,9 +715,9 @@ public partial class MainWindow : Window
 
         _isExpanded = true;
         Width = ExpandedWidth;
-        Height = _expandedHeight;
-        RepositionAfterWidthChange();
         DetailsPanel.Visibility = Visibility.Visible;
+        Height = MeasureExpandedHeight();
+        RepositionAfterWidthChange();
 
         if (!SystemParameters.ClientAreaAnimation)
         {
@@ -755,141 +785,272 @@ public partial class MainWindow : Window
         }
     }
 
-    private void AppServerClient_OnSnapshotChanged(object? sender, UsageSnapshot snapshot)
+    private void Provider_OnStateChanged(object? sender, ProviderUsageState state)
     {
         _ = Dispatcher.InvokeAsync(() =>
         {
-            _lastUsageSnapshot = snapshot;
-            _hasCurrentUsage = true;
-            ApplySnapshot(snapshot);
+            if (_isClosing)
+            {
+                return;
+            }
+
+            _states[state.Provider] = state;
+            EvaluateNotifications(state);
+            UpdateTrayText();
+            Render();
         });
     }
 
-    private void AppServerClient_OnStatusChanged(object? sender, string status)
+    private ProviderUsageState CurrentState =>
+        _states.TryGetValue(_displayedProvider, out var state) ? state : ProviderUsageState.Off(_displayedProvider);
+
+    private void ShowProvider(UsageProviderKind provider)
     {
-        _ = Dispatcher.InvokeAsync(() =>
+        if (provider == _displayedProvider)
         {
-            _appServerStatus = status;
-            StatusText.Text = status;
-            LiveDot.Fill = status == "Live"
-                ? new SolidColorBrush((System.Windows.Media.Color)FindResource("OverlayNormalColor"))
-                : new SolidColorBrush((System.Windows.Media.Color)FindResource("OverlayMutedColor"));
+            return;
+        }
 
-            if (status == "Connecting…" || status == "Trying again…" ||
-                status == "Couldn’t connect" || status == "CLI not found" || status == "Signed out")
-            {
-                _hasCurrentUsage = false;
-                _lastUsageSnapshot = null;
-            }
-
-            if (!_hasCurrentUsage)
-            {
-                ApplyConnectionState(status);
-            }
-        });
+        _displayedProvider = provider;
+        _animationTarget = null;
+        Render();
     }
 
-    private void ApplyConnectionState(string status)
+    private void Render()
     {
+        var state = CurrentState;
+        HeaderText.Text = $"{state.DisplayName} usage";
+        StatusText.Text = _options.DemoPercent is null ? state.StatusText : "Demo";
+        LiveDot.Fill = new SolidColorBrush((System.Windows.Media.Color)FindResource(state.Connection switch
+        {
+            ProviderConnection.Live => "OverlayNormalColor",
+            ProviderConnection.Stale => "OverlayWarningColor",
+            _ => "OverlayMutedColor"
+        }));
+        RailRemainingText.Visibility = _settings.ShowCompactPercentage
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        AutomationProperties.SetName(ViewUsageButton, $"View full {state.DisplayName} usage");
+        ViewUsageButton.ToolTip = $"Open full {state.DisplayName} usage";
+
+        if (state.HasUsage)
+        {
+            ApplyUsage(state);
+        }
+        else
+        {
+            ApplyConnectionState(state);
+        }
+
+        RenderOtherApps();
+        UpdateExpandedHeight();
+    }
+
+    private void ApplyConnectionState(ProviderUsageState state)
+    {
+        _animationTarget = null;
         BeginAnimation(AnimatedRemainingPercentProperty, null);
         AnimatedRemainingPercent = 0;
         UsageFillBrush.BeginAnimation(SolidColorBrush.ColorProperty, null);
         UsageFillBrush.Color = (System.Windows.Media.Color)FindResource("OverlayMutedColor");
         LeadingCap.Opacity = 0;
         RailRemainingText.Text = "--";
-        BucketNameText.Text = "Codex usage";
+        BucketNameText.Text = state.DisplayName;
         AdditionalLimitsPanel.Children.Clear();
-        _expandedHeight = MinimumExpandedHeight;
-        if (_isExpanded)
-        {
-            Height = MinimumExpandedHeight;
-            RepositionAfterWidthChange();
-        }
+        SummaryText.Visibility = Visibility.Collapsed;
 
-        switch (status)
+        UsagePercentText.Text = state.Connection switch
         {
-            case "CLI not found":
-                UsagePercentText.Text = "Usage unavailable";
-                ResetText.Text = "CLI not found. Check Settings.";
-                break;
-            case "Couldn’t connect":
-            case "Trying again…":
-                UsagePercentText.Text = "Usage unavailable";
-                ResetText.Text = "Couldn’t load limits. Retrying…";
-                break;
-            case "Disconnected":
-                UsagePercentText.Text = "CLI disconnected";
-                ResetText.Text = "Reconnect when the CLI update is finished.";
-                break;
-            case "Signed out":
-                UsagePercentText.Text = "Signed out";
-                ResetText.Text = "Sign in to Codex. Usage will refresh automatically.";
-                break;
-            default:
-                UsagePercentText.Text = "Loading usage…";
-                ResetText.Text = "Connecting to Codex…";
-                break;
-        }
+            ProviderConnection.Live or ProviderConnection.Stale when state.Summary is not null => state.Summary,
+            ProviderConnection.Off => $"{state.DisplayName} is off",
+            ProviderConnection.SignedOut => "Signed out",
+            ProviderConnection.Disconnected => "CLI disconnected",
+            ProviderConnection.Unavailable => "Usage unavailable",
+            _ => "Loading usage…"
+        };
+        ResetText.Text = state.Detail;
+        ResetText.Visibility = state.Detail.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-        AutomationProperties.SetName(
-            RailHitTarget,
-            $"Codex usage unavailable. {ResetText.Text}");
+        var summary = $"{state.DisplayName}: {UsagePercentText.Text}. {state.Detail}".Trim();
+        AutomationProperties.SetName(RailHitTarget, summary);
+        RailHitTarget.ToolTip = summary;
     }
 
-    private void ApplySnapshot(UsageSnapshot snapshot)
+    private void ApplyUsage(ProviderUsageState state)
     {
-        var primary = snapshot.Primary;
-        var usedPercent = UsageLevelResolver.Normalize(primary.Primary.UsedPercent);
+        var lead = state.Windows[0];
+        var usedPercent = UsageLevelResolver.Normalize(lead.Window.UsedPercent);
         var remainingPercent = UsageLevelResolver.RemainingFromUsed(usedPercent);
         var showingUsed = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used;
         var primaryPercent = showingUsed ? usedPercent : remainingPercent;
-        var secondaryPercent = showingUsed ? remainingPercent : usedPercent;
         var primaryLabel = showingUsed ? "used" : "left";
-        var secondaryLabel = showingUsed ? "left" : "used";
-        BucketNameText.Text = primary.DisplayName;
-        ResetText.Text =
-            $"{Math.Round(secondaryPercent)}% {secondaryLabel}  ·  " +
-            ResetTimeFormatter.Format(primary.Primary.ResetsAt, DateTimeOffset.Now);
-        RailRemainingText.Visibility = _settings.ShowCompactPercentage
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        RenderLimitRows(snapshot);
-        EvaluateNotifications(snapshot);
-        AnimateUsageValue(primaryPercent, usedPercent);
-        AutomationProperties.SetName(
-            RailHitTarget,
-            $"Codex limit: {Math.Round(primaryPercent)} percent {primaryLabel}. {ResetText.Text}");
-    }
+        BucketNameText.Text = lead.Label;
+        ResetText.Text = FormatSecondaryLine(lead.Window);
+        ResetText.Visibility = Visibility.Visible;
 
-    private void RenderLimitRows(UsageSnapshot snapshot)
-    {
-        var rows = UsageWindowDisplayBuilder.Build(snapshot);
+        var notes = new[] { state.Summary, state.Detail }
+            .Where(note => !string.IsNullOrWhiteSpace(note))
+            .ToArray();
+        SummaryText.Text = string.Join(Environment.NewLine, notes);
+        SummaryText.Visibility = notes.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+
         AdditionalLimitsPanel.Children.Clear();
-
-        if (rows.Count == 0)
-        {
-            _expandedHeight = MinimumExpandedHeight;
-            return;
-        }
-
-        BucketNameText.Text = rows[0].Label;
-        ResetText.Text = FormatSecondaryLine(rows[0].Window);
-
-        foreach (var row in rows.Skip(1))
+        foreach (var row in state.Windows.Skip(1))
         {
             AdditionalLimitsPanel.Children.Add(CreateLimitRow(row));
         }
 
-        _expandedHeight = Math.Clamp(
-            MinimumExpandedHeight + Math.Max(0, rows.Count - 1) * 52,
-            MinimumExpandedHeight,
-            346);
-        if (_isExpanded)
+        AnimateUsageValue(primaryPercent, usedPercent);
+        var summary =
+            $"{state.DisplayName} {lead.Label.ToLowerInvariant()}: {Math.Round(primaryPercent)} percent {primaryLabel}. {ResetText.Text}";
+        AutomationProperties.SetName(RailHitTarget, summary);
+        RailHitTarget.ToolTip = summary;
+    }
+
+    private void RenderOtherApps()
+    {
+        OtherAppsPanel.Children.Clear();
+        var others = UsageProviderCatalog.All
+            .Where(provider => provider != _displayedProvider && IsProviderEnabled(provider))
+            .ToArray();
+        if (others.Length == 0)
         {
-            Height = _expandedHeight;
+            OtherAppsPanel.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        OtherAppsPanel.Visibility = Visibility.Visible;
+        var content = new StackPanel();
+        content.Children.Add(new TextBlock
+        {
+            Text = "Other apps",
+            Foreground = (System.Windows.Media.Brush)FindResource("OverlayMutedBrush"),
+            FontSize = (double)FindResource("OverlayTextSmall"),
+            Margin = new Thickness(0, 0, 0, 2)
+        });
+
+        foreach (var provider in others)
+        {
+            content.Children.Add(CreateOtherAppRow(
+                _states.TryGetValue(provider, out var state) ? state : ProviderUsageState.Off(provider)));
+        }
+
+        OtherAppsPanel.Children.Add(new Border
+        {
+            BorderBrush = (System.Windows.Media.Brush)FindResource("OverlayBorderBrush"),
+            BorderThickness = new Thickness(0, 1, 0, 0),
+            Margin = new Thickness(0, 10, 0, 0),
+            Padding = new Thickness(0, 9, 0, 0),
+            Child = content
+        });
+    }
+
+    private System.Windows.Controls.Button CreateOtherAppRow(ProviderUsageState state)
+    {
+        var row = new Grid();
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        row.Children.Add(new TextBlock
+        {
+            Text = state.DisplayName,
+            Foreground = (System.Windows.Media.Brush)FindResource("OverlayTextBrush"),
+            FontSize = (double)FindResource("OverlayTextSmall"),
+            TextTrimming = TextTrimming.CharacterEllipsis
+        });
+
+        string valueText;
+        System.Windows.Media.Brush valueBrush;
+        if (state.Lead is { } lead)
+        {
+            var used = UsageLevelResolver.Normalize(lead.Window.UsedPercent);
+            var showingUsed = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used;
+            valueText = $"{Math.Round(showingUsed ? used : UsageLevelResolver.RemainingFromUsed(used))}% " +
+                        (showingUsed ? "used" : "left");
+            valueBrush = new SolidColorBrush(LevelColor(used));
+        }
+        else
+        {
+            valueText = state.Summary ?? state.StatusText;
+            valueBrush = (System.Windows.Media.Brush)FindResource("OverlayMutedBrush");
+        }
+
+        var value = new TextBlock
+        {
+            Text = valueText,
+            Foreground = valueBrush,
+            FontSize = (double)FindResource("OverlayTextSmall"),
+            FontWeight = FontWeights.Medium,
+            Margin = new Thickness(8, 0, 0, 0)
+        };
+        Grid.SetColumn(value, 1);
+        row.Children.Add(value);
+
+        var button = new System.Windows.Controls.Button
+        {
+            Content = row,
+            Padding = new Thickness(0, 3, 0, 3),
+            Background = System.Windows.Media.Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            HorizontalContentAlignment = System.Windows.HorizontalAlignment.Stretch,
+            Cursor = System.Windows.Input.Cursors.Hand,
+            Focusable = false,
+            ToolTip = $"Show {state.DisplayName} usage",
+            Template = CreateFlatButtonTemplate()
+        };
+        AutomationProperties.SetName(button, $"Show {state.DisplayName} usage: {valueText}");
+        var provider = state.Provider;
+        button.Click += (_, eventArgs) =>
+        {
+            ShowProvider(provider);
+            eventArgs.Handled = true;
+        };
+        return button;
+    }
+
+    private static ControlTemplate CreateFlatButtonTemplate()
+    {
+        var presenter = new FrameworkElementFactory(typeof(ContentPresenter));
+        presenter.SetValue(ContentPresenter.MarginProperty, new TemplateBindingExtension(PaddingProperty));
+        var border = new FrameworkElementFactory(typeof(Border));
+        border.SetValue(Border.BackgroundProperty, new TemplateBindingExtension(BackgroundProperty));
+        border.AppendChild(presenter);
+        return new ControlTemplate(typeof(System.Windows.Controls.Button)) { VisualTree = border };
+    }
+
+    private double MeasureExpandedHeight()
+    {
+        DetailsPanel.Measure(new System.Windows.Size(DetailsColumnWidth, double.PositiveInfinity));
+        return Math.Clamp(
+            Math.Ceiling(DetailsPanel.DesiredSize.Height + DetailsVerticalShift),
+            MinimumExpandedHeight,
+            MaximumExpandedHeight);
+    }
+
+    private void UpdateExpandedHeight()
+    {
+        if (!_isExpanded)
+        {
+            return;
+        }
+
+        var height = MeasureExpandedHeight();
+        if (Math.Abs(Height - height) > 0.5)
+        {
+            Height = height;
             RepositionAfterWidthChange();
         }
     }
+
+    private System.Windows.Media.Color LevelColor(double usedPercent) =>
+        (System.Windows.Media.Color)FindResource(UsageLevelResolver.FromPercentage(
+            usedPercent,
+            _settings.WarningThreshold,
+            _settings.CriticalThreshold) switch
+        {
+            UsageLevel.Critical => "OverlayCriticalColor",
+            UsageLevel.Warning => "OverlayWarningColor",
+            _ => "OverlayNormalColor"
+        });
 
     private Border CreateLimitRow(UsageWindowDisplay row)
     {
@@ -898,15 +1059,6 @@ public partial class MainWindow : Window
             ? used
             : UsageLevelResolver.RemainingFromUsed(used);
         var suffix = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used ? "used" : "left";
-        var colour = (System.Windows.Media.Color)FindResource(UsageLevelResolver.FromPercentage(
-            used,
-            _settings.WarningThreshold,
-            _settings.CriticalThreshold) switch
-        {
-            UsageLevel.Critical => "OverlayCriticalColor",
-            UsageLevel.Warning => "OverlayWarningColor",
-            _ => "OverlayNormalColor"
-        });
 
         var header = new Grid();
         header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -921,7 +1073,7 @@ public partial class MainWindow : Window
         var percentage = new TextBlock
         {
             Text = $"{Math.Round(displayed)}% {suffix}",
-            Foreground = new SolidColorBrush(colour),
+            Foreground = new SolidColorBrush(LevelColor(used)),
             FontSize = (double)FindResource("OverlayTextSmall"),
             FontWeight = FontWeights.Medium,
             Margin = new Thickness(8, 0, 0, 0)
@@ -960,13 +1112,18 @@ public partial class MainWindow : Window
                ResetTimeFormatter.Format(window.ResetsAt, DateTimeOffset.Now);
     }
 
-    private void EvaluateNotifications(UsageSnapshot snapshot)
+    private void EvaluateNotifications(ProviderUsageState state)
     {
+        if (!state.HasUsage)
+        {
+            return;
+        }
+
         var alerts = _notificationTracker.Evaluate(
-            snapshot,
+            state.Windows,
             _settings.WarningThreshold,
             _settings.CriticalThreshold);
-        if (!_settings.NotificationsEnabled)
+        if (!_settings.NotificationsEnabled || _options.DemoPercent is not null)
         {
             return;
         }
@@ -975,8 +1132,8 @@ public partial class MainWindow : Window
         {
             var remaining = Math.Round(UsageLevelResolver.RemainingFromUsed(alert.Window.Window.UsedPercent));
             _notifyIcon.BalloonTipTitle = alert.Level == UsageLevel.Critical
-                ? "Codex usage is nearly exhausted"
-                : "Codex usage is running low";
+                ? $"{state.DisplayName} usage is nearly exhausted"
+                : $"{state.DisplayName} usage is running low";
             _notifyIcon.BalloonTipText =
                 $"{alert.Window.Label}: {remaining}% left. " +
                 ResetTimeFormatter.Format(alert.Window.Window.ResetsAt, DateTimeOffset.Now);
@@ -986,22 +1143,46 @@ public partial class MainWindow : Window
         }
     }
 
+    private void UpdateTrayText()
+    {
+        var showingUsed = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used;
+        var parts = UsageProviderCatalog.All
+            .Where(IsProviderEnabled)
+            .Select(provider => _states.TryGetValue(provider, out var state) ? state : null)
+            .Where(state => state?.Lead is not null)
+            .Select(state =>
+            {
+                var used = UsageLevelResolver.Normalize(state!.Lead!.Window.UsedPercent);
+                var value = showingUsed ? used : UsageLevelResolver.RemainingFromUsed(used);
+                return $"{state.DisplayName} {Math.Round(value)}% {(showingUsed ? "used" : "left")}";
+            })
+            .ToArray();
+        var text = parts.Length == 0 ? "Usage Overlay" : "Usage Overlay" + Environment.NewLine + string.Join(" · ", parts);
+        // Windows limits notification-area tooltips to 127 characters.
+        _notifyIcon.Text = text.Length <= 127 ? text : text[..126] + "…";
+    }
+
     private void AnimateUsageValue(double displayPercentage, double usedPercentage)
     {
         var normalizedUsed = UsageLevelResolver.Normalize(usedPercentage);
         var normalizedDisplay = UsageLevelResolver.Normalize(displayPercentage);
-        var color = (System.Windows.Media.Color)FindResource(UsageLevelResolver.FromPercentage(
-            normalizedUsed,
-            _settings.WarningThreshold,
-            _settings.CriticalThreshold) switch
-        {
-            UsageLevel.Critical => "OverlayCriticalColor",
-            UsageLevel.Warning => "OverlayWarningColor",
-            _ => "OverlayNormalColor"
-        });
+        var color = LevelColor(normalizedUsed);
 
-        if (!_settings.AnimationsEnabled || !SystemParameters.ClientAreaAnimation)
+        // Providers republish unchanged readings; only move the rail for a new value.
+        if (_animationTarget is { } target && Math.Abs(target - normalizedDisplay) < 0.05)
         {
+            UsageFillBrush.BeginAnimation(SolidColorBrush.ColorProperty, null);
+            UsageFillBrush.Color = color;
+            UpdatePercentText(normalizedDisplay);
+            return;
+        }
+
+        _animationTarget = normalizedDisplay;
+        UpdatePercentText(AnimatedRemainingPercent);
+        if (!_settings.AnimationsEnabled || !SystemParameters.ClientAreaAnimation ||
+            Math.Abs(AnimatedRemainingPercent - normalizedDisplay) < 0.05)
+        {
+            UpdatePercentText(normalizedDisplay);
             BeginAnimation(AnimatedRemainingPercentProperty, null);
             AnimatedRemainingPercent = normalizedDisplay;
             UsageFillBrush.BeginAnimation(SolidColorBrush.ColorProperty, null);
@@ -1043,21 +1224,53 @@ public partial class MainWindow : Window
 
         var normalized = UsageLevelResolver.Normalize(percentage);
         window.UsageFillScale.ScaleY = normalized / 100d;
-        var suffix = window._settings.PrimaryDisplay == PrimaryUsageDisplay.Used ? "used" : "left";
-        window.UsagePercentText.Text = $"{Math.Round(normalized)}% {suffix}";
-        window.RailRemainingText.Text = $"{Math.Round(normalized)}%";
+        window.UpdatePercentText(normalized);
         window.LeadingCapTranslate.Y = -(RailUsableHeight * normalized / 100d);
     }
 
-    private static UsageSnapshot CreateDemoSnapshot(double percentage)
+    private void UpdatePercentText(double displayPercentage)
     {
-        var primary = new RateLimitBucket(
+        if (!CurrentState.HasUsage)
+        {
+            return;
+        }
+
+        var normalized = UsageLevelResolver.Normalize(displayPercentage);
+        var suffix = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used ? "used" : "left";
+        UsagePercentText.Text = $"{Math.Round(normalized)}% {suffix}";
+        RailRemainingText.Text = $"{Math.Round(normalized)}%";
+    }
+
+    private static IEnumerable<ProviderUsageState> CreateDemoStates(double percentage)
+    {
+        var now = DateTimeOffset.Now;
+        var codex = new RateLimitBucket(
             "codex",
             "All Codex models",
-            new QuotaWindow(percentage, 300, DateTimeOffset.Now.AddHours(2).AddMinutes(18)),
-            new QuotaWindow(Math.Max(0, percentage - 18), 10_080, DateTimeOffset.Now.AddDays(3).AddHours(2)),
+            new QuotaWindow(percentage, 300, now.AddHours(2).AddMinutes(18)),
+            new QuotaWindow(Math.Max(0, percentage - 18), 10_080, now.AddDays(3).AddHours(2)),
             "pro");
-        return new UsageSnapshot(primary, Array.Empty<RateLimitBucket>(), DateTimeOffset.Now);
+        yield return CodexStatusMapper.FromSnapshot(
+            new UsageSnapshot(codex, Array.Empty<RateLimitBucket>(), now));
+
+        yield return ClaudeUsageSnapshot.Empty
+            .Apply(
+                new CodexUsage.Core.Protocol.ClaudeRateLimits(
+                    new QuotaWindow(Math.Max(0, percentage - 30), 300, now.AddHours(3).AddMinutes(40)),
+                    new QuotaWindow(Math.Max(0, percentage - 45), 10_080, now.AddDays(4))),
+                "demo",
+                Array.Empty<int>(),
+                now.AddMinutes(-2))
+            .ToState(now);
+
+        yield return CodexUsage.Core.Protocol.CursorSpendParser.ToState(
+            new CodexUsage.Core.Protocol.CursorMemberSpend(
+                percentage * 40,
+                percentage * 60,
+                40,
+                null,
+                now.AddDays(-12)),
+            now);
     }
 
     private System.Windows.Forms.NotifyIcon CreateNotifyIcon()
@@ -1076,10 +1289,10 @@ public partial class MainWindow : Window
         menu.Items.Add(_trayVisibilityMenuItem);
         menu.Items.Add("Open settings…", null, (_, _) => Dispatcher.Invoke(ShowSettings));
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
-        menu.Items.Add("Refresh usage", null, (_, _) => _ = _appServerClient.RefreshAsync());
+        menu.Items.Add("Refresh usage", null, (_, _) => Dispatcher.Invoke(RefreshAllProviders));
         _trayConnectionMenuItem = new System.Windows.Forms.ToolStripMenuItem("Disconnect Codex CLI");
         _trayConnectionMenuItem.Click += async (_, _) =>
-            await Dispatcher.InvokeAsync(() => SetConnectionSuspendedAsync(!_isConnectionSuspended)).Task.Unwrap();
+            await Dispatcher.InvokeAsync(ToggleCodexConnectionAsync).Task.Unwrap();
         menu.Items.Add(_trayConnectionMenuItem);
         _trayUpdateMenuItem = new System.Windows.Forms.ToolStripMenuItem("Check for updates");
         _trayUpdateMenuItem.Click += async (_, _) => await CheckForUpdatesAsync();
@@ -1124,12 +1337,24 @@ public partial class MainWindow : Window
 
     private void UpdateConnectionMenuLabels()
     {
-        var label = _isConnectionSuspended ? "Reconnect Codex CLI" : "Disconnect Codex CLI";
+        var label = _codex.IsSuspended ? "Reconnect Codex CLI" : "Disconnect Codex CLI";
+        var visible = _settings.CodexEnabled && _options.DemoPercent is null;
         if (_trayConnectionMenuItem is not null)
         {
             _trayConnectionMenuItem.Text = label;
+            _trayConnectionMenuItem.Visible = visible;
         }
+
         ConnectionMenuItem.Header = label;
+        ConnectionMenuItem.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void RefreshAllProviders()
+    {
+        foreach (var provider in Providers.Where(provider => provider.IsRunning))
+        {
+            _ = provider.RefreshAsync();
+        }
     }
 
     private Task CheckForUpdatesAsync()
@@ -1237,14 +1462,8 @@ public partial class MainWindow : Window
     {
         _logger.Info($"Theme applied: {(ThemeManager.Instance.IsEffectiveDark ? "Dark" : "Light")}.");
         UpdateTrayMenuTheme();
-        if (_hasCurrentUsage && _lastUsageSnapshot is not null)
-        {
-            ApplySnapshot(_lastUsageSnapshot);
-        }
-        else
-        {
-            ApplyConnectionState(_appServerStatus);
-        }
+        _animationTarget = null;
+        Render();
     }
 
     private static System.Drawing.Icon LoadApplicationIcon()
@@ -1301,7 +1520,7 @@ public partial class MainWindow : Window
             PersistSettings();
         }
 
-        _logger.Info("Overlay manually enabled. Waiting for the active Codex window.");
+        _logger.Info("Overlay manually enabled. Waiting for a supported app window.");
         UpdateWindowPosition();
     }
 
@@ -1334,10 +1553,6 @@ public partial class MainWindow : Window
             return;
         }
 
-        var resolvedCliPath = AppServerClient.ResolveCodexCommand(_settings.CodexCliPath);
-        var cliStatus = resolvedCliPath is null
-            ? $"Codex CLI wasn’t found. Connection: {_appServerStatus}."
-            : $"Codex CLI is ready. Connection: {_appServerStatus}.";
         if (!IsVisible)
         {
             Show();
@@ -1347,8 +1562,8 @@ public partial class MainWindow : Window
             _settings,
             _startupShortcutManager.IsEnabled,
             _startupShortcutManager.IsSupported,
-            cliStatus,
-            ApplySettingsFromWindow,
+            GetProviderStatus(),
+            ApplySettingsFromWindowAsync,
             OpenLog)
         {
             Owner = this,
@@ -1368,29 +1583,115 @@ public partial class MainWindow : Window
         _logger.Info("Settings window opened.");
     }
 
-    private void ApplySettingsFromWindow(OverlaySettings settings, bool startAutomatically)
+    private ProviderSettingsStatus GetProviderStatus()
     {
-        _settings = settings.Normalize();
+        string Describe(UsageProviderKind provider)
+        {
+            if (!IsProviderEnabled(provider))
+            {
+                return "Off.";
+            }
+
+            var state = _states.TryGetValue(provider, out var value) ? value : ProviderUsageState.Off(provider);
+            return state.Detail.Length > 0 ? $"{state.StatusText}. {state.Detail}" : $"{state.StatusText}.";
+        }
+
+        var codexStatus = _codex.ResolvedCliPath is null
+            ? $"Codex CLI wasn’t found. {Describe(UsageProviderKind.Codex)}"
+            : $"Codex CLI is ready. {Describe(UsageProviderKind.Codex)}";
+        var claudeStatus = _claude.IntegrationMessage.Length > 0 && _settings.ClaudeEnabled
+            ? $"{_claude.IntegrationMessage} {Describe(UsageProviderKind.Claude)}"
+            : Describe(UsageProviderKind.Claude);
+        return new ProviderSettingsStatus(
+            codexStatus,
+            claudeStatus,
+            Describe(UsageProviderKind.Cursor),
+            _cursorCredentials.HasKey,
+            _claude.Integration.SettingsPath);
+    }
+
+    private async Task<string> ApplySettingsFromWindowAsync(SettingsSaveRequest request)
+    {
+        var previous = _settings;
+        _settings = request.Settings.Normalize();
         ThemeManager.Instance.ApplyTheme(_settings.Theme);
         UpdateTrayMenuTheme();
-        _ = _startupShortcutManager.SetEnabled(startAutomatically);
+        _ = _startupShortcutManager.SetEnabled(request.StartAutomatically);
         _fixedPlacementBounds = _settings.FollowCodexAcrossMonitors ? null : _lastBounds;
         PersistSettings();
         UpdateUsageReporting();
-        RailRemainingText.Visibility = _settings.ShowCompactPercentage
-            ? Visibility.Visible
-            : Visibility.Collapsed;
 
-        if (_hasCurrentUsage && _lastUsageSnapshot is not null)
+        var messages = new List<string>();
+        var cursorKeyChanged = false;
+        try
         {
-            ApplySnapshot(_lastUsageSnapshot);
+            if (request.RemoveCursorKey)
+            {
+                _cursorCredentials.Delete();
+                cursorKeyChanged = true;
+            }
+            else if (!string.IsNullOrWhiteSpace(request.NewCursorKey))
+            {
+                _cursorCredentials.Save(request.NewCursorKey);
+                cursorKeyChanged = true;
+            }
         }
-        else
+        catch (Exception exception) when (
+            exception is System.IO.IOException or UnauthorizedAccessException or
+                System.Security.Cryptography.CryptographicException)
         {
-            ApplyConnectionState(_appServerStatus);
+            messages.Add("The Cursor key couldn’t be saved.");
+            _logger.Error($"Could not update the Cursor key: {exception.Message}");
         }
 
+        if (_options.DemoPercent is null)
+        {
+            if (_settings.CodexEnabled && !previous.CodexEnabled)
+            {
+                _codex.Resume();
+            }
+            else if (!_settings.CodexEnabled && previous.CodexEnabled)
+            {
+                await _codex.StopAsync();
+            }
+
+            if (_settings.ClaudeEnabled && !previous.ClaudeEnabled)
+            {
+                _ = _claude.Enable();
+                messages.Add(_claude.IntegrationMessage);
+            }
+            else if (!_settings.ClaudeEnabled && previous.ClaudeEnabled)
+            {
+                await _claude.DisableAsync();
+                messages.Add(_claude.IntegrationMessage);
+            }
+
+            var cursorChanged = cursorKeyChanged ||
+                                _settings.CursorEnabled != previous.CursorEnabled ||
+                                !string.Equals(_settings.CursorAccountEmail, previous.CursorAccountEmail, StringComparison.OrdinalIgnoreCase);
+            if (cursorChanged)
+            {
+                await _cursor.StopAsync();
+                _cursor.Email = _settings.CursorAccountEmail;
+                if (_settings.CursorEnabled)
+                {
+                    _cursor.Start();
+                }
+            }
+        }
+
+        if (!IsProviderEnabled(_displayedProvider))
+        {
+            _displayedProvider = UsageProviderCatalog.All.FirstOrDefault(IsProviderEnabled, UsageProviderKind.Codex);
+        }
+
+        _hostProvider = null;
+        _animationTarget = null;
+        Render();
+        UpdateTrayText();
+        UpdateConnectionMenuLabels();
         UpdateWindowPosition();
+        return string.Join(" ", messages.Where(message => message.Length > 0));
     }
 
     private void PersistSettings()
@@ -1464,14 +1765,14 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void RefreshMenuItem_OnClick(object sender, RoutedEventArgs eventArgs)
+    private void RefreshMenuItem_OnClick(object sender, RoutedEventArgs eventArgs)
     {
-        await _appServerClient.RefreshAsync();
+        RefreshAllProviders();
     }
 
     private async void ConnectionMenuItem_OnClick(object sender, RoutedEventArgs eventArgs)
     {
-        await SetConnectionSuspendedAsync(!_isConnectionSuspended);
+        await ToggleCodexConnectionAsync();
     }
 
     private async void CheckForUpdatesMenuItem_OnClick(object sender, RoutedEventArgs eventArgs)
@@ -1481,7 +1782,7 @@ public partial class MainWindow : Window
 
     private void ViewUsageLink_OnClick(object sender, RoutedEventArgs eventArgs)
     {
-        OpenUri(UsagePageUri);
+        OpenUri(UsageProviderCatalog.UsagePage(_displayedProvider));
         eventArgs.Handled = true;
     }
 

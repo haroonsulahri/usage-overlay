@@ -16,9 +16,12 @@ public partial class SettingsWindow : Window
 {
     private const double NudgeAmount = 20;
 
-    private readonly Action<OverlaySettings, bool> _saveSettings;
+    private readonly Func<SettingsSaveRequest, Task<string>> _saveSettings;
     private readonly Action _openLogs;
     private readonly bool _startupSupported;
+    private bool _hasCursorKey;
+    private bool _removeCursorKeyPending;
+    private bool _isSaving;
     private OverlaySettings _settings;
     private bool _startAutomatically;
     private DateTimeOffset? _pendingPausedUntil;
@@ -31,8 +34,8 @@ public partial class SettingsWindow : Window
         OverlaySettings settings,
         bool startAutomatically,
         bool startupSupported,
-        string codexCliStatus,
-        Action<OverlaySettings, bool> saveSettings,
+        ProviderSettingsStatus providerStatus,
+        Func<SettingsSaveRequest, Task<string>> saveSettings,
         Action openLogs)
     {
         InitializeComponent();
@@ -44,7 +47,13 @@ public partial class SettingsWindow : Window
         _pendingVerticalOffset = _settings.VerticalOffset;
         _saveSettings = saveSettings;
         _openLogs = openLogs;
-        CodexCliStatusText.Text = codexCliStatus;
+        _hasCursorKey = providerStatus.HasCursorKey;
+        CodexCliStatusText.Text = providerStatus.Codex;
+        CodexAppStatusText.Text = providerStatus.Codex;
+        ClaudeStatusText.Text = providerStatus.Claude;
+        CursorStatusText.Text = providerStatus.Cursor;
+        ClaudeSettingsPathText.Text =
+            $"Updates {providerStatus.ClaudeSettingsPath}. An existing status line keeps working, and turning this off restores it.";
         LoadControls();
     }
 
@@ -52,6 +61,13 @@ public partial class SettingsWindow : Window
     {
         StartAutomaticallyCheckBox.IsChecked = _startAutomatically;
         StartAutomaticallyCheckBox.IsEnabled = _startupSupported;
+        CodexEnabledCheckBox.IsChecked = _settings.CodexEnabled;
+        ClaudeEnabledCheckBox.IsChecked = _settings.ClaudeEnabled;
+        CursorEnabledCheckBox.IsChecked = _settings.CursorEnabled;
+        CursorEmailTextBox.Text = _settings.CursorAccountEmail;
+        CursorKeyPasswordBox.Clear();
+        _removeCursorKeyPending = false;
+        UpdateCursorControls();
         CodexOnlyVisibilityRadio.IsChecked = _settings.ShowOnlyWhenCodexActive;
         AcrossWindowsVisibilityRadio.IsChecked = !_settings.ShowOnlyWhenCodexActive;
         FollowMonitorsCheckBox.IsChecked = _settings.FollowCodexAcrossMonitors;
@@ -144,10 +160,24 @@ public partial class SettingsWindow : Window
         Close();
     }
 
-    private void SaveButton_OnClick(object sender, RoutedEventArgs eventArgs)
+    private async void SaveButton_OnClick(object sender, RoutedEventArgs eventArgs)
     {
+        if (_isSaving)
+        {
+            return;
+        }
+
         ValidationText.Text = string.Empty;
         SavedStatusText.Text = string.Empty;
+
+        var cursorEnabled = CursorEnabledCheckBox.IsChecked == true;
+        var cursorEmail = CursorEmailTextBox.Text.Trim();
+        if (cursorEnabled && (cursorEmail.Length == 0 || !cursorEmail.Contains('@', StringComparison.Ordinal)))
+        {
+            ValidationText.Text = "Enter the email address of your Cursor account.";
+            CursorEmailTextBox.Focus();
+            return;
+        }
 
         if (!TryReadDouble(WarningThresholdTextBox.Text, out var warningThreshold) ||
             !TryReadDouble(CriticalThresholdTextBox.Text, out var criticalThreshold))
@@ -205,6 +235,10 @@ public partial class SettingsWindow : Window
             VerticalOffset = _pendingVerticalOffset,
             HideInFullscreen = HideFullscreenCheckBox.IsChecked == true,
             ShowOnlyWhenCodexActive = CodexOnlyVisibilityRadio.IsChecked == true,
+            CodexEnabled = CodexEnabledCheckBox.IsChecked == true,
+            ClaudeEnabled = ClaudeEnabledCheckBox.IsChecked == true,
+            CursorEnabled = cursorEnabled,
+            CursorAccountEmail = cursorEmail,
             FollowCodexAcrossMonitors = FollowMonitorsCheckBox.IsChecked == true,
             PrimaryDisplay = primaryDisplay,
             WarningThreshold = warningThreshold,
@@ -222,11 +256,61 @@ public partial class SettingsWindow : Window
             !string.Equals(updated.CodexCliPath, _settings.CodexCliPath, StringComparison.OrdinalIgnoreCase) ||
             updated.RefreshIntervalSeconds != _settings.RefreshIntervalSeconds;
         _startAutomatically = StartAutomaticallyCheckBox.IsChecked == true;
-        _saveSettings(updated, _startAutomatically);
+        var newCursorKey = CursorKeyPasswordBox.Password.Trim();
+        var request = new SettingsSaveRequest(
+            updated,
+            _startAutomatically,
+            newCursorKey.Length > 0 ? newCursorKey : null,
+            _removeCursorKeyPending && newCursorKey.Length == 0);
+
+        _isSaving = true;
+        SavedStatusText.Text = "Saving…";
+        string providerMessage;
+        try
+        {
+            providerMessage = await _saveSettings(request);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+
+        if (!IsLoaded)
+        {
+            return;
+        }
+
         _settings = updated;
-        SavedStatusText.Text = requiresRestart
+        _hasCursorKey = request.NewCursorKey is not null || (_hasCursorKey && !request.RemoveCursorKey);
+        _removeCursorKeyPending = false;
+        CursorKeyPasswordBox.Clear();
+        UpdateCursorControls();
+        var savedText = requiresRestart
             ? "Saved. Restart Usage Overlay to use the new CLI path or refresh time."
             : $"Saved at {DateTime.Now:t}.";
+        SavedStatusText.Text = providerMessage.Length > 0 ? $"{savedText} {providerMessage}" : savedText;
+    }
+
+    private void CursorEnabledCheckBox_OnChanged(object sender, RoutedEventArgs eventArgs) => UpdateCursorControls();
+
+    private void RemoveCursorKeyButton_OnClick(object sender, RoutedEventArgs eventArgs)
+    {
+        _removeCursorKeyPending = true;
+        CursorKeyPasswordBox.Clear();
+        UpdateCursorControls();
+    }
+
+    private void UpdateCursorControls()
+    {
+        CursorDetailsPanel.Visibility = CursorEnabledCheckBox.IsChecked == true
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        RemoveCursorKeyButton.IsEnabled = _hasCursorKey && !_removeCursorKeyPending;
+        CursorKeyStatusText.Text = _removeCursorKeyPending
+            ? "The saved key will be removed when you save."
+            : _hasCursorKey
+                ? "A key is saved, encrypted for your Windows account. Paste a new one to replace it."
+                : "A Cursor team admin can create one in the Cursor team dashboard. It’s stored encrypted for your Windows account.";
     }
 
     private void CancelButton_OnClick(object sender, RoutedEventArgs eventArgs)
@@ -365,3 +449,16 @@ public partial class SettingsWindow : Window
                double.TryParse(value, NumberStyles.Float, CultureInfo.CurrentCulture, out result);
     }
 }
+
+public sealed record ProviderSettingsStatus(
+    string Codex,
+    string Claude,
+    string Cursor,
+    bool HasCursorKey,
+    string ClaudeSettingsPath);
+
+public sealed record SettingsSaveRequest(
+    OverlaySettings Settings,
+    bool StartAutomatically,
+    string? NewCursorKey,
+    bool RemoveCursorKey);

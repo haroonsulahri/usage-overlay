@@ -33,6 +33,8 @@ if (args.Contains("--fake"))
     return;
 }
 
+ClaudeIntegrationSpecs.Run();
+
 var directory = Path.Combine(Path.GetTempPath(), "usage-overlay-switch-spec-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(directory);
 var oldHome = Environment.GetEnvironmentVariable("CODEX_HOME");

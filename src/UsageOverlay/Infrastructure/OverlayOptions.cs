@@ -1,10 +1,13 @@
+using CodexUsage.Core.Providers;
+
 namespace UsageOverlay.Infrastructure;
 
 public sealed record OverlayOptions(
     double? DemoPercent,
     bool StartExpanded,
     bool StartHidden,
-    bool StartSettings)
+    bool StartSettings,
+    UsageProviderKind? DemoProvider = null)
 {
     public static OverlayOptions Parse(IReadOnlyList<string> arguments)
     {
@@ -12,6 +15,7 @@ public sealed record OverlayOptions(
         var startExpanded = false;
         var startHidden = false;
         var startSettings = false;
+        UsageProviderKind? demoProvider = null;
 
         foreach (var argument in arguments)
         {
@@ -33,6 +37,14 @@ public sealed record OverlayOptions(
                 continue;
             }
 
+            if (argument.StartsWith("--provider=", StringComparison.OrdinalIgnoreCase) &&
+                Enum.TryParse<UsageProviderKind>(argument["--provider=".Length..], ignoreCase: true, out var provider) &&
+                Enum.IsDefined(provider))
+            {
+                demoProvider = provider;
+                continue;
+            }
+
             if (argument.StartsWith("--demo=", StringComparison.OrdinalIgnoreCase))
             {
                 var raw = argument["--demo=".Length..];
@@ -43,6 +55,6 @@ public sealed record OverlayOptions(
             }
         }
 
-        return new OverlayOptions(demoPercent, startExpanded, startHidden, startSettings);
+        return new OverlayOptions(demoPercent, startExpanded, startHidden, startSettings, demoProvider);
     }
 }

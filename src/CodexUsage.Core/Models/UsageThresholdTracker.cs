@@ -13,11 +13,18 @@ public sealed class UsageThresholdTracker
     public IReadOnlyList<UsageThresholdAlert> Evaluate(
         UsageSnapshot snapshot,
         double warningThreshold,
+        double criticalThreshold) =>
+        Evaluate(UsageWindowDisplayBuilder.Build(snapshot), warningThreshold, criticalThreshold);
+
+    /// <summary>Window keys must be unique across providers, for example "claude:five_hour".</summary>
+    public IReadOnlyList<UsageThresholdAlert> Evaluate(
+        IEnumerable<UsageWindowDisplay> windows,
+        double warningThreshold,
         double criticalThreshold)
     {
         var alerts = new List<UsageThresholdAlert>();
 
-        foreach (var window in UsageWindowDisplayBuilder.Build(snapshot))
+        foreach (var window in windows)
         {
             var level = UsageLevelResolver.FromPercentage(
                 window.Window.UsedPercent,

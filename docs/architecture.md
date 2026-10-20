@@ -2,22 +2,21 @@
 
 ## Overview
 
-Usage Overlay is a Windows-only companion process. It does not modify the Codex desktop package or render inside Codex's DOM.
+Usage Overlay is a Windows-only companion process. It does not modify the Codex, Claude or Cursor apps or render inside them.
 
 ```text
-Codex services
-      │
-      │ existing Codex authentication
-      ▼
-codex app-server --stdio
-      │
-      │ JSON-RPC / JSONL
-      ▼
-AppServerClient ──► RateLimitParser ──► UsageSnapshot
-                                             │
-                                             ▼
-CodexWindowLocator ───────────────────► WPF overlay
+codex app-server ──JSON-RPC──► AppServerClient ──► CodexUsageProvider ──┐
+                                                                         │
+Claude Code status line                                                  │  ProviderUsageState
+  └► UsageOverlay.exe --claude-statusline                                ├─────────────────────► WPF rail
+       └► claude-usage.json ──────────────────► ClaudeUsageProvider ─────┤        ▲
+                                                                         │        │
+api.cursor.com /teams/spend ───────────────────► CursorUsageProvider ────┘        │
+                                                                                  │
+HostWindowLocator (foreground Codex, Claude, Cursor or Claude Code window) ───────┘
 ```
+
+Each provider turns its source into the same `ProviderUsageState`: a connection state, short status text, and an ordered list of limit windows with the most constrained first. The rail shows the provider of the app in front; the card lists the others.
 
 ## Projects
 
@@ -25,6 +24,10 @@ CodexWindowLocator ───────────────────► 
 
 Platform-neutral logic:
 
+- The provider model (`UsageProviderKind`, `ProviderUsageState`) and Codex status mapping
+- Claude status-line parsing and the `claude-usage.json` snapshot model, including host-session tracking
+- Cursor Admin API spend parsing
+- Supported-app window identification
 - Rate-limit payload parsing
 - Percentage normalization and severity thresholds
 - Reset-time formatting
@@ -35,14 +38,19 @@ Platform-neutral logic:
 
 Windows integration:
 
+- `UsageProvider` background lifecycle shared by the Codex, Claude and Cursor providers
 - App Server process lifecycle and JSON-RPC transport
-- Active Codex window detection
+- The Claude Code status-line relay (`Program.Main` handles `--claude-statusline` before WPF starts) and the reversible `~/.claude/settings.json` integration
+- DPAPI storage for the Cursor Admin API key
+- Active app window detection, including terminals and editors that host Claude Code
 - WPF rail, detail card, animation, menus, and drag behavior
 - Native Settings window and appearance application
 - Settings persistence and Windows shortcuts
 - Single-instance signaling for overlay visibility and Settings requests
 
 ## Data flow
+
+### Codex
 
 1. The overlay uses an explicitly configured CLI path first, then the Codex Desktop bundled CLI when available, and finally `codex.cmd` or `codex.exe` on `PATH`. The legacy `QUOTARAIL_CODEX_PATH` and `CODEX_USAGE_CODEX_PATH` variables are also accepted.
 2. It starts `codex app-server --stdio` with redirected standard streams.
@@ -55,12 +63,25 @@ Windows integration:
 The user can disconnect App Server from either context menu before upgrading an npm-installed Codex CLI. Disconnecting cancels the session and terminates only the process tree started by Usage Overlay. Reconnecting creates a fresh App Server session.
 
 Update checks are separate from account usage. They run only after the user selects **Check for updates** and request the latest public release metadata from GitHub.
-5. The parser clamps percentages, validates timestamps, and selects the primary `codex` bucket.
-6. The UI calculates remaining quota as `100 - usedPercent` and animates to the new value.
+The parser clamps percentages, validates timestamps, and selects the primary `codex` bucket. The UI calculates remaining quota as `100 - usedPercent` and animates to the new value.
+
+### Claude
+
+1. Turning Claude on saves a restore point to `claude-statusline.json`, then sets Claude Code's `statusLine.command` to run `UsageOverlay.exe --claude-statusline`. An existing command is wrapped in a small bash script: both commands get the same input, and only the user's command's output is shown.
+2. Claude Code runs the command on status-line updates. `Program.Main` recognises the argument and runs the relay without loading WPF or taking the single-instance mutex.
+3. The relay parses `rate_limits`, walks its parent processes up to (not including) `explorer.exe` and other shell or system hosts, and identifies the Claude Code process (`claude.exe`, or `node.exe` for npm installs).
+4. Under a named mutex it merges this into `claude-usage.json`. A session without `rate_limits` updates only its host entry, so it never erases the last account-wide reading. Host entries expire after 24 hours and are kept to 16.
+5. `ClaudeUsageProvider` polls the file's metadata every two seconds and republishes every 30 seconds so ages and resets stay current. Readings older than 15 minutes are marked stale. A window whose reset time has passed is shown as reset.
+6. The window locator treats a foreground window as a Claude host when its process is in a session's chain and that session's Claude Code process is still running.
+7. Turning Claude off, or `--disconnect-claude` from the uninstaller, restores the previous status line, unless the user has replaced it since.
+
+### Cursor
+
+`CursorUsageProvider` reads the DPAPI-protected key and calls `POST https://api.cursor.com/teams/spend` every 15 minutes, filtered by the configured email. Rejected keys and unknown members are reported in the card. Network failures keep the last reading, marked stale. With a spend limit (`hardLimitOverrideDollars` or `monthlyLimitDollars`), or `totalPercentUsed` when the response includes it, the rail shows a percentage. Otherwise the card shows the amount spent.
 
 ## Window behavior
 
-The overlay matches the Microsoft Store Codex package by process path and hides unless that window is foreground and visible. It uses per-monitor DPI scaling and clamps custom positions inside the active Codex window.
+The overlay matches the Microsoft Store Codex package by process path, the Claude desktop app and native Claude Code by `claude.exe`, Cursor by `Cursor.exe`, and Claude Code hosts by the recorded process chain. It hides unless a supported, enabled app's window is foreground and visible. It uses per-monitor DPI scaling and clamps custom positions inside the active Codex window.
 
 The WPF tool window is topmost and non-activating. It can receive pointer input without taking keyboard focus from Codex.
 
@@ -73,7 +94,7 @@ The WPF tool window is topmost and non-activating. It can receive pointer input 
 
 Settings contain theme, placement, offsets, fullscreen preference, and pause expiry. Logs contain redacted, truncated status and error messages.
 
-Additional settings control Codex-only visibility, monitor following, Follow Codex/Dark/Light appearance, remaining-versus-used display, colour thresholds, animation, compact labels, CLI path, and polling interval. Follow Codex samples only a few active-window background pixels to infer light or dark; it does not store or log screen content. Existing settings files remain compatible because missing fields receive bounded defaults. On first launch, Usage Overlay imports settings from `%LOCALAPPDATA%\QuotaRail\settings.json` or the older `%LOCALAPPDATA%\CodexUsageOverlay\settings.json` location when no Usage Overlay settings file exists.
+Additional settings control which apps are tracked (Codex, Claude, Cursor and the Cursor email), supported-app-only visibility, monitor following, Follow app/Dark/Light appearance, remaining-versus-used display, colour thresholds, animation, compact labels, CLI path, and polling interval. Follow app samples only a few active-window background pixels to infer light or dark; it does not store or log screen content. Existing settings files remain compatible because missing fields receive bounded defaults. On first launch, Usage Overlay imports settings from `%LOCALAPPDATA%\QuotaRail\settings.json` or the older `%LOCALAPPDATA%\CodexUsageOverlay\settings.json` location when no Usage Overlay settings file exists.
 
 ## Failure handling
 

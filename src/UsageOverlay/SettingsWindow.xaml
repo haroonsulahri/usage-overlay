@@ -34,6 +34,28 @@
             </Style.Triggers>
         </Style>
 
+        <Style x:Key="SettingsPasswordBoxStyle" TargetType="PasswordBox">
+            <Setter Property="Foreground" Value="{DynamicResource OverlayTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource OverlaySurfaceRaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource OverlayBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="10,7" />
+            <Setter Property="FontSize" Value="{StaticResource OverlayTextBody}" />
+            <Setter Property="CaretBrush" Value="{DynamicResource OverlayTextBrush}" />
+            <Style.Triggers>
+                <Trigger Property="IsKeyboardFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource OverlayNormalBrush}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="HelpTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource OverlayMutedBrush}" />
+            <Setter Property="FontSize" Value="{StaticResource OverlayTextSmall}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="22,3,0,0" />
+        </Style>
+
         <Style x:Key="SettingsCheckStyle" TargetType="CheckBox">
             <Setter Property="Foreground" Value="{DynamicResource OverlayTextBrush}" />
             <Setter Property="FontSize" Value="{StaticResource OverlayTextBody}" />
@@ -296,7 +318,7 @@
                 <TextBlock Margin="0,5,0,0"
                            Foreground="{DynamicResource OverlayMutedBrush}"
                            FontSize="{StaticResource OverlayTextBody}">
-                    <Run Text="Your Codex usage at a glance. Built by " />
+                    <Run Text="Codex, Claude and Cursor usage at a glance. Built by " />
                     <Hyperlink NavigateUri="https://haroone.com"
                                Foreground="{DynamicResource OverlayNormalBrush}"
                                RequestNavigate="HarooneLink_OnRequestNavigate"
@@ -329,6 +351,67 @@
                 <Border Margin="0,0,0,12" Padding="1" Background="{DynamicResource OverlayBorderBrush}" CornerRadius="15">
                     <Border Padding="18" Background="{DynamicResource OverlaySurfaceBrush}" CornerRadius="14">
                         <StackPanel>
+                            <TextBlock Text="Apps" Style="{StaticResource SectionTitleStyle}" />
+                            <TextBlock Margin="0,6,0,2"
+                                       Text="Choose the AI apps the rail tracks. It follows whichever one is in front."
+                                       Foreground="{DynamicResource OverlayMutedBrush}"
+                                       FontSize="{StaticResource OverlayTextSmall}" />
+
+                            <CheckBox x:Name="CodexEnabledCheckBox"
+                                      Content="Codex"
+                                      Style="{StaticResource SettingsCheckStyle}" />
+                            <TextBlock Text="Reads limits from the Codex CLI already signed in on this PC."
+                                       Style="{StaticResource HelpTextStyle}" />
+                            <TextBlock x:Name="CodexAppStatusText" Style="{StaticResource HelpTextStyle}" />
+
+                            <CheckBox x:Name="ClaudeEnabledCheckBox"
+                                      Margin="0,14,0,0"
+                                      Content="Claude"
+                                      Style="{StaticResource SettingsCheckStyle}" />
+                            <TextBlock Text="Connects Claude Code’s status line to read your Pro or Max plan limits. They’re shared with the Claude desktop app, so the rail appears beside it and beside terminals running Claude Code."
+                                       Style="{StaticResource HelpTextStyle}" />
+                            <TextBlock x:Name="ClaudeSettingsPathText" Style="{StaticResource HelpTextStyle}" />
+                            <TextBlock x:Name="ClaudeStatusText" Style="{StaticResource HelpTextStyle}" />
+
+                            <CheckBox x:Name="CursorEnabledCheckBox"
+                                      Margin="0,14,0,0"
+                                      Content="Cursor (experimental)"
+                                      Style="{StaticResource SettingsCheckStyle}"
+                                      Checked="CursorEnabledCheckBox_OnChanged"
+                                      Unchecked="CursorEnabledCheckBox_OnChanged" />
+                            <TextBlock Text="Uses Cursor’s official Admin API, available to team admins. Shows your spend this billing cycle against your spend limit."
+                                       Style="{StaticResource HelpTextStyle}" />
+                            <StackPanel x:Name="CursorDetailsPanel" Margin="22,0,0,0" Visibility="Collapsed">
+                                <TextBlock Text="Your Cursor account email" Style="{StaticResource FieldLabelStyle}" />
+                                <TextBox x:Name="CursorEmailTextBox"
+                                         AutomationProperties.Name="Cursor account email"
+                                         Style="{StaticResource SettingsTextBoxStyle}" />
+                                <TextBlock Text="Team Admin API key" Style="{StaticResource FieldLabelStyle}" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <PasswordBox x:Name="CursorKeyPasswordBox"
+                                                 AutomationProperties.Name="Cursor Admin API key"
+                                                 Style="{StaticResource SettingsPasswordBoxStyle}" />
+                                    <Button x:Name="RemoveCursorKeyButton"
+                                            Grid.Column="1"
+                                            Margin="8,0,0,0"
+                                            Content="Remove key"
+                                            Style="{StaticResource SettingsButtonStyle}"
+                                            Click="RemoveCursorKeyButton_OnClick" />
+                                </Grid>
+                                <TextBlock x:Name="CursorKeyStatusText" Margin="0,5,0,0" Style="{StaticResource HelpTextStyle}" />
+                                <TextBlock x:Name="CursorStatusText" Margin="0,3,0,0" Style="{StaticResource HelpTextStyle}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Border>
+
+                <Border Margin="0,0,0,12" Padding="1" Background="{DynamicResource OverlayBorderBrush}" CornerRadius="15">
+                    <Border Padding="18" Background="{DynamicResource OverlaySurfaceBrush}" CornerRadius="14">
+                        <StackPanel>
                             <TextBlock Text="Visibility" Style="{StaticResource SectionTitleStyle}" />
                             <TextBlock Margin="0,6,0,2"
                                        Text="Choose when the usage rail appears."
@@ -338,7 +421,7 @@
                             <StackPanel Orientation="Horizontal">
                                 <RadioButton x:Name="CodexOnlyVisibilityRadio"
                                              GroupName="VisibilityScope"
-                                             Content="Only in Codex"
+                                             Content="Only in these apps"
                                              Style="{StaticResource SettingsRadioStyle}" />
                                 <RadioButton x:Name="AcrossWindowsVisibilityRadio"
                                              Margin="18,7,0,0"
@@ -351,7 +434,7 @@
                                        Foreground="{DynamicResource OverlayMutedBrush}"
                                        FontSize="{StaticResource OverlayTextSmall}" />
                             <CheckBox x:Name="HideFullscreenCheckBox"
-                                      Content="Hide while Codex is fullscreen"
+                                      Content="Hide while the app is fullscreen"
                                       Style="{StaticResource SettingsCheckStyle}" />
                             <Grid Margin="0,12,0,0">
                                 <Grid.ColumnDefinitions>
@@ -434,7 +517,7 @@
                                        Foreground="{DynamicResource OverlayMutedBrush}"
                                        FontSize="{StaticResource OverlayTextSmall}" />
                             <CheckBox x:Name="FollowMonitorsCheckBox"
-                                      Content="Follow Codex between monitors"
+                                      Content="Follow the app between monitors"
                                       Style="{StaticResource SettingsCheckStyle}" />
                         </StackPanel>
                     </Border>
@@ -448,7 +531,7 @@
                             <StackPanel Orientation="Horizontal">
                                 <RadioButton x:Name="SystemThemeRadio"
                                              GroupName="ThemeMode"
-                                             Content="Follow Codex"
+                                             Content="Follow app"
                                              Style="{StaticResource SettingsRadioStyle}"
                                              Click="ThemeRadio_OnClick" />
                                 <RadioButton x:Name="DarkThemeRadio"
@@ -465,7 +548,7 @@
                                              Click="ThemeRadio_OnClick" />
                             </StackPanel>
                             <TextBlock Margin="0,5,0,0"
-                                       Text="Follow Codex matches the active Codex app and falls back to Windows when Codex is unavailable."
+                                       Text="Follow app matches the light or dark look of the app in front and falls back to Windows otherwise."
                                        Foreground="{DynamicResource OverlayMutedBrush}"
                                        FontSize="{StaticResource OverlayTextSmall}" />
                             <TextBlock Text="Main number" Style="{StaticResource FieldLabelStyle}" />
@@ -550,7 +633,7 @@
                                 <StackPanel Margin="0,0,12,0">
                                     <TextBlock Text="Connection &amp; diagnostics" Style="{StaticResource SectionTitleStyle}" />
                                     <TextBlock Margin="0,6,0,0"
-                                               Text="Only needed if Usage Overlay cannot connect or update."
+                                               Text="Only needed if Usage Overlay cannot connect to Codex or update."
                                                Foreground="{DynamicResource OverlayMutedBrush}"
                                                FontSize="{StaticResource OverlayTextSmall}" />
                                 </StackPanel>
