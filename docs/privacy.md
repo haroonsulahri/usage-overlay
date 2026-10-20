@@ -4,7 +4,7 @@ Usage Overlay is designed to keep its data surface narrow.
 
 ## Data read
 
-The overlay requests Codex account rate-limit metadata:
+For Codex, the overlay requests account rate-limit metadata:
 
 - Used percentage
 - Quota window duration
@@ -14,12 +14,19 @@ The overlay requests Codex account rate-limit metadata:
 
 It does not request or inspect prompts, responses, files, repository content, browser activity, or conversation history.
 
+For Claude (off by default), Claude Code passes a JSON description of the session to its status-line command. Usage Overlay's relay keeps only the 5-hour and weekly used percentages and reset times, the session ID, and the IDs of the Claude Code process and its parent processes. It discards everything else, including the working directory, model, cost and transcript path, without storing or logging it. Turning Claude on edits the `statusLine` entry of Claude Code's `settings.json`. A restore point is kept, and turning Claude off restores the previous entry.
+
+For Cursor (off by default, experimental), the overlay sends the email you enter as a search term to Cursor's Admin API and reads that member's spend, spend limit and billing-cycle start.
+
 ## Data stored
 
 Local files may be created under `%LOCALAPPDATA%\UsageOverlay`:
 
 - `settings.json` stores display preferences.
 - `overlay.log` stores redacted and truncated diagnostic messages.
+- `claude-usage.json` (Claude on) stores Claude plan-limit percentages, reset times, session IDs and process IDs.
+- `claude-statusline.json` (Claude on) stores the Claude Code status-line entry to restore.
+- `cursor-admin-key.bin` (Cursor key saved) stores the Cursor Admin API key encrypted with Windows DPAPI for the current user. The key is never written to settings or logs.
 
 Neither file is uploaded by this application. After opting in, `reporting.json` stores a random installation ID and the last attempted reporting date. This identity survives upgrades and disabling/re-enabling reporting; deleting the local state may create a new reporting installation.
 
@@ -31,7 +38,9 @@ Authentication is owned by Codex CLI and Codex services. The overlay asks the su
 
 ## Network access
 
-The overlay does not open a network listener. The Codex App Server process uses the account's existing Codex connection to retrieve usage metadata.
+The overlay does not open a network listener. The Codex App Server process uses the account's existing Codex connection to retrieve usage metadata. Claude support makes no network requests; Claude Code supplies the limits locally.
+
+With Cursor on, Usage Overlay sends `POST https://api.cursor.com/teams/spend` at most every 15 minutes, or once a minute when you choose Refresh usage. The request carries the Admin API key as Basic authentication, the email as a search term, and the Usage Overlay version in the user-agent.
 
 When the user explicitly selects **Check for updates**, Usage Overlay makes one HTTPS request to the public GitHub Releases API for `haroonsulahri/usage-overlay`. The request contains the standard HTTP metadata required by GitHub and the installed Usage Overlay version in the user-agent. No settings, usage percentages, account data, logs, or identifiers are sent by Usage Overlay. It does not check for updates automatically.
 

@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.4.0] - 2026-10-20
+
+### Added
+
+- Claude support: the rail appears beside the Claude desktop app and beside terminals and editors running Claude Code, showing the 5-hour and weekly plan limits that Claude Code passes to its status line. It's opt-in, keeps an existing status line working, and restores it when turned off or uninstalled.
+- Experimental Cursor support through Cursor's official team Admin API, with the key stored encrypted with Windows DPAPI.
+- An **Other apps** section in the detail card, and a tray tooltip summarising every enabled app.
+- An **Apps** section in Settings to turn Codex, Claude and Cursor on or off.
+- `--provider=` demo option for previewing each app.
+
+### Changed
+
+- The rail follows whichever supported app is in front, and leads with the limit closest to running out.
+- The detail card sizes itself to its content.
+- Visibility, fullscreen, monitor and theme settings now apply to every supported app.
+- Diagnostic logs also redact `key_`-prefixed API keys.
+
 ## [0.3.1] - 2026-09-08
 
 ### Fixed

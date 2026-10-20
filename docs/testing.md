@@ -12,7 +12,8 @@ It performs:
 
 - Release restore and build
 - Compiler and analyzer checks with warnings treated as errors
-- Dependency-free specifications for parsing, calculations, settings, and log redaction
+- Dependency-free specifications for parsing, calculations, settings, and log redaction, including Claude status-line parsing, the Claude snapshot and host tracking, Cursor spend parsing, app identification and per-provider thresholds
+- Claude Code integration checks against a temporary profile: connecting with and without an existing status line, idempotent reconnects, restoring the original, leaving a status line the user replaced, repairing the command after the executable moves, and refusing malformed settings
 - Process-level checks using an isolated fake App Server and temporary `CODEX_HOME`: initial usage, external logout, login to a second account, direct account switching, late replies and child-process cancellation. The fake server also rejects any routine request that forces token refresh.
 
 ## Authenticated smoke test
@@ -42,6 +43,8 @@ Recommended visual states:
 | `75` | Amber rail, 25% left, with the weekly detail row |
 | `92` | Red rail, 8% left, with the weekly detail row |
 
+Add `--provider=claude` or `--provider=cursor` to lead with that app; the others appear under **Other apps**.
+
 ## Manual acceptance matrix
 
 | Scenario | Expected behavior |
@@ -64,13 +67,13 @@ Recommended visual states:
 | Automatic startup | Overlay starts without opening Settings |
 | Settings title bar | Minus hides Settings, Close closes Settings, and maximize is unavailable |
 | Visibility controls | Codex-only and fullscreen choices appear together near the top |
-| Visibility scope | Only in Codex and Across Windows map to the saved visibility setting |
+| Visibility scope | Only in these apps and Across Windows map to the saved visibility setting |
 | Connection details | Technical fields are collapsed by default and can be expanded |
 | Settings initial scroll | General and Visibility are shown when the window opens |
 | Pause | Overlay hides for 15 minutes, then resumes automatically |
 | Fullscreen exclusion | Overlay hides only while Codex is fullscreen |
 | Reduced motion | Values update without animated interpolation |
-| Follow Codex theme | Overlay matches the active Codex light/dark surface and uses Windows as fallback |
+| Follow app theme | Overlay matches the active app's light/dark surface and uses Windows as fallback |
 | Dark theme | Settings, rail, detail card, and menus use the dark palette |
 | Light theme | Settings, rail, detail card, and menus use the light palette with readable contrast |
 | App Server exit | Overlay reconnects after a bounded delay |
@@ -100,3 +103,14 @@ Before tagging a release:
 7. Run `scripts\test-installer.ps1` to verify Installed apps registration, launch, and uninstall cleanup.
 8. Extract the portable zip into a clean directory and run the executable.
 9. Verify both SHA-256 values in `SHA256SUMS.txt`.
+| Claude on, no status line | Claude Code shows `5h N% left · 7d N% left`; rail shows Claude beside the Claude desktop app |
+| Claude on, existing status line | The user's status line output is unchanged; Claude usage still updates |
+| Claude off | `~/.claude/settings.json` returns to its previous `statusLine` |
+| Claude Code in Windows Terminal or VS Code | After a reply, focusing that window shows the Claude rail; File Explorer and the desktop do not |
+| Claude Code exits | Its terminal stops showing the Claude rail within a few seconds |
+| Claude reading older than 15 minutes | Status shows its age in amber; past resets show the window as reset |
+| Cursor with valid key and email | Rail shows spend against the limit; card shows the amounts |
+| Cursor with rejected key or unknown email | Card shows `Key rejected` or `Not found` without retry storms |
+| Other apps | Card lists enabled apps; clicking one shows it until another app comes to the front |
+| Tray tooltip | Summarises each enabled app with usage |
+| Uninstall with Claude on | The previous Claude Code status line is restored |

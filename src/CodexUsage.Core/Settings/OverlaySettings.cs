@@ -36,7 +36,18 @@ public sealed record OverlaySettings
 
     public bool HideInFullscreen { get; init; }
 
+    /// <summary>Shows the rail only while a supported app (Codex, Claude or Cursor) is active.</summary>
     public bool ShowOnlyWhenCodexActive { get; init; } = true;
+
+    public bool CodexEnabled { get; init; } = true;
+
+    /// <summary>Connects Claude Code's status line so the rail can read Claude plan limits.</summary>
+    public bool ClaudeEnabled { get; init; }
+
+    /// <summary>Reads Cursor team spend through the Admin API. Experimental.</summary>
+    public bool CursorEnabled { get; init; }
+
+    public string CursorAccountEmail { get; init; } = string.Empty;
 
     public bool FollowCodexAcrossMonitors { get; init; } = true;
 
@@ -81,6 +92,12 @@ public sealed record OverlaySettings
             cliPath = cliPath[..1_024];
         }
 
+        var cursorEmail = (CursorAccountEmail ?? string.Empty).Trim();
+        if (cursorEmail.Length > 254)
+        {
+            cursorEmail = cursorEmail[..254];
+        }
+
         return this with
         {
             Theme = theme,
@@ -93,6 +110,7 @@ public sealed record OverlaySettings
             WarningThreshold = warningThreshold,
             CriticalThreshold = criticalThreshold,
             CodexCliPath = cliPath,
+            CursorAccountEmail = cursorEmail,
             RefreshIntervalSeconds = Math.Clamp(RefreshIntervalSeconds, 15, 3_600)
         };
     }
