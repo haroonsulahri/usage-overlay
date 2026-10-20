@@ -93,6 +93,14 @@ internal static class ProviderSpecs
         var waiting = ClaudeUsageSnapshot.Empty.ToState(Now);
         Assert(!waiting.HasUsage, "An empty snapshot has no usage.");
         AssertEqual(ProviderConnection.Connecting, waiting.Connection);
+
+        var withoutLimits = ClaudeUsageSnapshot.Empty
+            .Apply(new ClaudeRateLimits(null, null), "s", [1, 2], Now)
+            .ToState(Now.AddMinutes(1));
+        AssertEqual("No plan limits", withoutLimits.StatusText);
+        Assert(
+            !snapshot.Serialize().Contains("HasLimits", StringComparison.Ordinal),
+            "Computed properties are not written to the snapshot file.");
     }
 
     public static void ParsesCursorTeamSpend()

@@ -250,7 +250,8 @@ CLI path and refresh interval changes take effect after the app restarts.
 | `Trying again…` | App Server stopped or failed and will be restarted. |
 | `CLI not found` | Set the Codex CLI path in Settings or add it to `PATH`. |
 | `Disconnected` | Usage Overlay has released its App Server child process for a CLI update. Choose Reconnect Codex CLI when finished. |
-| `Waiting` | Claude is connected, but Claude Code hasn't reported plan limits yet. They arrive after its next reply. |
+| `Waiting` | Claude is connected, but Claude Code hasn't run its status line yet. Send a message in Claude Code. |
+| `No plan limits` | Claude Code runs the status line but sends no plan limits. Update Claude Code and check `/status` shows a Pro or Max plan. |
 | `Updated 5m ago` | A Claude or Cursor reading and its age. Claude readings older than 15 minutes turn amber. |
 | `Key rejected` | Cursor didn't accept the Admin API key. |
 
