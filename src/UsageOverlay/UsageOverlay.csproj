@@ -29,5 +29,6 @@
 
   <ItemGroup>
     <Resource Include="Assets\UsageOverlay.ico" />
+    <Resource Include="Assets\Logos\*.png" />
   </ItemGroup>
 </Project>
