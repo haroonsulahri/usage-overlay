@@ -11,13 +11,18 @@ using UsageOverlay.Infrastructure;
 namespace UsageOverlay.Services;
 
 /// <summary>
-/// Experimental Cursor usage from the official Admin API (<c>POST /teams/spend</c>).
-/// It needs a team admin API key and reports the configured member's spend this cycle.
+/// Experimental Cursor usage. By default it uses the official team Admin API
+/// (<c>POST /teams/spend</c>) with an admin key. In opt-in account mode it reads the
+/// editor's saved sign-in and the private endpoint behind Cursor's usage dashboard.
 /// </summary>
 public sealed class CursorUsageProvider : UsageProvider
 {
     private static readonly Uri SpendEndpoint = new("https://api.cursor.com/teams/spend");
+    private static readonly Uri UsageSummaryEndpoint = new("https://cursor.com/api/usage-summary");
+    private static readonly Uri PeriodUsageEndpoint =
+        new("https://api2.cursor.sh/aiserver.v1.DashboardService/GetCurrentPeriodUsage");
     private static readonly TimeSpan PollInterval = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan AccountPollInterval = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan MinimumRefreshGap = TimeSpan.FromMinutes(1);
     private static readonly TimeSpan RepublishInterval = TimeSpan.FromSeconds(30);
 
@@ -43,6 +48,9 @@ public sealed class CursorUsageProvider : UsageProvider
 
     public string Email { get; set; }
 
+    /// <summary>Use the editor's saved sign-in instead of an Admin API key (unofficial).</summary>
+    public bool AccountMode { get; set; }
+
     public override Task RefreshAsync()
     {
         if (IsRunning && DateTimeOffset.UtcNow - _lastFetch >= MinimumRefreshGap && _refreshSignal.CurrentCount == 0)
@@ -65,8 +73,16 @@ public sealed class CursorUsageProvider : UsageProvider
         _lastReading = null;
         while (!cancellationToken.IsCancellationRequested)
         {
-            await FetchAsync(cancellationToken).ConfigureAwait(false);
-            var nextFetch = DateTimeOffset.UtcNow + PollInterval;
+            if (AccountMode)
+            {
+                await FetchAccountAsync(cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                await FetchAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            var nextFetch = DateTimeOffset.UtcNow + (AccountMode ? AccountPollInterval : PollInterval);
             while (DateTimeOffset.UtcNow < nextFetch)
             {
                 if (await _refreshSignal.WaitAsync(RepublishInterval, cancellationToken).ConfigureAwait(false))
@@ -133,6 +149,94 @@ public sealed class CursorUsageProvider : UsageProvider
             _lastReading = CursorSpendParser.ToState(spend, DateTimeOffset.UtcNow);
             Publish(_lastReading);
             _logger.Info("Cursor usage updated.");
+        }
+        catch (Exception exception) when (
+            (exception is HttpRequestException or TaskCanceledException) && !cancellationToken.IsCancellationRequested)
+        {
+            PublishFailure($"Couldn’t reach Cursor: {exception.Message}");
+        }
+    }
+
+    private async Task FetchAccountAsync(CancellationToken cancellationToken)
+    {
+        if (!CursorLocalSession.TryReadAccessToken(out var token, out var problem))
+        {
+            _lastReading = null;
+            Publish(Unavailable("Sign in", problem));
+            return;
+        }
+
+        if (!JwtClaims.TryRead(token, out var subject, out var expiresAt))
+        {
+            _lastReading = null;
+            Publish(Unavailable("Sign in", "Cursor’s saved sign-in isn’t readable. Sign in to Cursor again."));
+            return;
+        }
+
+        if (expiresAt is { } expiry && expiry <= DateTimeOffset.UtcNow)
+        {
+            _lastReading = null;
+            Publish(Unavailable("Sign in", "Cursor’s saved sign-in has expired. Open Cursor to refresh it."));
+            return;
+        }
+
+        _lastFetch = DateTimeOffset.UtcNow;
+        if (_lastReading is null)
+        {
+            Publish(ProviderUsageState.Connecting(UsageProviderKind.Cursor, "Reading Cursor usage…"));
+        }
+
+        try
+        {
+            // The dashboard expects the WorkOS session cookie: "<user id>::<access token>".
+            var userId = subject.Contains('|', StringComparison.Ordinal) ? subject[(subject.LastIndexOf('|') + 1)..] : subject;
+            using var summaryRequest = new HttpRequestMessage(HttpMethod.Get, UsageSummaryEndpoint);
+            summaryRequest.Headers.TryAddWithoutValidation(
+                "Cookie",
+                $"WorkosCursorSessionToken={Uri.EscapeDataString(userId)}%3A%3A{token}");
+            using var summary = await _client.SendAsync(summaryRequest, cancellationToken).ConfigureAwait(false);
+            string? json = summary.IsSuccessStatusCode
+                ? await summary.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false)
+                : null;
+
+            if (json is null)
+            {
+                // Fall back to the editor's own usage API, which takes the token directly.
+                using var periodRequest = new HttpRequestMessage(HttpMethod.Post, PeriodUsageEndpoint)
+                {
+                    Content = new StringContent("{}", Encoding.UTF8, "application/json")
+                };
+                periodRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                periodRequest.Headers.TryAddWithoutValidation("Connect-Protocol-Version", "1");
+                using var period = await _client.SendAsync(periodRequest, cancellationToken).ConfigureAwait(false);
+                if (period.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden &&
+                    summary.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+                {
+                    _lastReading = null;
+                    Publish(Unavailable("Sign in", "Cursor didn’t accept the saved sign-in. Open Cursor to refresh it."));
+                    _logger.Error("Cursor account usage was rejected.");
+                    return;
+                }
+
+                if (!period.IsSuccessStatusCode)
+                {
+                    PublishFailure(
+                        $"Cursor usage returned HTTP {(int)summary.StatusCode} and {(int)period.StatusCode}.");
+                    return;
+                }
+
+                json = await period.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            if (!CursorAccountUsageParser.TryParse(json, DateTimeOffset.UtcNow, out var state))
+            {
+                PublishFailure("Cursor’s usage response has changed; this unofficial source may need an update.");
+                return;
+            }
+
+            _lastReading = state;
+            Publish(state);
+            _logger.Info("Cursor usage updated from the saved sign-in.");
         }
         catch (Exception exception) when (
             (exception is HttpRequestException or TaskCanceledException) && !cancellationToken.IsCancellationRequested)

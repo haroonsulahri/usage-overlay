@@ -117,8 +117,11 @@ public partial class MainWindow : Window
             logger,
             _settings.CodexCliPath,
             TimeSpan.FromSeconds(_settings.RefreshIntervalSeconds));
-        _claude = new ClaudeUsageProvider(logger, ClaudeCodeIntegration.CreateDefault());
-        _cursor = new CursorUsageProvider(logger, _cursorCredentials, _settings.CursorAccountEmail);
+        _claude = new ClaudeUsageProvider(logger, ClaudeCodeIntegration.CreateDefault(), new ClaudeAccountUsageClient());
+        _cursor = new CursorUsageProvider(logger, _cursorCredentials, _settings.CursorAccountEmail)
+        {
+            AccountMode = _settings.CursorAccountUsageEnabled
+        };
         foreach (var provider in Providers)
         {
             _states[provider.Kind] = IsProviderEnabled(provider.Kind)
@@ -265,7 +268,7 @@ public partial class MainWindow : Window
         // Reconnecting is idempotent and repairs the command if this executable moved.
         if (_settings.ClaudeEnabled)
         {
-            _ = _claude.Enable();
+            _ = _claude.ApplyAsync(true, _settings.ClaudeStatusLineEnabled, _settings.ClaudeAccountUsageEnabled);
         }
 
         if (_settings.CursorEnabled)
@@ -1665,24 +1668,25 @@ public partial class MainWindow : Window
                 await _codex.StopAsync();
             }
 
-            if (_settings.ClaudeEnabled && !previous.ClaudeEnabled)
+            if (_settings.ClaudeEnabled != previous.ClaudeEnabled ||
+                _settings.ClaudeStatusLineEnabled != previous.ClaudeStatusLineEnabled ||
+                _settings.ClaudeAccountUsageEnabled != previous.ClaudeAccountUsageEnabled)
             {
-                _ = _claude.Enable();
-                messages.Add(_claude.IntegrationMessage);
-            }
-            else if (!_settings.ClaudeEnabled && previous.ClaudeEnabled)
-            {
-                await _claude.DisableAsync();
-                messages.Add(_claude.IntegrationMessage);
+                messages.Add(await _claude.ApplyAsync(
+                    _settings.ClaudeEnabled,
+                    _settings.ClaudeStatusLineEnabled,
+                    _settings.ClaudeAccountUsageEnabled));
             }
 
             var cursorChanged = cursorKeyChanged ||
                                 _settings.CursorEnabled != previous.CursorEnabled ||
+                                _settings.CursorAccountUsageEnabled != previous.CursorAccountUsageEnabled ||
                                 !string.Equals(_settings.CursorAccountEmail, previous.CursorAccountEmail, StringComparison.OrdinalIgnoreCase);
             if (cursorChanged)
             {
                 await _cursor.StopAsync();
                 _cursor.Email = _settings.CursorAccountEmail;
+                _cursor.AccountMode = _settings.CursorAccountUsageEnabled;
                 if (_settings.CursorEnabled)
                 {
                     _cursor.Start();

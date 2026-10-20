@@ -41,13 +41,22 @@ public sealed record OverlaySettings
 
     public bool CodexEnabled { get; init; } = true;
 
-    /// <summary>Connects Claude Code's status line so the rail can read Claude plan limits.</summary>
+    /// <summary>Tracks Claude usage. The sources below decide where readings come from.</summary>
     public bool ClaudeEnabled { get; init; }
+
+    /// <summary>Official source: Claude Code's status line reports plan limits after each reply.</summary>
+    public bool ClaudeStatusLineEnabled { get; init; } = true;
+
+    /// <summary>Unofficial source: the usage endpoint behind Claude's usage page, using Claude Code's saved sign-in.</summary>
+    public bool ClaudeAccountUsageEnabled { get; init; }
 
     /// <summary>Reads Cursor team spend through the Admin API. Experimental.</summary>
     public bool CursorEnabled { get; init; }
 
     public string CursorAccountEmail { get; init; } = string.Empty;
+
+    /// <summary>Unofficial source: Cursor's dashboard usage, using the editor's saved sign-in.</summary>
+    public bool CursorAccountUsageEnabled { get; init; }
 
     public bool FollowCodexAcrossMonitors { get; init; } = true;
 

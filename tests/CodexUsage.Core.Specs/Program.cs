@@ -36,7 +36,10 @@ var specs = new (string Name, Action Run)[]
     ("Maps Codex connection states to provider states", ProviderSpecs.MapsCodexStatuses),
     ("Recognizes Codex, Claude and Cursor windows", ProviderSpecs.RecognizesSupportedApps),
     ("Keeps new providers opt-in for existing settings", ProviderSpecs.LoadsProviderSettingsSafely),
-    ("Tracks thresholds separately per provider", ProviderSpecs.TracksThresholdsPerProvider)
+    ("Tracks thresholds separately per provider", ProviderSpecs.TracksThresholdsPerProvider),
+    ("Parses Claude account credentials and usage", ProviderSpecs.ParsesClaudeAccountUsage),
+    ("Parses Cursor account usage", ProviderSpecs.ParsesCursorAccountUsage),
+    ("Reads JWT subject and expiry", ProviderSpecs.ReadsJwtClaims)
 };
 
 var failures = new List<string>();
