@@ -35,7 +35,7 @@ Hover over the rail to open the detail card. The card shows:
 - The reset countdown for each limit window
 - Live, connecting, stale or unavailable status
 - Green, amber, or red status based on your configured thresholds
-- **Other apps:** the remaining usage of your other enabled apps. Click one to view it
+- **Other apps** (optional): the remaining usage of your other enabled apps. Click one to view it. Off by default, so the card shows only the app in front
 - A small **View usage** link to the full usage page of the app shown
 
 The tray icon's tooltip summarises every enabled app, for example `Codex 62% left · Claude 40% left`.
@@ -44,7 +44,7 @@ If an app has not returned a fresh limit yet, the rail shows `--`. The card says
 
 ## Features
 
-- **Codex, Claude and Cursor in one rail:** the rail follows the app in front and the card lists the others.
+- **Codex, Claude and Cursor in one rail:** the rail follows the app in front and shows only that app's usage.
 - **Claude Code aware:** recognises terminals and editors (Windows Terminal, VS Code, Cursor and others) running Claude Code, and keeps your existing Claude Code status line working.
 - **Remaining usage first:** the default view answers the useful question: how much do I have left?
 - **Complete main-limit details:** inspect the primary and secondary usage windows for the main Codex limit without model-specific clutter.
@@ -200,6 +200,7 @@ Custom positions are stored as relative coordinates, so the rail remains inside 
 - **Turn red at:** set the higher used percentage where the rail changes to red.
 - **Animate changes:** smoothly moves the rail when a fresh value arrives. Windows reduced-motion preferences are still respected.
 - **Show the percentage below the rail:** keeps the compact number visible while the detail card is closed.
+- **List my other apps in the detail card:** adds an **Other apps** section with your other enabled apps. Off by default.
 - **Notify me when usage turns amber or red:** sends one Windows notification when a returned limit crosses either configured threshold. Notifications are off by default.
 
 **Follow app** checks a few background pixels from the active app window to decide whether the surface is light or dark. It does not capture, save, or log screen content. Windows appearance is used as a fallback when no supported app is in front.
@@ -234,6 +235,7 @@ CLI path and refresh interval changes take effect after the app restarts.
 | Red threshold | 90% used |
 | Animate changes | On |
 | Percentage below rail | On |
+| Other apps in the card | Off |
 | Threshold notifications | Off |
 | Custom CLI path | Empty; use `PATH` |
 | Refresh interval | 60 seconds |
