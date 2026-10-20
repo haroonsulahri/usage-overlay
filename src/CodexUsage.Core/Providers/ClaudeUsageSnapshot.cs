@@ -39,6 +39,7 @@ public sealed record ClaudeUsageSnapshot(
 
     public static ClaudeUsageSnapshot Empty { get; } = new(CurrentVersion, null, null, null, []);
 
+    [JsonIgnore]
     public bool HasLimits => FiveHour is not null || SevenDay is not null;
 
     public string Serialize() => JsonSerializer.Serialize(this, SerializerOptions);
@@ -115,6 +116,17 @@ public sealed record ClaudeUsageSnapshot(
     {
         if (!HasLimits || UpdatedAt is not { } updatedAt)
         {
+            // The status line is running but Claude Code sends no plan limits: this is the
+            // account or Claude Code version, not the connection.
+            if ((Hosts ?? []).Any(host => now - host.SeenAt < HostLifetime))
+            {
+                return ProviderUsageState.Unavailable(
+                    UsageProviderKind.Claude,
+                    ProviderConnection.Unavailable,
+                    "No plan limits",
+                    "Claude Code is connected but isn’t reporting plan limits. Update Claude Code and check /status shows a Pro or Max plan.");
+            }
+
             return ProviderUsageState.Unavailable(
                 UsageProviderKind.Claude,
                 ProviderConnection.Connecting,
