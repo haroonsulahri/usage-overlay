@@ -166,10 +166,14 @@ public sealed class ClaudeCodeIntegration
 
     internal static string BuildCommand(string executablePath, string previousCommand)
     {
-        var executable = BashQuote(Path.GetFullPath(executablePath).Replace('\\', '/'));
+        var path = Path.GetFullPath(executablePath).Replace('\\', '/');
+        var executable = BashQuote(path);
         if (string.IsNullOrWhiteSpace(previousCommand))
         {
-            return $"{executable} {ClaudeStatusLineRelay.Argument}";
+            // Double quotes work in both bash and Command Prompt; fall back to bash
+            // quoting only for paths containing characters bash expands inside them.
+            var portable = path.IndexOfAny(['$', '`', '"']) < 0 ? $"\"{path}\"" : executable;
+            return $"{portable} {ClaudeStatusLineRelay.Argument}";
         }
 
         // Claude Code runs status lines through bash. Feed the same input to both

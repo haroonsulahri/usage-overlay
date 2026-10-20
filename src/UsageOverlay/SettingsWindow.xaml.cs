@@ -117,6 +117,11 @@ public partial class SettingsWindow : Window
 
     private void Window_OnSourceInitialized(object? sender, EventArgs eventArgs)
     {
+        // Keep the Save bar on screen on small or highly scaled displays.
+        var available = Math.Max(400, SystemParameters.WorkArea.Height - 24);
+        MaxHeight = available;
+        MinHeight = Math.Min(MinHeight, available);
+        Height = Math.Min(Height, available);
         NativeWindowStyle.ApplyTitleBarTheme(this, ThemeManager.Instance.IsEffectiveDark);
     }
 
