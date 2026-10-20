@@ -119,7 +119,7 @@ public sealed record ClaudeUsageSnapshot(
                 UsageProviderKind.Claude,
                 ProviderConnection.Connecting,
                 "Waiting",
-                "Usage appears after Claude Code’s next reply. Plan limits need a Pro or Max sign-in.");
+                "Send a message in Claude Code in a terminal. Limits appear after its reply and need a Pro or Max sign-in.");
         }
 
         var windows = new List<UsageWindowDisplay>(2);

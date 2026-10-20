@@ -819,7 +819,7 @@ public partial class MainWindow : Window
     private void Render()
     {
         var state = CurrentState;
-        HeaderText.Text = $"{state.DisplayName} usage";
+        HeaderText.Text = state.DisplayName;
         HeaderBadgeHost.Child = ProviderBadge.Create(state.Provider, 18);
         StatusText.Text = _options.DemoPercent is null ? state.StatusText : "Demo";
         LiveDot.Fill = new SolidColorBrush((System.Windows.Media.Color)FindResource(state.Connection switch

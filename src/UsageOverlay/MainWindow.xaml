@@ -56,16 +56,21 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Grid VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
                         <Border x:Name="HeaderBadgeHost" Margin="0,0,7,0" VerticalAlignment="Center" />
                         <TextBlock x:Name="HeaderText"
-                                   Text="Codex usage"
+                                   Grid.Column="1"
+                                   Text="Codex"
                                    VerticalAlignment="Center"
                                    TextTrimming="CharacterEllipsis"
                                    Foreground="{DynamicResource OverlayTextBrush}"
                                    FontSize="{StaticResource OverlayTextBody}"
                                    FontWeight="Medium" />
-                    </StackPanel>
+                    </Grid>
                     <StackPanel Grid.Column="1"
                                 Margin="0,0,10,0"
                                 Orientation="Horizontal"
@@ -102,6 +107,7 @@
                     <TextBlock x:Name="UsagePercentText"
                                Margin="0,2,0,0"
                                Text="Loading usage…"
+                               TextWrapping="Wrap"
                                Foreground="{DynamicResource OverlayTextBrush}"
                                FontSize="{StaticResource OverlayTextValue}"
                                FontWeight="Medium" />
