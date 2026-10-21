@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.1] - 2026-10-21
+
+### Fixed
+
+- Preserve legacy Claude and Cursor enabled settings and saved-sign-in sources when upgrading. Explicit current settings, including opt-outs, take precedence.
+- Show Claude's 5-hour limit on the rail when available; keep weekly usage in the detail card and retain the weekly-only fallback. Cursor and Codex limit selection is unchanged.
+- Bundle official Codex and Cursor application icons instead of generic badges.
+
 ## [0.4.0] - 2026-10-20
 
 ### Added

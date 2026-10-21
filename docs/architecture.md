@@ -16,7 +16,7 @@ api.cursor.com /teams/spend ─────────────────�
 HostWindowLocator (foreground Codex, Claude, Cursor or Claude Code window) ───────┘
 ```
 
-Each provider turns its source into the same `ProviderUsageState`: a connection state, short status text, and an ordered list of limit windows with the most constrained first. The rail shows the provider of the app in front; the card lists the others.
+Each provider turns its source into the same `ProviderUsageState`: a connection state, short status text, and an ordered list of limit windows. Claude places the 5-hour window first when available and retains weekly usage as a detail row; other providers retain their existing ordering. The rail shows the provider of the app in front; the card lists the others.
 
 ## Projects
 

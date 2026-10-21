@@ -34,7 +34,7 @@ Both are off by default. The tokens are only read when needed, sent only to thei
 
 ## What it shows
 
-The collapsed rail is designed to stay out of the way. Its fill and compact label show the amount remaining at a glance. When an app has more than one limit, the rail leads with the one closest to running out, so a nearly spent weekly limit isn't hidden behind a fresh 5-hour window.
+The collapsed rail is designed to stay out of the way. Its fill and compact label show the amount remaining at a glance. Claude's rail shows the **5-hour limit** whenever it is available, with the weekly limit kept in the detail card. If Claude returns only a weekly limit, the rail uses that reading. Codex and Cursor keep their existing limit selection.
 
 Hover over the rail to open the detail card. The card shows:
 
@@ -52,6 +52,8 @@ If an app has not returned a fresh limit yet, the rail shows `--`. The card says
 ## Features
 
 - **Codex, Claude and Cursor in one rail:** the rail follows the app in front and shows only that app's usage.
+- **Upgrade-safe integrations:** upgrades preserve existing Claude and Cursor opt-ins, including their saved-sign-in sources. Explicit choices made in the current Settings take precedence over legacy values. New installs keep both integrations off until enabled.
+- **Official app icons:** the Codex and Cursor badges use assets from their official Windows applications.
 - **Claude Code aware:** recognises terminals and editors (Windows Terminal, VS Code, Cursor and others) running Claude Code, and keeps your existing Claude Code status line working.
 - **Remaining usage first:** the default view answers the useful question: how much do I have left?
 - **Complete main-limit details:** inspect the primary and secondary usage windows for the main Codex limit without model-specific clutter.

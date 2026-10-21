@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace CodexUsage.Core.Settings;
 
 public enum AppTheme
@@ -22,6 +24,35 @@ public enum PrimaryUsageDisplay
 
 public sealed record OverlaySettings
 {
+    /// <summary>Preserves opt-ins from earlier settings without overriding an explicit current choice.</summary>
+    public static OverlaySettings FromJson(string json)
+    {
+        var settings = JsonSerializer.Deserialize<OverlaySettings>(json) ?? new OverlaySettings();
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+        if (root.ValueKind != JsonValueKind.Object) return settings.Normalize();
+
+        bool Has(string name) => root.TryGetProperty(name, out _);
+        bool? Legacy(string name)
+        {
+            if (!root.TryGetProperty(name, out var value)) return null;
+            return value.ValueKind is JsonValueKind.True or JsonValueKind.False
+                ? value.GetBoolean()
+                : throw new JsonException($"Expected a boolean setting for {name}.");
+        }
+        var desktop = Legacy("ClaudeDesktopUsageEnabled");
+        var code = Legacy("ClaudeCodeUsageEnabled");
+        var cursor = Legacy("CursorUsageEnabled");
+        return (settings with
+        {
+            ClaudeEnabled = Has(nameof(ClaudeEnabled)) ? settings.ClaudeEnabled : desktop == true || code == true,
+            ClaudeStatusLineEnabled = Has(nameof(ClaudeStatusLineEnabled)) ? settings.ClaudeStatusLineEnabled : code ?? settings.ClaudeStatusLineEnabled,
+            ClaudeAccountUsageEnabled = Has(nameof(ClaudeAccountUsageEnabled)) ? settings.ClaudeAccountUsageEnabled : desktop ?? settings.ClaudeAccountUsageEnabled,
+            CursorEnabled = Has(nameof(CursorEnabled)) ? settings.CursorEnabled : cursor ?? settings.CursorEnabled,
+            CursorAccountUsageEnabled = Has(nameof(CursorAccountUsageEnabled)) ? settings.CursorAccountUsageEnabled : cursor ?? settings.CursorAccountUsageEnabled
+        }).Normalize();
+    }
+
     public AppTheme Theme { get; init; } = AppTheme.System;
 
     public HorizontalPlacement Placement { get; init; } = HorizontalPlacement.RightEdge;

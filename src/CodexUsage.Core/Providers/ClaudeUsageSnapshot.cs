@@ -143,7 +143,7 @@ public sealed record ClaudeUsageSnapshot(
             isStale ? ProviderConnection.Stale : ProviderConnection.Live,
             RelativeTimeFormatter.FormatAge(updatedAt, now),
             isStale ? "Updates when Claude Code replies again." : string.Empty,
-            UsageWindowOrdering.MostConstrainedFirst(windows),
+            windows,
             updatedAt);
     }
 
