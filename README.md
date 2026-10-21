@@ -17,9 +17,9 @@ Built by [Haroone.com](https://haroone.com).
 
 | App | Where the rail appears | Where the numbers come from | Setup |
 | --- | --- | --- | --- |
-| **Codex** | The Codex desktop app | The documented Codex App Server `account/rateLimits/*` methods, through the Codex CLI already signed in on your PC | On by default |
-| **Claude** | The Claude desktop app, and any terminal or editor window running Claude Code | Your Pro or Max plan's 5-hour and weekly limits, which Claude Code passes to its status line. Optionally (unofficial) read from your Claude sign-in | Turn on **Claude** in Settings |
-| **Cursor** *(experimental)* | The Cursor editor | Your plan usage from your Cursor sign-in (unofficial), or your spend from the official team Admin API | Turn on **Cursor** and choose a source |
+| <img src="src/UsageOverlay/Assets/Logos/codex.png" width="28" height="28" alt=""> **Codex** | The Codex desktop app | The documented Codex App Server `account/rateLimits/*` methods, through the Codex CLI already signed in on your PC | On by default |
+| <img src="docs/images/providers/claude.png" width="28" height="28" alt=""> **Claude** | The Claude desktop app, and any terminal or editor window running Claude Code | Your Pro or Max plan's 5-hour and weekly limits, which Claude Code passes to its status line. Optionally (unofficial) read from your Claude sign-in | Turn on **Claude** in Settings |
+| <img src="src/UsageOverlay/Assets/Logos/cursor.png" width="28" height="28" alt=""> **Cursor** *(experimental)* | The Cursor editor | Your plan usage from your Cursor sign-in (unofficial), or your spend from the official team Admin API | Turn on **Cursor** and choose a source |
 
 Claude's plan limits are shared across Claude.ai, the desktop app and Claude Code, so one reading serves all of them. It refreshes whenever Claude Code replies; between replies the card shows how old the reading is.
 
