@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace CodexUsage.Core.Settings;
 
 public enum AppTheme
@@ -22,6 +24,35 @@ public enum PrimaryUsageDisplay
 
 public sealed record OverlaySettings
 {
+    /// <summary>Preserves opt-ins from earlier settings without overriding an explicit current choice.</summary>
+    public static OverlaySettings FromJson(string json)
+    {
+        var settings = JsonSerializer.Deserialize<OverlaySettings>(json) ?? new OverlaySettings();
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+        if (root.ValueKind != JsonValueKind.Object) return settings.Normalize();
+
+        bool Has(string name) => root.TryGetProperty(name, out _);
+        bool? Legacy(string name)
+        {
+            if (!root.TryGetProperty(name, out var value)) return null;
+            return value.ValueKind is JsonValueKind.True or JsonValueKind.False
+                ? value.GetBoolean()
+                : throw new JsonException($"Expected a boolean setting for {name}.");
+        }
+        var desktop = Legacy("ClaudeDesktopUsageEnabled");
+        var code = Legacy("ClaudeCodeUsageEnabled");
+        var cursor = Legacy("CursorUsageEnabled");
+        return (settings with
+        {
+            ClaudeEnabled = Has(nameof(ClaudeEnabled)) ? settings.ClaudeEnabled : desktop == true || code == true,
+            ClaudeStatusLineEnabled = Has(nameof(ClaudeStatusLineEnabled)) ? settings.ClaudeStatusLineEnabled : code ?? settings.ClaudeStatusLineEnabled,
+            ClaudeAccountUsageEnabled = Has(nameof(ClaudeAccountUsageEnabled)) ? settings.ClaudeAccountUsageEnabled : desktop ?? settings.ClaudeAccountUsageEnabled,
+            CursorEnabled = Has(nameof(CursorEnabled)) ? settings.CursorEnabled : cursor ?? settings.CursorEnabled,
+            CursorAccountUsageEnabled = Has(nameof(CursorAccountUsageEnabled)) ? settings.CursorAccountUsageEnabled : cursor ?? settings.CursorAccountUsageEnabled
+        }).Normalize();
+    }
+
     public AppTheme Theme { get; init; } = AppTheme.System;
 
     public HorizontalPlacement Placement { get; init; } = HorizontalPlacement.RightEdge;
@@ -36,7 +67,27 @@ public sealed record OverlaySettings
 
     public bool HideInFullscreen { get; init; }
 
+    /// <summary>Shows the rail only while a supported app (Codex, Claude or Cursor) is active.</summary>
     public bool ShowOnlyWhenCodexActive { get; init; } = true;
+
+    public bool CodexEnabled { get; init; } = true;
+
+    /// <summary>Tracks Claude usage. The sources below decide where readings come from.</summary>
+    public bool ClaudeEnabled { get; init; }
+
+    /// <summary>Official source: Claude Code's status line reports plan limits after each reply.</summary>
+    public bool ClaudeStatusLineEnabled { get; init; } = true;
+
+    /// <summary>Unofficial source: the usage endpoint behind Claude's usage page, using Claude Code's saved sign-in.</summary>
+    public bool ClaudeAccountUsageEnabled { get; init; }
+
+    /// <summary>Reads Cursor team spend through the Admin API. Experimental.</summary>
+    public bool CursorEnabled { get; init; }
+
+    public string CursorAccountEmail { get; init; } = string.Empty;
+
+    /// <summary>Unofficial source: Cursor's dashboard usage, using the editor's saved sign-in.</summary>
+    public bool CursorAccountUsageEnabled { get; init; }
 
     public bool FollowCodexAcrossMonitors { get; init; } = true;
 
@@ -49,6 +100,9 @@ public sealed record OverlaySettings
     public bool AnimationsEnabled { get; init; } = true;
 
     public bool ShowCompactPercentage { get; init; } = true;
+
+    /// <summary>Lists the other enabled apps in the detail card. Off: each app shows only its own usage.</summary>
+    public bool ShowOtherApps { get; init; }
 
     public bool NotificationsEnabled { get; init; }
 
@@ -81,6 +135,12 @@ public sealed record OverlaySettings
             cliPath = cliPath[..1_024];
         }
 
+        var cursorEmail = (CursorAccountEmail ?? string.Empty).Trim();
+        if (cursorEmail.Length > 254)
+        {
+            cursorEmail = cursorEmail[..254];
+        }
+
         return this with
         {
             Theme = theme,
@@ -93,6 +153,7 @@ public sealed record OverlaySettings
             WarningThreshold = warningThreshold,
             CriticalThreshold = criticalThreshold,
             CodexCliPath = cliPath,
+            CursorAccountEmail = cursorEmail,
             RefreshIntervalSeconds = Math.Clamp(RefreshIntervalSeconds, 15, 3_600)
         };
     }

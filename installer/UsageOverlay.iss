@@ -53,6 +53,10 @@ Name: "{autoprograms}\Usage Overlay"; Filename: "{app}\UsageOverlay.exe"; Parame
 [Run]
 Filename: "{app}\UsageOverlay.exe"; Description: "Launch Usage Overlay"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
 
+[UninstallRun]
+; Restore Claude Code's previous status line if the Claude integration is on.
+Filename: "{app}\UsageOverlay.exe"; Parameters: "--disconnect-claude"; Flags: runhidden waituntilterminated; RunOnceId: "DisconnectClaudeCode"
+
 [UninstallDelete]
 Type: files; Name: "{userstartup}\Usage Overlay.lnk"
 Type: files; Name: "{userstartup}\QuotaRail for Codex.lnk"

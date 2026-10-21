@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.4.1] - 2026-10-21
+
+### Fixed
+
+- Read Cursor’s current editor allowance directly instead of the website’s separate monthly summary, which can incorrectly show 100% remaining. Preserve the editor’s returned reset time.
+
+- Preserve legacy Claude and Cursor enabled settings and saved-sign-in sources when upgrading. Explicit current settings, including opt-outs, take precedence.
+- Show Claude's 5-hour limit on the rail when available; keep weekly usage in the detail card and retain the weekly-only fallback. Cursor and Codex limit selection is unchanged.
+- Bundle official Codex and Cursor application icons instead of generic badges.
+
+## [0.4.0] - 2026-10-20
+
+### Added
+
+- Claude support: the rail appears beside the Claude desktop app and beside terminals and editors running Claude Code, showing the 5-hour and weekly plan limits that Claude Code passes to its status line. It's opt-in, keeps an existing status line working, and restores it when turned off or uninstalled.
+- Experimental Cursor support through Cursor's official team Admin API, with the key stored encrypted with Windows DPAPI.
+- Opt-in unofficial sources: Claude usage from Claude Code's saved sign-in (works when only the desktop app is used), and Cursor plan usage from the editor's saved sign-in (works with individual plans).
+- An optional **Other apps** section in the detail card, and a tray tooltip summarising every enabled app.
+- An **Apps** section in Settings to turn Codex, Claude and Cursor on or off.
+- `--provider=` demo option for previewing each app.
+
+### Changed
+
+- The rail follows whichever supported app is in front, and leads with the limit closest to running out.
+- The detail card sizes itself to its content.
+- Visibility, fullscreen, monitor and theme settings now apply to every supported app.
+- Diagnostic logs also redact `key_`-prefixed API keys.
+
 ## [0.3.1] - 2026-09-08
 
 ### Fixed

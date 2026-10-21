@@ -13,6 +13,7 @@ public static partial class LogSanitizer
         sanitized = BearerPattern().Replace(sanitized, "Bearer [REDACTED]");
         sanitized = NamedSecretPattern().Replace(sanitized, "$1[REDACTED]");
         sanitized = OpenAiKeyPattern().Replace(sanitized, "[REDACTED]");
+        sanitized = PrefixedKeyPattern().Replace(sanitized, "[REDACTED]");
 
         return sanitized.Length <= MaximumMessageLength
             ? sanitized
@@ -38,5 +39,11 @@ public static partial class LogSanitizer
         "\\bsk-[A-Za-z0-9_-]{12,}\\b",
         RegexOptions.CultureInvariant)]
     private static partial Regex OpenAiKeyPattern();
+
+    // Admin and API keys that use a "key_" prefix, such as Cursor Admin API keys.
+    [GeneratedRegex(
+        "\\bkey_[A-Za-z0-9_-]{16,}\\b",
+        RegexOptions.CultureInvariant)]
+    private static partial Regex PrefixedKeyPattern();
 }
 

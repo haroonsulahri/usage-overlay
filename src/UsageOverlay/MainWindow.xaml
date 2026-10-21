@@ -56,11 +56,21 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Codex usage"
-                               VerticalAlignment="Center"
-                               Foreground="{DynamicResource OverlayTextBrush}"
-                               FontSize="{StaticResource OverlayTextBody}"
-                               FontWeight="Medium" />
+                    <Grid VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border x:Name="HeaderBadgeHost" Margin="0,0,7,0" VerticalAlignment="Center" />
+                        <TextBlock x:Name="HeaderText"
+                                   Grid.Column="1"
+                                   Text="Codex"
+                                   VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{DynamicResource OverlayTextBrush}"
+                                   FontSize="{StaticResource OverlayTextBody}"
+                                   FontWeight="Medium" />
+                    </Grid>
                     <StackPanel Grid.Column="1"
                                 Margin="0,0,10,0"
                                 Orientation="Horizontal"
@@ -97,20 +107,30 @@
                     <TextBlock x:Name="UsagePercentText"
                                Margin="0,2,0,0"
                                Text="Loading usage…"
+                               TextWrapping="Wrap"
                                Foreground="{DynamicResource OverlayTextBrush}"
                                FontSize="{StaticResource OverlayTextValue}"
                                FontWeight="Medium" />
                     <TextBlock x:Name="ResetText"
                                Margin="0,3,0,0"
+                               TextWrapping="Wrap"
                                Text="Connecting to Codex…"
                                Foreground="{DynamicResource OverlayMutedBrush}"
                                FontSize="{StaticResource OverlayTextSmall}" />
+                    <TextBlock x:Name="SummaryText"
+                               Margin="0,3,0,0"
+                               Visibility="Collapsed"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource OverlayMutedBrush}"
+                               FontSize="{StaticResource OverlayTextSmall}" />
                     <StackPanel x:Name="AdditionalLimitsPanel" />
+                    <StackPanel x:Name="OtherAppsPanel" Visibility="Collapsed" />
                     <Border Margin="0,10,0,0"
                             Padding="0,9,0,0"
                             BorderBrush="{DynamicResource OverlayBorderBrush}"
                             BorderThickness="0,1,0,0">
-                        <Button HorizontalAlignment="Right"
+                        <Button x:Name="ViewUsageButton"
+                                HorizontalAlignment="Right"
                                 Padding="2,0"
                                 Background="Transparent"
                                 BorderThickness="0"

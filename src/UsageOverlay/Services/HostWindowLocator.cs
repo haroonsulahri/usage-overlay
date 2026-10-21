@@ -1,27 +1,31 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using CodexUsage.Core.Providers;
 using CodexUsage.Core.Windows;
 
 namespace UsageOverlay.Services;
 
-public sealed class CodexWindowLocator
+/// <summary>Finds the foreground window of a supported AI app and measures it.</summary>
+public static class HostWindowLocator
 {
     private const int DwmExtendedFrameBounds = 9;
     private const uint GetAncestorRoot = 2;
     private const uint MonitorDefaultToNearest = 2;
 
-    public static bool TryGetActiveBounds(out WindowBounds bounds)
+    /// <param name="isEnabled">Whether the rail should attach to a provider's app.</param>
+    /// <param name="isClaudeCodeHost">
+    /// Recognises terminals and editors running Claude Code, which have no fixed identity.
+    /// </param>
+    public static bool TryGetActiveHost(
+        Func<UsageProviderKind, bool> isEnabled,
+        Func<uint, bool> isClaudeCodeHost,
+        out ActiveHost host)
     {
-        return TryGetActiveBounds(out bounds, out _);
-    }
-
-    public static bool TryGetActiveBounds(out WindowBounds bounds, out bool? isLightTheme)
-    {
-        bounds = default;
-        isLightTheme = null;
+        host = default;
         var window = GetAncestor(GetForegroundWindow(), GetAncestorRoot);
 
-        if (window == IntPtr.Zero || !IsWindowVisible(window) || IsIconic(window) || !IsCodexWindow(window))
+        if (window == IntPtr.Zero || !IsWindowVisible(window) || IsIconic(window) ||
+            !TryClassify(window, isEnabled, isClaudeCodeHost, out var provider))
         {
             return false;
         }
@@ -37,15 +41,17 @@ public sealed class CodexWindowLocator
         }
 
         var isFullscreen = IsFullscreen(window, rectangle);
-        isLightTheme = TryDetectLightTheme(rectangle);
         var dpi = GetDpiForWindow(window);
         var scale = dpi > 0 ? dpi / 96d : 1d;
-        bounds = new WindowBounds(
-            rectangle.Left / scale,
-            rectangle.Top / scale,
-            rectangle.Right / scale,
-            rectangle.Bottom / scale,
-            isFullscreen);
+        host = new ActiveHost(
+            provider,
+            new WindowBounds(
+                rectangle.Left / scale,
+                rectangle.Top / scale,
+                rectangle.Right / scale,
+                rectangle.Bottom / scale,
+                isFullscreen),
+            TryDetectLightTheme(rectangle));
         return true;
     }
 
@@ -127,8 +133,13 @@ public sealed class CodexWindowLocator
                Math.Abs(windowRectangle.Bottom - monitorInfo.Monitor.Bottom) <= tolerance;
     }
 
-    private static bool IsCodexWindow(IntPtr window)
+    private static bool TryClassify(
+        IntPtr window,
+        Func<UsageProviderKind, bool> isEnabled,
+        Func<uint, bool> isClaudeCodeHost,
+        out UsageProviderKind provider)
     {
+        provider = UsageProviderKind.Codex;
         if (GetWindowThreadProcessId(window, out var processId) == 0)
         {
             return false;
@@ -139,13 +150,26 @@ public sealed class CodexWindowLocator
             using var process = Process.GetProcessById((int)processId);
             var executablePath = process.MainModule?.FileName ?? string.Empty;
             var title = GetTitle(window);
-            return CodexWindowIdentity.IsMainWindow(executablePath, process.ProcessName, title);
+            if (HostApplicationIdentity.Classify(executablePath, process.ProcessName, title) is { } app &&
+                isEnabled(app))
+            {
+                provider = app;
+                return true;
+            }
         }
         catch (Exception exception) when (
             exception is ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception)
         {
-            return false;
+            // Protected or exited processes can still be Claude Code hosts below.
         }
+
+        if (isEnabled(UsageProviderKind.Claude) && isClaudeCodeHost(processId))
+        {
+            provider = UsageProviderKind.Claude;
+            return true;
+        }
+
+        return false;
     }
 
     private static string GetTitle(IntPtr window)
@@ -232,6 +256,11 @@ public sealed class CodexWindowLocator
         public uint Flags;
     }
 }
+
+public readonly record struct ActiveHost(
+    UsageProviderKind Provider,
+    WindowBounds Bounds,
+    bool? IsLightTheme);
 
 public readonly record struct WindowBounds(
     double Left,

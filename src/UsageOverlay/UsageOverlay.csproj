@@ -14,9 +14,15 @@
     <Company>Haroone.com</Company>
     <Authors>Haroone.com</Authors>
     <Copyright>Copyright (c) 2026 Haroone.com</Copyright>
-    <Description>Unofficial Windows usage overlay for Codex.</Description>
+    <Description>Unofficial Windows usage rail for Codex, Claude and Cursor.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <StartupObject>UsageOverlay.Program</StartupObject>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CodexUsage.Core\CodexUsage.Core.csproj" />
@@ -24,5 +30,6 @@
 
   <ItemGroup>
     <Resource Include="Assets\UsageOverlay.ico" />
+    <Resource Include="Assets\Logos\*.png" />
   </ItemGroup>
 </Project>

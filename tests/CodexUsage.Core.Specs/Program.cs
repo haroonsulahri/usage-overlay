@@ -26,7 +26,22 @@ var specs = new (string Name, Action Run)[]
     ("Redacts secrets from diagnostic logs", RedactsDiagnosticSecrets),
     ("Loads legacy settings with new safe defaults", LoadsLegacySettings),
     ("Recognizes only the main Codex window", RecognizesOnlyMainCodexWindow),
-    ("Keeps a custom-positioned rail fixed while expanding", KeepsCustomRailFixedWhileExpanding)
+    ("Keeps a custom-positioned rail fixed while expanding", KeepsCustomRailFixedWhileExpanding),
+    ("Parses Claude Code status-line plan limits", ProviderSpecs.ParsesClaudeStatusLine),
+    ("Tolerates Claude status lines without plan limits", ProviderSpecs.ToleratesClaudeStatusLineWithoutLimits),
+    ("Keeps the last Claude limits and tracks host sessions", ProviderSpecs.KeepsLastClaudeLimitsAndTracksHosts),
+    ("Leads Claude usage with the 5-hour window", ProviderSpecs.BuildsClaudeStateWithFiveHourLead),
+    ("Preserves legacy integrations and current opt-outs", SettingsMigrationSpecs.Run),
+    ("Parses Cursor team spend for one member", ProviderSpecs.ParsesCursorTeamSpend),
+    ("Shows Cursor spend without a limit", ProviderSpecs.ShowsCursorSpendWithoutLimit),
+    ("Maps Codex connection states to provider states", ProviderSpecs.MapsCodexStatuses),
+    ("Recognizes Codex, Claude and Cursor windows", ProviderSpecs.RecognizesSupportedApps),
+    ("Keeps new providers opt-in for existing settings", ProviderSpecs.LoadsProviderSettingsSafely),
+    ("Tracks thresholds separately per provider", ProviderSpecs.TracksThresholdsPerProvider),
+    ("Parses Claude account credentials and usage", ProviderSpecs.ParsesClaudeAccountUsage),
+    ("Parses Cursor account usage", ProviderSpecs.ParsesCursorAccountUsage),
+    ("Reads Cursor’s current editor allowance without spend fields", ProviderSpecs.ParsesCurrentCursorAllowance),
+    ("Reads JWT subject and expiry", ProviderSpecs.ReadsJwtClaims)
 };
 
 var failures = new List<string>();
@@ -302,13 +317,15 @@ static void NormalizesThemeSettings()
 static void RedactsDiagnosticSecrets()
 {
     const string message =
-        "Authorization: Bearer abc.def.ghi access_token=token-value api_key=key-value sk-example123456789";
+        "Authorization: Bearer abc.def.ghi access_token=token-value api_key=key-value sk-example123456789 " +
+        "key_0123456789abcdef0123456789";
     var sanitized = LogSanitizer.Sanitize(message);
 
     Assert(!sanitized.Contains("abc.def.ghi", StringComparison.Ordinal), "Bearer token was not redacted.");
     Assert(!sanitized.Contains("token-value", StringComparison.Ordinal), "Access token was not redacted.");
     Assert(!sanitized.Contains("key-value", StringComparison.Ordinal), "API key was not redacted.");
     Assert(!sanitized.Contains("sk-example123456789", StringComparison.Ordinal), "OpenAI key was not redacted.");
+    Assert(!sanitized.Contains("key_0123456789abcdef", StringComparison.Ordinal), "Prefixed admin key was not redacted.");
     Assert(sanitized.Contains("[REDACTED]", StringComparison.Ordinal), "Redaction marker was missing.");
 }
 
