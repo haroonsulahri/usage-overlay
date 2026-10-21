@@ -69,7 +69,7 @@ internal static class ProviderSpecs
         AssertEqual(80d, roundTripped.SevenDay!.UsedPercent);
     }
 
-    public static void BuildsClaudeStateWithMostConstrainedLead()
+    public static void BuildsClaudeStateWithFiveHourLead()
     {
         var snapshot = ClaudeUsageSnapshot.Empty.Apply(
             new ClaudeRateLimits(
@@ -81,7 +81,10 @@ internal static class ProviderSpecs
 
         var live = snapshot.ToState(Now.AddMinutes(3));
         AssertEqual(ProviderConnection.Live, live.Connection);
-        AssertEqual("claude:seven_day", live.Lead!.Key);
+        AssertEqual("claude:five_hour", live.Lead!.Key);
+        AssertEqual("claude:seven_day", live.Windows[1].Key);
+        var weeklyOnly = (snapshot with { FiveHour = null }).ToState(Now);
+        AssertEqual("claude:seven_day", weeklyOnly.Lead!.Key);
         AssertEqual("Updated 3m ago", live.StatusText);
 
         var stale = snapshot.ToState(Now.AddHours(3));

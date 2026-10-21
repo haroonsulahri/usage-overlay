@@ -39,7 +39,7 @@ public sealed class OverlaySettingsStore
             try
             {
                 var legacyJson = File.ReadAllText(legacyPath);
-                var migrated = (JsonSerializer.Deserialize<OverlaySettings>(legacyJson) ?? new OverlaySettings()).Normalize();
+                var migrated = OverlaySettings.FromJson(legacyJson);
                 Save(migrated);
                 if (File.Exists(_path))
                 {
@@ -61,7 +61,7 @@ public sealed class OverlaySettingsStore
         try
         {
             var json = File.ReadAllText(_path);
-            return (JsonSerializer.Deserialize<OverlaySettings>(json) ?? new OverlaySettings()).Normalize();
+            return OverlaySettings.FromJson(json);
         }
         catch (Exception exception) when (exception is IOException or JsonException or UnauthorizedAccessException)
         {
