@@ -40,6 +40,7 @@ var specs = new (string Name, Action Run)[]
     ("Tracks thresholds separately per provider", ProviderSpecs.TracksThresholdsPerProvider),
     ("Parses Claude account credentials and usage", ProviderSpecs.ParsesClaudeAccountUsage),
     ("Parses Cursor account usage", ProviderSpecs.ParsesCursorAccountUsage),
+    ("Reads Cursor’s current editor allowance without spend fields", ProviderSpecs.ParsesCurrentCursorAllowance),
     ("Reads JWT subject and expiry", ProviderSpecs.ReadsJwtClaims)
 };
 

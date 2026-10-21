@@ -102,9 +102,11 @@ public static class ClaudeStatusLineParser
             if (element.ValueKind == JsonValueKind.String)
             {
                 var text = element.GetString();
-                if (long.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var seconds))
+                if (long.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var timestamp))
                 {
-                    value = DateTimeOffset.FromUnixTimeSeconds(seconds);
+                    value = timestamp > 100_000_000_000
+                        ? DateTimeOffset.FromUnixTimeMilliseconds(timestamp)
+                        : DateTimeOffset.FromUnixTimeSeconds(timestamp);
                     return true;
                 }
 

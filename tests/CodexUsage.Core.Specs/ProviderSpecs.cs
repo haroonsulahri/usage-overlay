@@ -266,6 +266,30 @@ internal static class ProviderSpecs
         Assert(!CursorAccountUsageParser.TryParse("{}", Now, out _), "Unexpected payloads are rejected.");
     }
 
+    public static void ParsesCurrentCursorAllowance()
+    {
+        const string editor = """
+            {
+              "billingCycleStart": "1792200180394",
+              "billingCycleEnd": "1792804980394",
+              "planUsage": {
+                "remainingBonus": false,
+                "autoPercentUsed": 60.65005417118093,
+                "apiPercentUsed": 0,
+                "totalPercentUsed": 60.65005417118093
+              },
+              "spendLimitUsage": { "limitType": "user" }
+            }
+            """;
+        Assert(CursorAccountUsageParser.TryParse(editor, Now, out var state), "Current editor quota parses without spend fields.");
+        AssertEqual(60.65005417118093, state.Lead!.Window.UsedPercent);
+        AssertEqual(39d, Math.Round(100 - state.Lead.Window.UsedPercent));
+        AssertEqual(DateTimeOffset.FromUnixTimeMilliseconds(1792804980394), state.Lead.Window.ResetsAt);
+        AssertEqual("Auto 61%  ·  API 0%", state.Summary);
+        Assert(CursorAccountUsageParser.TryParse("""{"planUsage":{}}""", Now, out var missing), "Missing quota remains a readable state.");
+        Assert(!missing.HasUsage, "Missing quota must not become a full allowance.");
+    }
+
     public static void ReadsJwtClaims()
     {
         static string Encode(string json) =>

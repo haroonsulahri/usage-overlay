@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- Read Cursor’s current editor allowance directly instead of the website’s separate monthly summary, which can incorrectly show 100% remaining. Preserve the editor’s returned reset time.
+
 - Preserve legacy Claude and Cursor enabled settings and saved-sign-in sources when upgrading. Explicit current settings, including opt-outs, take precedence.
 - Show Claude's 5-hour limit on the rail when available; keep weekly usage in the detail card and retain the weekly-only fallback. Cursor and Codex limit selection is unchanged.
 - Bundle official Codex and Cursor application icons instead of generic badges.

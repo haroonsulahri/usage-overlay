@@ -18,7 +18,6 @@ namespace UsageOverlay.Services;
 public sealed class CursorUsageProvider : UsageProvider
 {
     private static readonly Uri SpendEndpoint = new("https://api.cursor.com/teams/spend");
-    private static readonly Uri UsageSummaryEndpoint = new("https://cursor.com/api/usage-summary");
     private static readonly Uri PeriodUsageEndpoint =
         new("https://api2.cursor.sh/aiserver.v1.DashboardService/GetCurrentPeriodUsage");
     private static readonly TimeSpan PollInterval = TimeSpan.FromMinutes(15);
@@ -166,7 +165,7 @@ public sealed class CursorUsageProvider : UsageProvider
             return;
         }
 
-        if (!JwtClaims.TryRead(token, out var subject, out var expiresAt))
+        if (!JwtClaims.TryRead(token, out _, out var expiresAt))
         {
             _lastReading = null;
             Publish(Unavailable("Sign in", "Cursor’s saved sign-in isn’t readable. Sign in to Cursor again."));
@@ -188,46 +187,30 @@ public sealed class CursorUsageProvider : UsageProvider
 
         try
         {
-            // The dashboard expects the WorkOS session cookie: "<user id>::<access token>".
-            var userId = subject.Contains('|', StringComparison.Ordinal) ? subject[(subject.LastIndexOf('|') + 1)..] : subject;
-            using var summaryRequest = new HttpRequestMessage(HttpMethod.Get, UsageSummaryEndpoint);
-            summaryRequest.Headers.TryAddWithoutValidation(
-                "Cookie",
-                $"WorkosCursorSessionToken={Uri.EscapeDataString(userId)}%3A%3A{token}");
-            using var summary = await _client.SendAsync(summaryRequest, cancellationToken).ConfigureAwait(false);
-            string? json = summary.IsSuccessStatusCode
-                ? await summary.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false)
-                : null;
-
-            if (json is null)
+            // Use the editor's current allowance. The website summary can report an
+            // unused monthly pool while the editor's active quota is already partly spent.
+            using var request = new HttpRequestMessage(HttpMethod.Post, PeriodUsageEndpoint)
             {
-                // Fall back to the editor's own usage API, which takes the token directly.
-                using var periodRequest = new HttpRequestMessage(HttpMethod.Post, PeriodUsageEndpoint)
-                {
-                    Content = new StringContent("{}", Encoding.UTF8, "application/json")
-                };
-                periodRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                periodRequest.Headers.TryAddWithoutValidation("Connect-Protocol-Version", "1");
-                using var period = await _client.SendAsync(periodRequest, cancellationToken).ConfigureAwait(false);
-                if (period.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden &&
-                    summary.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
-                {
-                    _lastReading = null;
-                    Publish(Unavailable("Sign in", "Cursor didn’t accept the saved sign-in. Open Cursor to refresh it."));
-                    _logger.Error("Cursor account usage was rejected.");
-                    return;
-                }
-
-                if (!period.IsSuccessStatusCode)
-                {
-                    PublishFailure(
-                        $"Cursor usage returned HTTP {(int)summary.StatusCode} and {(int)period.StatusCode}.");
-                    return;
-                }
-
-                json = await period.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                Content = new StringContent("{}", Encoding.UTF8, "application/json")
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Headers.TryAddWithoutValidation("Connect-Protocol-Version", "1");
+            using var response = await _client.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+            {
+                _lastReading = null;
+                Publish(Unavailable("Sign in", "Cursor didn’t accept the saved sign-in. Open Cursor to refresh it."));
+                _logger.Error("Cursor account usage was rejected.");
+                return;
             }
 
+            if (!response.IsSuccessStatusCode)
+            {
+                PublishFailure($"Cursor editor usage returned HTTP {(int)response.StatusCode}.");
+                return;
+            }
+
+            var json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             if (!CursorAccountUsageParser.TryParse(json, DateTimeOffset.UtcNow, out var state))
             {
                 PublishFailure("Cursor’s usage response has changed; this unofficial source may need an update.");
@@ -236,7 +219,7 @@ public sealed class CursorUsageProvider : UsageProvider
 
             _lastReading = state;
             Publish(state);
-            _logger.Info("Cursor usage updated from the saved sign-in.");
+            _logger.Info("Cursor editor usage updated from the saved sign-in.");
         }
         catch (Exception exception) when (
             (exception is HttpRequestException or TaskCanceledException) && !cancellationToken.IsCancellationRequested)
