@@ -28,7 +28,7 @@ Claude's plan limits are shared across Claude.ai, the desktop app and Claude Cod
 Neither the Claude desktop app nor individual Cursor plans offer an official usage API. Two opt-in options fill that gap:
 
 - **Read usage from my Claude sign-in:** uses the OAuth sign-in Claude Code saved in `~\.claude\.credentials.json` to call `https://api.anthropic.com/api/oauth/usage` every 5 minutes, the endpoint behind Claude's usage page. Use this if you mostly work in the Claude desktop app. Claude Code must have been signed in on this PC once.
-- **Read usage from my Cursor sign-in:** reads the access token the Cursor editor saved in `%APPDATA%\Cursor\User\globalStorage\state.vscdb` (opened read-only) and calls `https://cursor.com/api/usage-summary`, the endpoint behind Cursor's usage dashboard, every 5 minutes.
+- **Read usage from my Cursor sign-in:** reads the access token the Cursor editor saved in `%APPDATA%\Cursor\User\globalStorage\state.vscdb` (opened read-only) and calls the editor’s `https://api2.cursor.sh/aiserver.v1.DashboardService/GetCurrentPeriodUsage` endpoint every 5 minutes. The rail shows the allowance and reset time reported by the editor; the website’s separate monthly usage summary is not used because it can report an unused pool while the editor’s current allowance is partly spent.
 
 Both are off by default. The tokens are only read when needed, sent only to their own service, and never stored, refreshed or logged by Usage Overlay. These endpoints are undocumented and may change or stop working. Anthropic's consumer terms also restrict how Claude sign-ins may be used, so turn the Claude option on only if you accept that risk.
 
