@@ -47,7 +47,7 @@ Hover over the rail to open the detail card. The card shows:
 
 The tray icon's tooltip summarises every enabled app, for example `Codex 62% left · Claude 40% left`.
 
-If an app has not returned a fresh limit yet, the rail shows `--`. The card says **Loading usage** while connecting and **Usage unavailable** if the limits cannot be read. It never presents an old Codex percentage as a current reading after the connection is lost; Claude and Cursor readings are labelled with their age.
+While connecting, the rail shows `…`. If usage needs attention it shows an amber `!`; hover for the reason or open the card for recovery actions. Claude distinguishes expired or missing sign-ins, access denial, connection failures, rate limits, service errors and unreadable responses. **Copy sign-in command** copies `claude auth login`; complete it in your terminal and browser, then choose **Retry now**. Claude desktop can remain signed in while Claude Code's saved sign-in expires. Other connection problems offer **Open settings** and **Retry now**, alongside **View usage**. Old readings are labelled as stale when a refresh fails; rejected or expired Claude sign-ins hide cached readings until sign-in succeeds.
 
 ## Features
 
