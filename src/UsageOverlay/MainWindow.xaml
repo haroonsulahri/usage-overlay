@@ -20,6 +20,36 @@
         Loaded="Window_OnLoaded"
         Closed="Window_OnClosed"
         SourceInitialized="Window_OnSourceInitialized">
+    <Window.Resources>
+        <Style x:Key="UsageActionLinkStyle" TargetType="Button">
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Padding" Value="2,0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="{StaticResource OverlayTextSmall}" />
+            <Setter Property="Foreground">
+                <Setter.Value><SolidColorBrush Color="{DynamicResource OverlayNormalColor}" /></Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <TextBlock x:Name="LinkText" Padding="{TemplateBinding Padding}"
+                                   Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}"
+                                   TextDecorations="Underline" />
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="LinkText" Property="Opacity" Value="0.78" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="LinkText" Property="Foreground" Value="{DynamicResource OverlayTextBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <Grid x:Name="OverlayRoot"
           Width="254"
           HorizontalAlignment="Right"
@@ -124,40 +154,18 @@
                                Foreground="{DynamicResource OverlayMutedBrush}"
                                FontSize="{StaticResource OverlayTextSmall}" />
                     <StackPanel x:Name="AdditionalLimitsPanel" />
+                    <StackPanel x:Name="RecoveryActionsPanel" Visibility="Collapsed" Margin="0,10,0,0">
+                        <Button x:Name="RecoveryActionButton" Style="{StaticResource UsageActionLinkStyle}"
+                                Click="RecoveryActionButton_OnClick" />
+                        <Button x:Name="RetryUsageButton" Content="Retry now" Margin="0,9,0,0"
+                                Style="{StaticResource UsageActionLinkStyle}" Click="RetryUsageButton_OnClick" />
+                    </StackPanel>
                     <StackPanel x:Name="OtherAppsPanel" Visibility="Collapsed" />
                     <Border Margin="0,10,0,0"
                             Padding="0,9,0,0"
                             BorderBrush="{DynamicResource OverlayBorderBrush}"
                             BorderThickness="0,1,0,0">
-                        <Button x:Name="ViewUsageButton"
-                                HorizontalAlignment="Right"
-                                Padding="2,0"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                Cursor="Hand"
-                                FontSize="{StaticResource OverlayTextSmall}"
-                                AutomationProperties.Name="View full Codex usage"
-                                ToolTip="Open full Codex usage"
-                                Click="ViewUsageLink_OnClick">
-                            <Button.Foreground>
-                                <SolidColorBrush Color="{StaticResource OverlayNormalColor}" />
-                            </Button.Foreground>
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <TextBlock x:Name="LinkText"
-                                               Padding="{TemplateBinding Padding}"
-                                               Text="{TemplateBinding Content}"
-                                               Foreground="{TemplateBinding Foreground}"
-                                               TextDecorations="Underline" />
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="LinkText" Property="Opacity" Value="0.78" />
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Button.Template>
-                            View usage
-                        </Button>
+                        <Button x:Name="ViewUsageButton" Style="{StaticResource UsageActionLinkStyle}" HorizontalAlignment="Right" AutomationProperties.Name="View full Codex usage" ToolTip="Open full Codex usage" Click="ViewUsageLink_OnClick">View usage</Button>
                     </Border>
                 </StackPanel>
 

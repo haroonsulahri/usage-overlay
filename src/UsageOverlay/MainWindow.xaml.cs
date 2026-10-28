@@ -824,11 +824,17 @@ public partial class MainWindow : Window
         var state = CurrentState;
         HeaderText.Text = state.DisplayName;
         HeaderBadgeHost.Child = ProviderBadge.Create(state.Provider, 18);
-        StatusText.Text = _options.DemoPercent is null ? state.StatusText : "Demo";
+        StatusText.Text = _options.DemoPercent is not null ? "Demo" : state.Connection switch
+        {
+            ProviderConnection.SignedOut => "Sign in",
+            ProviderConnection.Unavailable => "Unavailable",
+            ProviderConnection.Stale => "Stale",
+            _ => state.StatusText
+        };
         LiveDot.Fill = new SolidColorBrush((System.Windows.Media.Color)FindResource(state.Connection switch
         {
             ProviderConnection.Live => "OverlayNormalColor",
-            ProviderConnection.Stale => "OverlayWarningColor",
+            ProviderConnection.Stale or ProviderConnection.SignedOut or ProviderConnection.Unavailable => "OverlayWarningColor",
             _ => "OverlayMutedColor"
         }));
         RailRemainingText.Visibility = _settings.ShowCompactPercentage
@@ -847,6 +853,17 @@ public partial class MainWindow : Window
         }
 
         RenderOtherApps();
+        var needsHelp = state.Connection is ProviderConnection.SignedOut or ProviderConnection.Unavailable
+            or ProviderConnection.Disconnected or ProviderConnection.Off or ProviderConnection.Stale;
+        RecoveryActionsPanel.Visibility = needsHelp ? Visibility.Visible : Visibility.Collapsed;
+        RecoveryActionButton.Content = state.Provider == UsageProviderKind.Claude && state.Connection == ProviderConnection.SignedOut
+            ? "Copy sign-in command" : "Open settings";
+        AutomationProperties.SetName(RecoveryActionButton, $"{RecoveryActionButton.Content} for {state.DisplayName}");
+        RecoveryActionButton.ToolTip = state.Provider == UsageProviderKind.Claude && state.Connection == ProviderConnection.SignedOut
+            ? "Copy claude auth login. Run it in your terminal, then complete sign-in in your browser." : "Open usage source and connection settings";
+        RetryUsageButton.Visibility = state.Connection is ProviderConnection.Off or ProviderConnection.Disconnected
+            ? Visibility.Collapsed : Visibility.Visible;
+        AutomationProperties.SetName(RetryUsageButton, $"Retry {state.DisplayName} usage now");
         UpdateExpandedHeight();
     }
 
@@ -858,7 +875,10 @@ public partial class MainWindow : Window
         UsageFillBrush.BeginAnimation(SolidColorBrush.ColorProperty, null);
         UsageFillBrush.Color = (System.Windows.Media.Color)FindResource("OverlayMutedColor");
         LeadingCap.Opacity = 0;
-        RailRemainingText.Text = "--";
+        RailRemainingText.Text = state.Connection is ProviderConnection.SignedOut or ProviderConnection.Unavailable ? "!"
+            : state.Connection == ProviderConnection.Connecting ? "…" : "--";
+        RailRemainingText.Foreground = new SolidColorBrush((System.Windows.Media.Color)FindResource(
+            state.Connection is ProviderConnection.SignedOut or ProviderConnection.Unavailable ? "OverlayWarningColor" : "OverlayMutedColor"));
         BucketNameText.Text = state.DisplayName;
         BucketNameText.Visibility = Visibility.Collapsed;
         AdditionalLimitsPanel.Children.Clear();
@@ -868,9 +888,9 @@ public partial class MainWindow : Window
         {
             ProviderConnection.Live or ProviderConnection.Stale when state.Summary is not null => state.Summary,
             ProviderConnection.Off => $"{state.DisplayName} is off",
-            ProviderConnection.SignedOut => "Signed out",
+            ProviderConnection.SignedOut => state.StatusText,
             ProviderConnection.Disconnected => "CLI disconnected",
-            ProviderConnection.Unavailable => "Usage unavailable",
+            ProviderConnection.Unavailable => state.StatusText,
             _ when state.Provider == UsageProviderKind.Claude && state.StatusText == "Waiting" => "Waiting for Claude Code",
             _ => "Loading usage…"
         };
@@ -879,10 +899,13 @@ public partial class MainWindow : Window
 
         var summary = $"{state.DisplayName}: {UsagePercentText.Text}. {state.Detail}".Trim();
         AutomationProperties.SetName(RailHitTarget, summary);
+        RailHitTarget.ToolTip = summary;
     }
 
     private void ApplyUsage(ProviderUsageState state)
     {
+        RailRemainingText.Foreground = (System.Windows.Media.Brush)FindResource("OverlayMutedBrush");
+        RailHitTarget.ToolTip = state.Connection == ProviderConnection.Stale ? state.Detail : null;
         var lead = state.Windows[0];
         var usedPercent = UsageLevelResolver.Normalize(lead.Window.UsedPercent);
         var remainingPercent = UsageLevelResolver.RemainingFromUsed(usedPercent);
@@ -1798,6 +1821,36 @@ public partial class MainWindow : Window
     {
         OpenUri(UsageProviderCatalog.UsagePage(_displayedProvider));
         eventArgs.Handled = true;
+    }
+
+    private void RecoveryActionButton_OnClick(object sender, RoutedEventArgs eventArgs)
+    {
+        eventArgs.Handled = true;
+        if (CurrentState.Provider != UsageProviderKind.Claude || CurrentState.Connection != ProviderConnection.SignedOut)
+        {
+            ShowSettings();
+            return;
+        }
+
+        try
+        {
+            System.Windows.Clipboard.SetText("claude auth login");
+            RecoveryActionButton.Content = "Command copied";
+        }
+        catch (System.Runtime.InteropServices.ExternalException)
+        {
+            RecoveryActionButton.Content = "Copy failed. Try again";
+        }
+    }
+
+    private async void RetryUsageButton_OnClick(object sender, RoutedEventArgs eventArgs)
+    {
+        eventArgs.Handled = true;
+        var provider = Providers.FirstOrDefault(provider => provider.Kind == _displayedProvider && provider.IsRunning);
+        if (provider is not null)
+        {
+            await provider.RefreshAsync();
+        }
     }
 
     private void VisibilityMenuItem_OnClick(object sender, RoutedEventArgs eventArgs)

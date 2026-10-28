@@ -11,7 +11,12 @@ using UsageOverlay.Infrastructure;
 namespace UsageOverlay.Services;
 
 /// <param name="RateLimited">The service asked us to slow down; back off before retrying.</param>
-public sealed record ClaudeAccountFetch(ClaudeRateLimits? Limits, string? Problem, bool RateLimited = false);
+public sealed record ClaudeAccountFetch(
+    ClaudeRateLimits? Limits,
+    string? Problem,
+    bool RateLimited = false,
+    ProviderConnection Connection = ProviderConnection.Unavailable,
+    string StatusText = "Usage unavailable");
 
 /// <summary>
 /// Unofficial and opt-in: reads Claude plan limits from the endpoint behind Claude's usage
@@ -39,17 +44,17 @@ public sealed class ClaudeAccountUsageClient : IDisposable
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            return new ClaudeAccountFetch(null, "Couldn’t read Claude Code’s saved sign-in. Retrying…");
+            return new ClaudeAccountFetch(null, "The rail couldn’t read Claude Code’s saved sign-in. Check file access, then retry.", StatusText: "Sign-in unreadable");
         }
 
         if (!ClaudeAccountUsageParser.TryReadCredentials(credentials, out var token, out var expiresAt))
         {
-            return new ClaudeAccountFetch(null, "Sign in to Claude Code on this PC once: run claude, then /login.");
+            return new ClaudeAccountFetch(null, "The rail needs a Claude Code sign-in on this PC. Run claude auth login, finish in your browser, then retry.", Connection: ProviderConnection.SignedOut, StatusText: "Sign-in required");
         }
 
         if (expiresAt is { } expiry && expiry <= DateTimeOffset.UtcNow)
         {
-            return new ClaudeAccountFetch(null, "Claude’s saved sign-in has expired. Open Claude Code to refresh it.");
+            return new ClaudeAccountFetch(null, "The rail’s Claude Code sign-in has expired. Run claude auth login, finish in your browser, then retry. Claude desktop can stay signed in separately.", Connection: ProviderConnection.SignedOut, StatusText: "Sign-in expired");
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, UsageEndpoint);
@@ -60,28 +65,33 @@ public sealed class ClaudeAccountUsageClient : IDisposable
             using var response = await _client.SendAsync(request, cancellationToken).ConfigureAwait(false);
             if (response.StatusCode == HttpStatusCode.TooManyRequests)
             {
-                return new ClaudeAccountFetch(null, "Claude is limiting usage checks. Trying again later.", RateLimited: true);
+                return new ClaudeAccountFetch(null, "Claude is limiting usage checks. The rail will retry automatically with a longer delay.", RateLimited: true, StatusText: "Too many requests");
             }
 
-            if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                return new ClaudeAccountFetch(null, "Claude didn’t accept the saved sign-in. Open Claude Code to refresh it.");
+                return new ClaudeAccountFetch(null, "Claude rejected the rail’s saved sign-in. Run claude auth login, finish in your browser, then retry.", Connection: ProviderConnection.SignedOut, StatusText: "Sign-in rejected");
+            }
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                return new ClaudeAccountFetch(null, "Claude denied access to usage (HTTP 403). Check your account’s usage page and the enabled usage source in Settings.", StatusText: "Access denied");
             }
 
             if (!response.IsSuccessStatusCode)
             {
-                return new ClaudeAccountFetch(null, $"Claude returned HTTP {(int)response.StatusCode}. Retrying…");
+                return new ClaudeAccountFetch(null, $"Claude returned HTTP {(int)response.StatusCode}. The rail will retry automatically.", StatusText: "Service error");
             }
 
             var json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             return ClaudeAccountUsageParser.TryParseUsage(json, out var limits)
                 ? new ClaudeAccountFetch(limits, null)
-                : new ClaudeAccountFetch(null, "Claude’s usage response has changed; this unofficial source may need an update.");
+                : new ClaudeAccountFetch(null, "Claude returned no readable usage limits. This unofficial source may need an update. You can still check Claude’s usage page.", StatusText: "No readable limits");
         }
         catch (Exception exception) when (
             (exception is HttpRequestException or TaskCanceledException) && !cancellationToken.IsCancellationRequested)
         {
-            return new ClaudeAccountFetch(null, "Couldn’t reach Claude. Retrying…");
+            return new ClaudeAccountFetch(null, "The rail couldn’t reach Claude. Check your internet or VPN connection, then retry. It also retries automatically.", StatusText: "Connection failed");
         }
     }
 

@@ -20,7 +20,7 @@ public sealed class ClaudeUsageProvider : UsageProvider
     private readonly Dictionary<int, (bool IsRunning, DateTimeOffset CheckedAt)> _processChecks = new();
     private readonly ClaudeAccountUsageClient _accountClient;
     private ClaudeUsageSnapshot _snapshot = ClaudeUsageSnapshot.Empty;
-    private volatile string? _accountProblem;
+    private volatile ClaudeAccountFetch? _accountProblem;
     private volatile bool _accountUsageEnabled;
     private volatile bool _refreshAccountNow;
 
@@ -133,7 +133,9 @@ public sealed class ClaudeUsageProvider : UsageProvider
         {
             _refreshAccountNow = true;
             ReadSnapshot();
-            Publish(CurrentState(DateTimeOffset.UtcNow));
+            Publish(_accountUsageEnabled && !_snapshot.HasLimits
+                ? ProviderUsageState.Connecting(UsageProviderKind.Claude, "Checking Claude usage…")
+                : CurrentState(DateTimeOffset.UtcNow));
         }
 
         return Task.CompletedTask;
@@ -148,9 +150,14 @@ public sealed class ClaudeUsageProvider : UsageProvider
     private ProviderUsageState CurrentState(DateTimeOffset now)
     {
         var state = _snapshot.ToState(now);
-        return !state.HasUsage && _accountUsageEnabled && _accountProblem is { } problem
-            ? ProviderUsageState.Unavailable(UsageProviderKind.Claude, ProviderConnection.Unavailable, "Unavailable", problem)
-            : state;
+        if (_accountUsageEnabled && _accountProblem is { } problem)
+        {
+            return !state.HasUsage || problem.Connection == ProviderConnection.SignedOut
+                ? ProviderUsageState.Unavailable(UsageProviderKind.Claude, problem.Connection, problem.StatusText, problem.Problem ?? string.Empty)
+                : state with { Connection = ProviderConnection.Stale, StatusText = problem.StatusText, Detail = $"Showing the last reading. {problem.Problem}" };
+        }
+
+        return state;
     }
 
     protected override async Task RunAsync(CancellationToken cancellationToken)
@@ -175,12 +182,12 @@ public sealed class ClaudeUsageProvider : UsageProvider
                 }
                 else
                 {
-                    if (_accountProblem != fetch.Problem)
+                    if (_accountProblem != fetch)
                     {
                         _logger.Error($"Claude account usage: {fetch.Problem}");
                     }
 
-                    _accountProblem = fetch.Problem;
+                    _accountProblem = fetch;
                     accountBackoff = fetch.RateLimited
                         ? TimeSpan.FromTicks(Math.Min(accountBackoff.Ticks * 2, MaximumAccountBackoff.Ticks))
                         : AccountPollInterval;

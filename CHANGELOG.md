@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.2] - 2026-10-28
+
+### Added
+
+- Explain missing usage with a specific cause, an amber attention marker and a tooltip. Offer sign-in command copying, settings and retry actions inside the card.
+- Distinguish Claude authentication failures, forbidden access, rate limits, network failures, service errors and unreadable responses. Explain the separate Claude desktop and Claude Code sign-ins.
+- Label cached Claude readings as stale after failed refreshes and hide them when the saved sign-in expires or is rejected.
+
 ## [0.4.1] - 2026-10-21
 
 ### Fixed
