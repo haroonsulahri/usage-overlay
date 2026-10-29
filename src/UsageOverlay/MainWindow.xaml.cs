@@ -268,7 +268,7 @@ public partial class MainWindow : Window
         // Reconnecting is idempotent and repairs the command if this executable moved.
         if (_settings.ClaudeEnabled)
         {
-            _ = _claude.ApplyAsync(true, _settings.ClaudeStatusLineEnabled, _settings.ClaudeAccountUsageEnabled);
+            _ = _claude.ApplyAsync(true, _settings.ClaudeStatusLineEnabled, _settings.ClaudeAccountUsageEnabled, _settings.ClaudeAutomaticRenewalEnabled);
         }
 
         if (_settings.CursorEnabled)
@@ -856,10 +856,10 @@ public partial class MainWindow : Window
         var needsHelp = state.Connection is ProviderConnection.SignedOut or ProviderConnection.Unavailable
             or ProviderConnection.Disconnected or ProviderConnection.Off or ProviderConnection.Stale;
         RecoveryActionsPanel.Visibility = needsHelp ? Visibility.Visible : Visibility.Collapsed;
-        RecoveryActionButton.Content = state.Provider == UsageProviderKind.Claude && state.Connection == ProviderConnection.SignedOut
+        RecoveryActionButton.Content = NeedsClaudeLogin(state)
             ? "Copy sign-in command" : "Open settings";
         AutomationProperties.SetName(RecoveryActionButton, $"{RecoveryActionButton.Content} for {state.DisplayName}");
-        RecoveryActionButton.ToolTip = state.Provider == UsageProviderKind.Claude && state.Connection == ProviderConnection.SignedOut
+        RecoveryActionButton.ToolTip = NeedsClaudeLogin(state)
             ? "Copy claude auth login. Run it in your terminal, then complete sign-in in your browser." : "Open usage source and connection settings";
         RetryUsageButton.Visibility = state.Connection is ProviderConnection.Off or ProviderConnection.Disconnected
             ? Visibility.Collapsed : Visibility.Visible;
@@ -1698,7 +1698,8 @@ public partial class MainWindow : Window
                 messages.Add(await _claude.ApplyAsync(
                     _settings.ClaudeEnabled,
                     _settings.ClaudeStatusLineEnabled,
-                    _settings.ClaudeAccountUsageEnabled));
+                    _settings.ClaudeAccountUsageEnabled,
+                    _settings.ClaudeAutomaticRenewalEnabled));
             }
 
             var cursorChanged = cursorKeyChanged ||
@@ -1826,7 +1827,7 @@ public partial class MainWindow : Window
     private void RecoveryActionButton_OnClick(object sender, RoutedEventArgs eventArgs)
     {
         eventArgs.Handled = true;
-        if (CurrentState.Provider != UsageProviderKind.Claude || CurrentState.Connection != ProviderConnection.SignedOut)
+        if (!NeedsClaudeLogin(CurrentState))
         {
             ShowSettings();
             return;
@@ -1842,6 +1843,9 @@ public partial class MainWindow : Window
             RecoveryActionButton.Content = "Copy failed. Try again";
         }
     }
+
+    private static bool NeedsClaudeLogin(ProviderUsageState state) =>
+        state.Provider == UsageProviderKind.Claude && state.Connection == ProviderConnection.SignedOut && state.StatusText != "Sign-in expired";
 
     private async void RetryUsageButton_OnClick(object sender, RoutedEventArgs eventArgs)
     {

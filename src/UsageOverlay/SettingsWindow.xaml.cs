@@ -65,6 +65,7 @@ public partial class SettingsWindow : Window
         ClaudeEnabledCheckBox.IsChecked = _settings.ClaudeEnabled;
         ClaudeStatusLineCheckBox.IsChecked = _settings.ClaudeStatusLineEnabled;
         ClaudeAccountUsageCheckBox.IsChecked = _settings.ClaudeAccountUsageEnabled;
+        ClaudeAutomaticRenewalCheckBox.IsChecked = _settings.ClaudeAutomaticRenewalEnabled;
         CursorAccountUsageCheckBox.IsChecked = _settings.CursorAccountUsageEnabled;
         CursorEnabledCheckBox.IsChecked = _settings.CursorEnabled;
         CursorEmailTextBox.Text = _settings.CursorAccountEmail;
@@ -259,6 +260,7 @@ public partial class SettingsWindow : Window
             ClaudeEnabled = ClaudeEnabledCheckBox.IsChecked == true,
             ClaudeStatusLineEnabled = ClaudeStatusLineCheckBox.IsChecked == true,
             ClaudeAccountUsageEnabled = ClaudeAccountUsageCheckBox.IsChecked == true,
+            ClaudeAutomaticRenewalEnabled = ClaudeAutomaticRenewalCheckBox.IsChecked == true,
             CursorAccountUsageEnabled = cursorAccountUsage,
             CursorEnabled = cursorEnabled,
             CursorAccountEmail = cursorEmail,

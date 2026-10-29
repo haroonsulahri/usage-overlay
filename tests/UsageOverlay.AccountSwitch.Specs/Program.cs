@@ -35,6 +35,7 @@ if (args.Contains("--fake"))
 
 ClaudeIntegrationSpecs.Run();
 await ClaudeSignInSpecs.RunAsync();
+await ClaudeRenewalSpecs.RunAsync();
 
 var directory = Path.Combine(Path.GetTempPath(), "usage-overlay-switch-spec-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(directory);

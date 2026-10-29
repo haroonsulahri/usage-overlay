@@ -20,26 +20,53 @@ public sealed record ClaudeAccountFetch(
 
 /// <summary>
 /// Unofficial and opt-in: reads Claude plan limits from the endpoint behind Claude's usage
-/// page, authenticated with the sign-in Claude Code saved on this PC. The token is never
-/// refreshed, stored or logged here; Claude Code keeps owning it.
+/// page, authenticated with the sign-in Claude Code saved on this PC. Automatic renewal
+/// is separately opt-in; tokens are never logged or sent outside Anthropic.
 /// </summary>
 public sealed class ClaudeAccountUsageClient : IDisposable
 {
     private static readonly Uri UsageEndpoint = new("https://api.anthropic.com/api/oauth/usage");
     private readonly string _credentialsPath;
     private readonly HttpClient _client;
+    private readonly ClaudeCredentialRenewal _renewal;
+    private readonly SemaphoreSlim _gate = new(1, 1);
 
-    public ClaudeAccountUsageClient(string? credentialsPath = null)
+    public ClaudeAccountUsageClient(string? credentialsPath = null, HttpMessageHandler? handler = null)
     {
         _credentialsPath = credentialsPath ?? Path.Combine(ClaudeCodeIntegration.ResolveClaudeConfigDirectory(), ".credentials.json");
-        _client = AccountHttp.Create();
+        _client = AccountHttp.Create(handler);
+        _renewal = new ClaudeCredentialRenewal(_credentialsPath, _client);
+    }
+
+    public bool AutomaticRenewalEnabled { get; set; }
+
+    public string CredentialsRevision
+    {
+        get
+        {
+            try
+            {
+                var file = new FileInfo(_credentialsPath);
+                return file.Exists ? $"{file.LastWriteTimeUtc.Ticks}:{file.Length}" : "missing";
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { return "unavailable"; }
+        }
     }
 
     public async Task<ClaudeAccountFetch> FetchAsync(CancellationToken cancellationToken)
     {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try { return await FetchCoreAsync(allowForcedRenewal: true, cancellationToken).ConfigureAwait(false); }
+        finally { _gate.Release(); }
+    }
+
+    private async Task<ClaudeAccountFetch> FetchCoreAsync(bool allowForcedRenewal, CancellationToken cancellationToken)
+    {
+        var credentialsRevision = CredentialsRevision;
         string credentials;
         try
         {
+            if (File.Exists(_credentialsPath) && new FileInfo(_credentialsPath).Length > 65536) throw new IOException("Credentials exceed the supported size.");
             credentials = File.Exists(_credentialsPath) ? await File.ReadAllTextAsync(_credentialsPath, cancellationToken).ConfigureAwait(false) : string.Empty;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
@@ -54,7 +81,13 @@ public sealed class ClaudeAccountUsageClient : IDisposable
 
         if (expiresAt is { } expiry && expiry <= DateTimeOffset.UtcNow)
         {
-            return new ClaudeAccountFetch(null, "The rail’s Claude Code sign-in has expired. Run claude auth login, finish in your browser, then retry. Claude desktop can stay signed in separately.", Connection: ProviderConnection.SignedOut, StatusText: "Sign-in expired");
+            if (!AutomaticRenewalEnabled)
+                return new ClaudeAccountFetch(null, "The saved access token has expired. Open Claude Code to renew it, or enable automatic renewal in Settings. A browser login is only needed if renewal fails.", Connection: ProviderConnection.SignedOut, StatusText: "Sign-in expired");
+            if (!allowForcedRenewal)
+                return new ClaudeAccountFetch(null, "The renewed sign-in is not usable yet. The rail will retry automatically.", StatusText: "Renewal pending");
+            var failure = await _renewal.RenewAsync(token, force: false, cancellationToken).ConfigureAwait(false);
+            if (failure is not null) return failure;
+            return await FetchCoreAsync(allowForcedRenewal: false, cancellationToken).ConfigureAwait(false);
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, UsageEndpoint);
@@ -63,6 +96,8 @@ public sealed class ClaudeAccountUsageClient : IDisposable
         try
         {
             using var response = await _client.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            if (CredentialsRevision != credentialsRevision)
+                return new ClaudeAccountFetch(null, "The saved Claude account changed during the request. Detecting its current usage…", StatusText: "Sign-in changed");
             if (response.StatusCode == HttpStatusCode.TooManyRequests)
             {
                 return new ClaudeAccountFetch(null, "Claude is limiting usage checks. The rail will retry automatically with a longer delay.", RateLimited: true, StatusText: "Too many requests");
@@ -70,6 +105,12 @@ public sealed class ClaudeAccountUsageClient : IDisposable
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
+                if (AutomaticRenewalEnabled && allowForcedRenewal)
+                {
+                    var failure = await _renewal.RenewAsync(token, force: true, cancellationToken).ConfigureAwait(false);
+                    if (failure is not null) return failure;
+                    return await FetchCoreAsync(allowForcedRenewal: false, cancellationToken).ConfigureAwait(false);
+                }
                 return new ClaudeAccountFetch(null, "Claude rejected the rail’s saved sign-in. Run claude auth login, finish in your browser, then retry.", Connection: ProviderConnection.SignedOut, StatusText: "Sign-in rejected");
             }
 
@@ -95,7 +136,11 @@ public sealed class ClaudeAccountUsageClient : IDisposable
         }
     }
 
-    public void Dispose() => _client.Dispose();
+    public void Dispose()
+    {
+        _client.Dispose();
+        _gate.Dispose();
+    }
 }
 
 /// <summary>
@@ -163,11 +208,12 @@ internal static class CursorLocalSession
 
 internal static class AccountHttp
 {
-    public static HttpClient Create()
+    public static HttpClient Create(HttpMessageHandler? handler = null)
     {
-        var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false })
+        var client = new HttpClient(handler ?? new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false })
         {
-            Timeout = TimeSpan.FromSeconds(15)
+            Timeout = TimeSpan.FromSeconds(15),
+            MaxResponseContentBufferSize = 65536
         };
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("UsageOverlay", AppVersion.Current));
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));

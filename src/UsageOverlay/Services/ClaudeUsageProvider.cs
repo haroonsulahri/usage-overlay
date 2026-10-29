@@ -41,7 +41,7 @@ public sealed class ClaudeUsageProvider : UsageProvider
     /// Applies the Claude settings: the official status-line source and the unofficial
     /// account source are independent. Returns a message for Settings.
     /// </summary>
-    public async Task<string> ApplyAsync(bool enabled, bool statusLine, bool accountUsage)
+    public async Task<string> ApplyAsync(bool enabled, bool statusLine, bool accountUsage, bool automaticRenewal = false)
     {
         if (!enabled)
         {
@@ -51,6 +51,7 @@ public sealed class ClaudeUsageProvider : UsageProvider
         }
 
         _accountUsageEnabled = accountUsage;
+        _accountClient.AutomaticRenewalEnabled = automaticRenewal;
         _refreshAccountNow = true;
         if (statusLine)
         {
@@ -166,14 +167,30 @@ public sealed class ClaudeUsageProvider : UsageProvider
         var nextPublish = DateTimeOffset.MinValue;
         var nextAccountFetch = DateTimeOffset.MinValue;
         var accountBackoff = AccountPollInterval;
+        string? credentialsRevision = null;
         _accountProblem = null;
         using var timer = new PeriodicTimer(PollInterval);
         do
         {
+            if (_accountUsageEnabled && _accountClient.CredentialsRevision is { } changed && changed != credentialsRevision)
+            {
+                credentialsRevision = changed;
+                revision = ReadRevision();
+                _snapshot = ClaudeUsageSnapshot.Empty;
+                _accountProblem = null;
+                _refreshAccountNow = true;
+                Publish(ProviderUsageState.Connecting(UsageProviderKind.Claude, "Detecting the saved Claude sign-in…"));
+            }
             if (_accountUsageEnabled && (_refreshAccountNow || DateTimeOffset.UtcNow >= nextAccountFetch))
             {
                 _refreshAccountNow = false;
                 var fetch = await _accountClient.FetchAsync(cancellationToken).ConfigureAwait(false);
+                credentialsRevision = _accountClient.CredentialsRevision;
+                if (fetch.StatusText == "Sign-in changed")
+                {
+                    credentialsRevision = null;
+                    _snapshot = ClaudeUsageSnapshot.Empty;
+                }
                 if (fetch.Limits is { } limits)
                 {
                     ClaudeSnapshotStore.Update(limits, null, Array.Empty<int>(), null);
@@ -190,7 +207,7 @@ public sealed class ClaudeUsageProvider : UsageProvider
                     _accountProblem = fetch;
                     accountBackoff = fetch.RateLimited
                         ? TimeSpan.FromTicks(Math.Min(accountBackoff.Ticks * 2, MaximumAccountBackoff.Ticks))
-                        : AccountPollInterval;
+                        : fetch.StatusText == "Renewal pending" ? TimeSpan.FromSeconds(15) : AccountPollInterval;
                 }
 
                 nextAccountFetch = DateTimeOffset.UtcNow + accountBackoff;

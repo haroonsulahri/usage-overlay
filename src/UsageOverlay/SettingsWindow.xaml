@@ -383,6 +383,13 @@
                                 <TextBlock Margin="22,3,0,0"
                                            Text="Works when you only use the Claude desktop app. Every 5 minutes it uses the sign-in Claude Code saved on this PC to call the private endpoint behind Claude’s usage page. Anthropic may change or restrict this, and its terms limit how that sign-in may be used."
                                            Style="{StaticResource HelpTextStyle}" />
+                                <CheckBox x:Name="ClaudeAutomaticRenewalCheckBox"
+                                          Content="Automatically renew my Claude sign-in"
+                                          IsEnabled="{Binding IsChecked, ElementName=ClaudeAccountUsageCheckBox}"
+                                          Style="{StaticResource SettingsCheckStyle}" />
+                                <TextBlock Margin="22,3,0,0"
+                                           Text="Optional. When the access token expires, renew it with Anthropic and update Claude Code’s saved sign-in on this PC. This avoids repeated logins while the renewal token remains valid. No browser, terminal, or model request is launched."
+                                           Style="{StaticResource HelpTextStyle}" />
                             </StackPanel>
                             <TextBlock x:Name="ClaudeStatusText" Style="{StaticResource HelpTextStyle}" />
 

@@ -75,6 +75,14 @@ The parser clamps percentages, validates timestamps, and selects the primary `co
 6. The window locator treats a foreground window as a Claude host when its process is in a session's chain and that session's Claude Code process is still running.
 7. Turning Claude off, or `--disconnect-claude` from the uninstaller, restores the previous status line, unless the user has replaced it since.
 
+### Claude saved-sign-in renewal
+
+The unofficial account source checks credential-file metadata on its existing two-second timer. A changed sign-in clears the in-memory reading and starts a new usage check; a response racing with another account's saved sign-in is discarded. Normal successful account polls remain five minutes apart.
+
+Automatic renewal is separately disabled by default. When enabled, an expired access token or one usage HTTP 401 triggers a bounded refresh-token exchange at Anthropic's fixed token endpoint. Existing scopes are preserved. The client acquires the current `.oauth_refresh.lock` and legacy configuration-directory lock used by the installed Windows Claude Code implementation, rereads credentials, and defers to a concurrent sign-in. Only this app's own abandoned locks can be recovered, after their recorded process is proven dead and their directory instance still matches.
+
+Renewed credentials preserve unrelated JSON fields, are flushed into a private temporary file and replace the original atomically with its Windows access controls. Once a rotating-token request is issued, its bounded save finishes even when the provider stops, so the new refresh token is not lost. No terminal, browser or model prompt is launched. Authentication rejection requires login; network failures and rate limits preserve credentials and back off. Credentials remain read-only when renewal is disabled.
+
 ### Cursor
 
 `CursorUsageProvider` reads the DPAPI-protected key and calls `POST https://api.cursor.com/teams/spend` every 15 minutes, filtered by the configured email. Rejected keys and unknown members are reported in the card. Network failures keep the last reading, marked stale. With a spend limit (`hardLimitOverrideDollars` or `monthlyLimitDollars`), or `totalPercentUsed` when the response includes it, the rail shows a percentage. Otherwise the card shows the amount spent.

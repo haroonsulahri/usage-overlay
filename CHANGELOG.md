@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.3] - 2026-10-29
+
+### Added
+
+- Separately opt-in automatic Claude sign-in renewal. Renew expired access tokens and retry one rejected usage request, preserve rotated refresh tokens and unrelated credential fields, and atomically update the existing private credential file. No CLI, browser or model request is launched.
+- Coordinate renewal with Claude Code's current and legacy refresh locks; recover only this app's abandoned locks when the recorded process is proven dead. Defer to concurrent sign-ins and respect rate limits.
+
+### Fixed
+
+- Detect changes to the saved Claude sign-in within the existing two-second poll instead of waiting for the next five-minute account check.
+- Distinguish access-token renewal from a genuinely unusable sign-in. Opening Claude Code or enabling automatic renewal can recover an expired access token without another browser login.
+
 ## [0.4.2] - 2026-10-28
 
 ### Added

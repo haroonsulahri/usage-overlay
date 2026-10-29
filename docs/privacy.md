@@ -20,7 +20,8 @@ For Cursor (off by default, experimental), the overlay sends the email you enter
 
 Two unofficial sources are separately opt-in:
 
-- **Claude sign-in:** reads the OAuth access token from Claude Code's `.credentials.json` and sends it only to `api.anthropic.com/api/oauth/usage`, every 5 minutes, to read the 5-hour and weekly utilization. The token is not refreshed, copied, stored or logged.
+- **Claude sign-in:** reads the OAuth access token from Claude Code's `.credentials.json` and sends it only to `api.anthropic.com/api/oauth/usage`, every 5 minutes, to read the 5-hour and weekly utilization. Saved-sign-in changes are detected through file metadata within the existing two-second poll. Credentials are read-only unless the separate automatic-renewal option below is enabled.
+- **Automatic Claude renewal:** off by default and separately enabled in Settings. On access-token expiry or one usage HTTP 401, sends the existing refresh token, client identifier and existing scopes only to `https://platform.claude.com/v1/oauth/token`. Saves the renewed access token, expiry and any rotated refresh token atomically in the same private `.credentials.json`, preserving unrelated fields and Windows access controls. Uses Claude Code's current and legacy refresh locks; another login's file update takes precedence. It never logs tokens, starts a CLI/browser, or sends a model prompt. Disabling the option prevents future renewals; an already-issued renewal is saved before stopping so its rotated token is not lost. Network failures and rate limits are retried; unusable renewal credentials require sign-in. Temporary files stay in the Claude configuration directory and are removed after use.
 - **Cursor sign-in:** opens Cursor's `state.vscdb` read-only to read `cursorAuth/accessToken`, and sends it only to `cursor.com` (and, as a fallback, `api2.cursor.sh`) every 5 minutes to read plan usage. The token is not stored or logged.
 
 ## Data stored

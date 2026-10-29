@@ -43,7 +43,7 @@ Run the authenticated smoke test only when you are already signed in to Codex:
 - Keep the change scoped to one problem.
 - Add or update tests for parsing, calculations, settings, or security-sensitive behavior.
 - Preserve reduced-motion support, Codex-only visibility, single-instance behavior, and local account-data handling.
-- Optional installation reporting is the only permitted background upload: explicit opt-in, random installation ID and app version only, bounded requests, immediate cancellation on opt-out. Do not expand its scope or add private API calls, credential access, advertising, analytics SDKs or account-data uploads.
+- Optional installation reporting is the only permitted background upload: explicit opt-in, random installation ID and app version only, bounded requests, immediate cancellation on opt-out. Do not expand reporting or add advertising, analytics SDKs or account-data uploads. Credential access must stay within the documented opt-in Claude and Cursor sources. Claude automatic renewal requires a separate opt-in, the fixed Anthropic token endpoint, existing scopes, shared refresh locks and atomic preservation of the user's credentials. Do not add other private authentication calls or broaden access.
 - Do not include generated binaries, logs, settings, screenshots with private content, or machine-specific paths.
 - Update README, CHANGELOG, SECURITY, or architecture documentation when behavior changes.
 - Run `scripts\build.ps1` before submitting.
