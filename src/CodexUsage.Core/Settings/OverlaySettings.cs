@@ -81,6 +81,9 @@ public sealed record OverlaySettings
     /// <summary>Unofficial source: the usage endpoint behind Claude's usage page, using Claude Code's saved sign-in.</summary>
     public bool ClaudeAccountUsageEnabled { get; init; }
 
+    /// <summary>Separately opt-in: renew and atomically update Claude Code's saved OAuth credentials.</summary>
+    public bool ClaudeAutomaticRenewalEnabled { get; init; }
+
     /// <summary>Reads Cursor team spend through the Admin API. Experimental.</summary>
     public bool CursorEnabled { get; init; }
 

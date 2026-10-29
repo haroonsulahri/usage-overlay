@@ -24,9 +24,9 @@ internal static class ClaudeSignInSpecs
             var expired = await client.FetchAsync(CancellationToken.None);
             Check(expired.Connection == ProviderConnection.SignedOut && expired.StatusText == "Sign-in expired" && expired.Limits is null,
                 "Expired credentials surface an explicit sign-in state without calling the API");
-            Check(expired.Problem!.Contains("claude auth login", StringComparison.Ordinal) &&
+            Check(expired.Problem!.Contains("automatic renewal", StringComparison.Ordinal) &&
                   !expired.Problem.Contains("test-secret", StringComparison.Ordinal),
-                "Recovery instructions provide the sign-in command without exposing credentials");
+                "Recovery instructions explain renewal without exposing credentials");
             Check(await File.ReadAllTextAsync(path) == saved, "Usage checks leave Claude credentials unchanged");
             await File.WriteAllTextAsync(path, "{broken");
             var malformed = await client.FetchAsync(CancellationToken.None);
