@@ -33,6 +33,7 @@ if (args.Contains("--fake"))
     return;
 }
 
+SettingsPersistenceSpecs.Run();
 ClaudeIntegrationSpecs.Run();
 await ClaudeSignInSpecs.RunAsync();
 await ClaudeRenewalSpecs.RunAsync();

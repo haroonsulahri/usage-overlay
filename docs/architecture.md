@@ -96,7 +96,7 @@ The WPF tool window is topmost and non-activating. It can receive pointer input 
 ## Local state
 
 ```text
-%LOCALAPPDATA%\UsageOverlay\settings.json
+%USERPROFILE%\.usage-overlay\settings.json
 %LOCALAPPDATA%\UsageOverlay\overlay.log
 ```
 
@@ -111,3 +111,5 @@ Additional settings control which apps are tracked (Codex, Claude, Cursor and th
 - Malformed payloads are ignored without changing the last valid snapshot.
 - Invalid settings fall back to bounded defaults.
 - A second application launch signals the running instance instead of creating a duplicate.
+
+Settings are shared across ordinary desktop, packaged-parent and Windows Startup launches. On the first v0.4.4 launch, existing UsageOverlay AppData settings (or the older QuotaRail/CodexUsageOverlay settings) are migrated only if the shared settings file is absent. The first migrated file wins; conflicting old copies are not merged and explicit opt-outs remain authoritative. Original files are retained. Automatic Claude renewal remains off unless already enabled or explicitly selected. Logs, snapshots, encrypted keys and optional reporting identity keep their existing AppData locations.

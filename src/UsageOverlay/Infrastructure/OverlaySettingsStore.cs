@@ -15,18 +15,18 @@ public sealed class OverlaySettingsStore
     private readonly string _path;
     private readonly string[] _legacyPaths;
 
-    public OverlaySettingsStore(AppLogger logger)
+    public OverlaySettingsStore(AppLogger logger) : this(logger, AppPaths.SettingsPath,
+        [System.IO.Path.Combine(AppPaths.DataDirectory, "settings.json"),
+         System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "QuotaRail", "settings.json"),
+         System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CodexUsageOverlay", "settings.json")])
+    {
+    }
+
+    internal OverlaySettingsStore(AppLogger logger, string path, string[] legacyPaths)
     {
         _logger = logger;
-        var directory = System.IO.Path.GetDirectoryName(logger.Path) ??
-                        throw new InvalidOperationException("The application log path has no directory.");
-        _path = System.IO.Path.Combine(directory, "settings.json");
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        _legacyPaths =
-        [
-            System.IO.Path.Combine(localAppData, "QuotaRail", "settings.json"),
-            System.IO.Path.Combine(localAppData, "CodexUsageOverlay", "settings.json")
-        ];
+        _path = path;
+        _legacyPaths = legacyPaths;
     }
 
     public string Path => _path;
@@ -40,15 +40,14 @@ public sealed class OverlaySettingsStore
             {
                 var legacyJson = File.ReadAllText(legacyPath);
                 var migrated = OverlaySettings.FromJson(legacyJson);
-                Save(migrated);
-                if (File.Exists(_path))
-                {
-                    _logger.Info("Migrated settings from the previous application name.");
-                }
-                return migrated;
+                Write(migrated, overwrite: false);
+                _logger.Info("Migrated settings to the shared user-profile location.");
+                return OverlaySettings.FromJson(File.ReadAllText(_path));
             }
             catch (Exception exception) when (exception is IOException or JsonException or UnauthorizedAccessException)
             {
+                // Another launch may have completed migration first. Its canonical file wins.
+                if (File.Exists(_path)) return Read();
                 _logger.Error($"Could not migrate previous display settings: {exception.Message}");
             }
         }
@@ -58,6 +57,11 @@ public sealed class OverlaySettingsStore
             return new OverlaySettings();
         }
 
+        return Read();
+    }
+
+    private OverlaySettings Read()
+    {
         try
         {
             var json = File.ReadAllText(_path);
@@ -72,17 +76,28 @@ public sealed class OverlaySettingsStore
 
     public void Save(OverlaySettings settings)
     {
-        var normalized = settings.Normalize();
-        var temporaryPath = _path + ".tmp";
-
         try
         {
-            File.WriteAllText(temporaryPath, JsonSerializer.Serialize(normalized, SerializerOptions));
-            File.Move(temporaryPath, _path, overwrite: true);
+            Write(settings, overwrite: true);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             _logger.Error($"Could not save display settings: {exception.Message}");
+        }
+    }
+
+    private void Write(OverlaySettings settings, bool overwrite)
+    {
+        Directory.CreateDirectory(System.IO.Path.GetDirectoryName(_path)!);
+        var temporaryPath = $"{_path}.{Environment.ProcessId}.{Guid.NewGuid():N}.tmp";
+        try
+        {
+            File.WriteAllText(temporaryPath, JsonSerializer.Serialize(settings.Normalize(), SerializerOptions));
+            File.Move(temporaryPath, _path, overwrite);
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
         }
     }
 }

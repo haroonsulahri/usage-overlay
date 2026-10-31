@@ -28,7 +28,9 @@ Two unofficial sources are separately opt-in:
 
 Local files may be created under `%LOCALAPPDATA%\UsageOverlay`:
 
-- `settings.json` stores display preferences.
+Settings are stored at `%USERPROFILE%\.usage-overlay\settings.json` so the same preferences apply after Windows startup and when launched from a packaged desktop app. Existing settings are migrated only when this file is absent; original files remain, and explicit renewal/reporting opt-ins and opt-outs are preserved.
+
+Other local files:
 - `overlay.log` stores redacted and truncated diagnostic messages.
 - `claude-usage.json` (Claude on) stores Claude plan-limit percentages, reset times, session IDs and process IDs.
 - `claude-statusline.json` (Claude on) stores the Claude Code status-line entry to restore.
@@ -36,7 +38,7 @@ Local files may be created under `%LOCALAPPDATA%\UsageOverlay`:
 
 Neither file is uploaded by this application. After opting in, `reporting.json` stores a random installation ID and the last attempted reporting date. This identity survives upgrades and disabling/re-enabling reporting; deleting the local state may create a new reporting installation.
 
-For backward compatibility, the first launch may read `%LOCALAPPDATA%\QuotaRail\settings.json` or the older `%LOCALAPPDATA%\CodexUsageOverlay\settings.json` file and copy its normalized settings into the Usage Overlay directory. Previous files are not deleted.
+For backward compatibility, the first launch may read `%LOCALAPPDATA%\QuotaRail\settings.json` or the older `%LOCALAPPDATA%\CodexUsageOverlay\settings.json` file and copy its normalized settings into the shared user-profile settings file. Previous files are not deleted.
 
 ## Authentication
 

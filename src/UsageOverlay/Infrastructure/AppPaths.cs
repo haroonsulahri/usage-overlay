@@ -4,6 +4,11 @@ namespace UsageOverlay.Infrastructure;
 
 public static class AppPaths
 {
+    // AppData can be virtualized by a packaged parent process. User-profile files
+    // remain shared with ordinary desktop and Windows Startup launches.
+    public static string SettingsPath => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".usage-overlay", "settings.json");
+
     public static string DataDirectory
     {
         get
