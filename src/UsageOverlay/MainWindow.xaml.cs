@@ -107,7 +107,7 @@ public partial class MainWindow : Window
         _settings = _settingsStore.Load();
         _usageReporter = new UsageReporter(_reportingClient,
             new Uri("https://haroone.com/api/usage-overlay.php"),
-            System.IO.Path.Combine(System.IO.Path.GetDirectoryName(_settingsStore.Path)!, "reporting.json"), AppVersion.Current);
+            System.IO.Path.Combine(AppPaths.DataDirectory, "reporting.json"), AppVersion.Current);
         _reportingTimer.Tick += (_, _) => StartUsageReport();
         ThemeManager.Instance.Initialize(_settings.Theme);
         ThemeManager.Instance.ThemeApplied += ThemeManager_OnThemeApplied;

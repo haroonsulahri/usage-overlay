@@ -151,7 +151,7 @@ Open Settings from **Open settings…** in the rail or tray menu. Opening **Usag
 
 ### Saving and closing
 
-Most controls are staged while the window is open. Choose **Save** or press `Ctrl+S` to validate and write them to `%LOCALAPPDATA%\UsageOverlay\settings.json`.
+Most controls are staged while the window is open. Choose **Save** or press `Ctrl+S` to validate and write them to `%USERPROFILE%\.usage-overlay\settings.json`.
 
 - **Save:** applies valid changes and keeps the Settings window open. A confirmation appears beside the buttons.
 - **Cancel:** closes Settings and discards changes made since the last save.
@@ -326,7 +326,7 @@ Read the full [Privacy policy](docs/privacy.md) and [Security policy](SECURITY.m
 Usage Overlay stores settings and logs on your computer. Opting in also creates `reporting.json`, containing a random installation ID and the last attempted reporting date:
 
 ```text
-%LOCALAPPDATA%\UsageOverlay\settings.json
+%USERPROFILE%\.usage-overlay\settings.json
 %LOCALAPPDATA%\UsageOverlay\overlay.log
 %LOCALAPPDATA%\UsageOverlay\claude-usage.json        (Claude on)
 %LOCALAPPDATA%\UsageOverlay\claude-statusline.json   (Claude on: restore point for your status line)
@@ -529,3 +529,5 @@ Usage Overlay is independently developed and is not affiliated with or endorsed 
 Usage Overlay is released under the [MIT Licence](LICENSE).
 
 Codex, OpenAI, Claude, Anthropic and Cursor are referenced only to describe compatibility.
+
+Settings are shared across ordinary desktop, packaged-parent and Windows Startup launches. On the first v0.4.4 launch, existing UsageOverlay AppData settings (or the older QuotaRail/CodexUsageOverlay settings) are migrated only if the shared settings file is absent. The first migrated file wins; conflicting old copies are not merged and explicit opt-outs remain authoritative. Original files are retained. Automatic Claude renewal remains off unless already enabled or explicitly selected. Logs, snapshots, encrypted keys and optional reporting identity keep their existing AppData locations.

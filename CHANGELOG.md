@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.4] - 2026-10-31
+
+### Fixed
+
+- Store settings once at `%USERPROFILE%\.usage-overlay\settings.json`, outside Windows package AppData redirection. Launching from a packaged desktop app and launching at Windows startup now share the same renewal preference.
+- Migrate existing settings on first launch without deleting the originals or overriding an existing shared settings file. Preserve explicit opt-ins and opt-outs; automatic Claude renewal remains off by default.
+- Keep snapshots, logs, encrypted keys and optional reporting identity at their existing locations. Add migration and cross-launch settings regression checks.
+
 ## [0.4.3] - 2026-10-29
 
 ### Added
