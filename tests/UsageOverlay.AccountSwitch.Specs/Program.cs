@@ -34,6 +34,43 @@ if (args.Contains("--fake"))
 }
 
 SettingsPersistenceSpecs.Run();
+var projectStateFile = Path.GetTempFileName();
+try
+{
+    var repository = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));
+    File.WriteAllText(projectStateFile, JsonSerializer.Serialize(new Dictionary<string, object>
+    {
+        ["selected-project"] = new { type = "local", projectId = "project-1" },
+        ["local-projects"] = new Dictionary<string, object> { ["project-1"] = new { name = "Overlay", rootPaths = new[] { repository } } }
+    }));
+    var selected = ProjectGitStatus.ReadSelectedProject(projectStateFile);
+    Assert(selected?.Root == repository, "Resolves the selected project's single root");
+    var status = await ProjectGitStatus.ReadAsync(selected!);
+    Assert(status.IsRepository && status.Branches >= 1 && status.LastCommit is not null, "Reads local branch count and last commit");
+    Assert(ProjectGitStatus.Format(status with { LastCommit = DateTimeOffset.Now.AddHours(1) }, DateTimeOffset.Now).Contains("in the future"), "Distinguishes a future commit");
+    var fixture = Path.Combine(Path.GetTempPath(), "usage-overlay-project-spec-" + Guid.NewGuid().ToString("N"));
+    Directory.CreateDirectory(fixture);
+    try
+    {
+        var nonRepo = await ProjectGitStatus.ReadAsync(new SelectedProject("none", "Temp", fixture));
+        Assert(!nonRepo.IsRepository && nonRepo.Branches is null && nonRepo.LastCommit is null, "Does not invent Git values for a non-repository");
+        Directory.CreateDirectory(Path.Combine(fixture, "one", ".git"));
+        var single = await ProjectGitStatus.ReadAsync(new SelectedProject("single", "Single", fixture));
+        Assert(single.RepositoryRoot == Path.Combine(fixture, "one") && !single.MultipleRepositories, "Finds a single nested repository");
+        Directory.CreateDirectory(Path.Combine(fixture, "two", ".git"));
+        var ambiguous = await ProjectGitStatus.ReadAsync(new SelectedProject("multi", "Multiple", fixture));
+        Assert(!ambiguous.IsRepository && ambiguous.MultipleRepositories, "Reports ambiguous nested repositories without choosing one");
+        Directory.CreateDirectory(Path.Combine(fixture, "app", ".git"));
+        var appRepo = await ProjectGitStatus.ReadAsync(new SelectedProject("app", "App", fixture));
+        Assert(appRepo.RepositoryRoot == Path.Combine(fixture, "app") && appRepo.MultipleRepositories && ProjectGitStatus.Format(appRepo, DateTimeOffset.Now).Contains("Repository: app (of several)"), "Labels app when several nested repositories exist");
+    }
+    finally { Directory.Delete(fixture, true); }
+    File.WriteAllText(projectStateFile, "{invalid");
+    Assert(ProjectGitStatus.ReadSelectedProject(projectStateFile) is null, "Ignores malformed project state");
+    File.WriteAllText(projectStateFile, """{"selected-project":{"type":"local","projectId":"p"},"local-projects":{"p":{"name":"multi","rootPaths":["C:/one","C:/two"]}}}""");
+    Assert(ProjectGitStatus.ReadSelectedProject(projectStateFile) is null, "Does not choose an arbitrary root in a multi-root project");
+}
+finally { File.Delete(projectStateFile); }
 ClaudeIntegrationSpecs.Run();
 await ClaudeSignInSpecs.RunAsync();
 await ClaudeRenewalSpecs.RunAsync();

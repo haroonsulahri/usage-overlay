@@ -128,6 +128,7 @@ Remove either shortcut without touching the application files:
 | Action | Result |
 | --- | --- |
 | Hover over the rail | Temporarily opens usage details |
+| Enable project Git details in Settings | Show the selected local project root, local branch count and last commit time |
 | Move the pointer away | Closes an unpinned detail card |
 | Click the rail | Pins or unpins usage details |
 | Click the card's close button | Closes only the detail card |
@@ -140,6 +141,8 @@ Remove either shortcut without touching the application files:
 | Launch the executable again | Restores the existing instance; no duplicate is created |
 | Disconnect Codex CLI | Releases the CLI process so the npm-installed CLI can be updated safely |
 | Check for updates | Checks the public GitHub Releases API for a newer stable version |
+
+For project folders containing multiple repositories, the overlay uses an `app` subfolder when present and labels the choice; otherwise it reports the ambiguity. This reads local Codex desktop state, which can change between Codex releases.
 
 Choosing **Hide usage rail** does not stop usage updates. Use the tray icon to show it again. Choose **Quit Usage Overlay** when you want to stop the process.
 

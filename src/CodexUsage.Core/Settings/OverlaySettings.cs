@@ -107,6 +107,8 @@ public sealed record OverlaySettings
     /// <summary>Lists the other enabled apps in the detail card. Off: each app shows only its own usage.</summary>
     public bool ShowOtherApps { get; init; }
 
+    public bool ShowProjectGit { get; init; }
+
     public bool NotificationsEnabled { get; init; }
 
     public bool UsageReportingEnabled { get; init; }

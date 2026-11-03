@@ -641,6 +641,12 @@
                                        Text="Off: the card shows only the app in front."
                                        Foreground="{DynamicResource OverlayMutedBrush}"
                                        FontSize="{StaticResource OverlayTextSmall}" />
+                            <CheckBox x:Name="ShowProjectGitCheckBox"
+                                      Content="Show Git details for the selected Codex project"
+                                      Style="{StaticResource SettingsCheckStyle}" />
+                            <TextBlock Margin="22,3,0,0"
+                                       Text="Reads the selected project from Codex desktop state and runs local Git commands. If the project root is not a repository, it checks immediate subfolders and prefers app when several contain repositories."
+                                       Style="{StaticResource HelpTextStyle}" />
                             <CheckBox x:Name="NotificationsCheckBox"
                                       Content="Notify me when usage turns amber or red"
                                       Style="{StaticResource SettingsCheckStyle}" />

@@ -88,6 +88,9 @@ public partial class MainWindow : Window
     private bool _isPinned;
     private bool _isManuallyHidden;
     private bool _isClosing;
+    private bool _gitRefreshRunning;
+    private DateTimeOffset _nextGitRefresh;
+    private ProjectGitSnapshot? _projectGit;
     private bool _isDragging;
     private bool _hasDragged;
     private bool _escapeHotKeyRegistered;
@@ -326,12 +329,45 @@ public partial class MainWindow : Window
 
     private void WindowTrackingTimer_OnTick(object? sender, EventArgs eventArgs)
     {
+        if (_settings.ShowProjectGit && _options.DemoPercent is null && DateTimeOffset.UtcNow >= _nextGitRefresh && !_gitRefreshRunning)
+        {
+            _nextGitRefresh = DateTimeOffset.UtcNow.AddSeconds(5);
+            _ = RefreshProjectGitAsync();
+        }
         if (_isDragging)
         {
             return;
         }
 
         UpdateWindowPosition();
+    }
+
+    private async Task RefreshProjectGitAsync()
+    {
+        _gitRefreshRunning = true;
+        try
+        {
+            var path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".codex", ".codex-global-state.json");
+            var selected = ProjectGitStatus.ReadSelectedProject(path);
+            if (_projectGit?.Project != selected)
+            {
+                _projectGit = null;
+                RenderProjectGit();
+            }
+            var snapshot = selected is null ? null : await ProjectGitStatus.ReadAsync(selected);
+            if (_isClosing || !_settings.ShowProjectGit || selected != ProjectGitStatus.ReadSelectedProject(path)) return;
+            _projectGit = snapshot;
+            RenderProjectGit();
+        }
+        finally { _gitRefreshRunning = false; }
+    }
+
+    private void RenderProjectGit()
+    {
+        ProjectGitText.Visibility = _settings.ShowProjectGit && _displayedProvider == UsageProviderKind.Codex && _projectGit is not null
+            ? Visibility.Visible : Visibility.Collapsed;
+        ProjectGitText.Text = _projectGit is null ? string.Empty : ProjectGitStatus.Format(_projectGit, DateTimeOffset.Now);
+        UpdateExpandedHeight();
     }
 
     private void UpdateWindowPosition()
@@ -853,6 +889,7 @@ public partial class MainWindow : Window
         }
 
         RenderOtherApps();
+        RenderProjectGit();
         var needsHelp = state.Connection is ProviderConnection.SignedOut or ProviderConnection.Unavailable
             or ProviderConnection.Disconnected or ProviderConnection.Off or ProviderConnection.Stale;
         RecoveryActionsPanel.Visibility = needsHelp ? Visibility.Visible : Visibility.Collapsed;
