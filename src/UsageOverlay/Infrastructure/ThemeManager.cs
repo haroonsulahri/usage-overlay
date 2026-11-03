@@ -1,5 +1,8 @@
 using System.Windows;
 using System.Windows.Media;
+using System.IO;
+using System.Globalization;
+using System.Text.RegularExpressions;
 using Microsoft.Win32;
 using CodexUsage.Core.Settings;
 using Color = System.Windows.Media.Color;
@@ -15,6 +18,9 @@ public sealed class ThemeManager
     private AppTheme _currentTheme = AppTheme.System;
     private bool _systemEventsHooked;
     private bool? _lastCodexIsLight;
+    private bool _paletteApplied;
+    private DateTime _codexThemeModified;
+    private DateTimeOffset _nextCodexThemeCheck;
 
     public event Action? ThemeApplied;
 
@@ -29,7 +35,7 @@ public sealed class ThemeManager
     {
         var themeChanged = _currentTheme != theme;
         _currentTheme = theme;
-        UpdateSystemEventsHook(theme == AppTheme.System);
+        UpdateSystemEventsHook(theme is AppTheme.System or AppTheme.Codex);
 
         var isDark = theme switch
         {
@@ -38,32 +44,86 @@ public sealed class ThemeManager
             _ => !(_lastCodexIsLight ?? IsSystemInLightTheme())
         };
 
-        if (!themeChanged && IsEffectiveDark == isDark && Application.Current is not null)
+        if (_paletteApplied && !themeChanged && IsEffectiveDark == isDark && Application.Current is not null)
         {
             return;
         }
 
         IsEffectiveDark = isDark;
         ApplyPalette(isDark);
+        _paletteApplied = true;
         ThemeApplied?.Invoke();
     }
 
     public void RefreshSystemThemeIfApplicable()
     {
-        if (_currentTheme == AppTheme.System)
+        if (_currentTheme is AppTheme.System or AppTheme.Codex)
         {
-            ApplyTheme(AppTheme.System);
+            ApplyTheme(_currentTheme);
         }
     }
 
     public void RefreshFromCodexTheme(bool isLight)
     {
         _lastCodexIsLight = isLight;
-        if (_currentTheme == AppTheme.System && IsEffectiveDark == isLight)
+        if ((_currentTheme is AppTheme.System or AppTheme.Codex) && IsEffectiveDark == isLight)
         {
-            ApplyTheme(AppTheme.System);
+            ApplyTheme(_currentTheme);
+        }
+        if (_currentTheme == AppTheme.Codex && DateTimeOffset.UtcNow >= _nextCodexThemeCheck)
+        {
+            _nextCodexThemeCheck = DateTimeOffset.UtcNow.AddSeconds(2);
+            DateTime modified;
+            try { modified = File.GetLastWriteTimeUtc(CodexConfigPath); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { return; }
+            if (modified != _codexThemeModified)
+            {
+                _codexThemeModified = modified;
+                ApplyPalette(IsEffectiveDark);
+                ThemeApplied?.Invoke();
+            }
         }
     }
+
+    private static string CodexConfigPath => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".codex", "config.toml");
+
+    internal static (Color Surface, Color Ink)? ReadCodexPalette(string path, bool isDark)
+    {
+        try
+        {
+            var section = isDark ? "[desktop.appearanceDarkChromeTheme]" : "[desktop.appearanceLightChromeTheme]";
+            var inside = false;
+            Color? surface = null, ink = null;
+            foreach (var line in File.ReadLines(path))
+            {
+                var trimmed = line.Trim();
+                if (trimmed.StartsWith('[')) { inside = trimmed == section; continue; }
+                if (!inside) continue;
+                var match = Regex.Match(line, "^\\s*(surface|ink)\\s*=\\s*[\"']#([0-9a-fA-F]{6})[\"']\\s*(?:#.*)?$", RegexOptions.CultureInvariant);
+                if (!match.Success) continue;
+                var value = int.Parse(match.Groups[2].Value, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                var color = Color.FromRgb((byte)(value >> 16), (byte)(value >> 8), (byte)value);
+                if (match.Groups[1].Value == "surface") surface = color; else ink = color;
+            }
+            return surface is { } background && ink is { } foreground && Contrast(background, foreground) >= 4.5
+                ? (background, foreground) : null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or FormatException) { return null; }
+    }
+
+    private static double Contrast(Color a, Color b)
+    {
+        static double Channel(byte value) { var x = value / 255d; return x <= 0.04045 ? x / 12.92 : Math.Pow((x + 0.055) / 1.055, 2.4); }
+        static double Luminance(Color c) => 0.2126 * Channel(c.R) + 0.7152 * Channel(c.G) + 0.0722 * Channel(c.B);
+        var x = Luminance(a); var y = Luminance(b);
+        return (Math.Max(x, y) + 0.05) / (Math.Min(x, y) + 0.05);
+    }
+
+    private static Color Blend(Color background, Color foreground, double amount) => Color.FromRgb(
+        (byte)Math.Round(background.R + (foreground.R - background.R) * amount),
+        (byte)Math.Round(background.G + (foreground.G - background.G) * amount),
+        (byte)Math.Round(background.B + (foreground.B - background.B) * amount));
 
     private void UpdateSystemEventsHook(bool hook)
     {
@@ -85,9 +145,9 @@ public sealed class ThemeManager
         {
             Application.Current?.Dispatcher.BeginInvoke(() =>
             {
-                if (_currentTheme == AppTheme.System)
+                if (_currentTheme is AppTheme.System or AppTheme.Codex)
                 {
-                    ApplyTheme(AppTheme.System);
+                    ApplyTheme(_currentTheme);
                 }
             });
         }
@@ -111,7 +171,7 @@ public sealed class ThemeManager
         return false;
     }
 
-    private static void ApplyPalette(bool isDark)
+    private void ApplyPalette(bool isDark)
     {
         var app = Application.Current;
         if (app is null)
@@ -173,6 +233,20 @@ public sealed class ThemeManager
             buttonPressedColor = Color.FromRgb(220, 224, 230);// #FFDCE0E6
             leadingCapColor = Color.FromRgb(255, 255, 255);   // #FFFFFFFF
             primaryTextColor = Color.FromRgb(255, 255, 255);  // #FFFFFFFF
+        }
+
+        if (_currentTheme == AppTheme.Codex && ReadCodexPalette(CodexConfigPath, isDark) is { } palette)
+        {
+            surfaceColor = palette.Surface;
+            textColor = palette.Ink;
+            surfaceRaisedColor = Blend(surfaceColor, textColor, 0.05);
+            borderColor = Blend(surfaceColor, textColor, 0.20);
+            mutedColor = Blend(surfaceColor, textColor, 0.70);
+            trackColor = Blend(surfaceColor, textColor, 0.18);
+            menuHoverColor = Blend(surfaceColor, textColor, 0.10);
+            settingsBgColor = surfaceColor;
+            buttonHoverColor = Blend(surfaceColor, textColor, 0.12);
+            buttonPressedColor = Blend(surfaceColor, textColor, 0.18);
         }
 
         SetResourceColor(app, "OverlaySurfaceColor", surfaceColor);

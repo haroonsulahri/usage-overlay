@@ -84,6 +84,7 @@ public partial class SettingsWindow : Window
         SystemThemeRadio.IsChecked = _settings.Theme == AppTheme.System;
         DarkThemeRadio.IsChecked = _settings.Theme == AppTheme.Dark;
         LightThemeRadio.IsChecked = _settings.Theme == AppTheme.Light;
+        CodexThemeRadio.IsChecked = _settings.Theme == AppTheme.Codex;
         RemainingPrimaryRadio.IsChecked = _settings.PrimaryDisplay == PrimaryUsageDisplay.Remaining;
         UsedPrimaryRadio.IsChecked = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used;
         RightEdgeRadio.IsChecked = _settings.Placement == HorizontalPlacement.RightEdge;
@@ -99,7 +100,7 @@ public partial class SettingsWindow : Window
 
     private void ThemeRadio_OnClick(object sender, RoutedEventArgs eventArgs)
     {
-        var theme = LightThemeRadio.IsChecked == true
+        var theme = CodexThemeRadio.IsChecked == true ? AppTheme.Codex : LightThemeRadio.IsChecked == true
             ? AppTheme.Light
             : DarkThemeRadio.IsChecked == true
                 ? AppTheme.Dark
@@ -242,7 +243,7 @@ public partial class SettingsWindow : Window
             ? PrimaryUsageDisplay.Used
             : PrimaryUsageDisplay.Remaining;
 
-        var theme = LightThemeRadio.IsChecked == true
+        var theme = CodexThemeRadio.IsChecked == true ? AppTheme.Codex : LightThemeRadio.IsChecked == true
             ? AppTheme.Light
             : DarkThemeRadio.IsChecked == true
                 ? AppTheme.Dark

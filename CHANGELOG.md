@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Optional Codex desktop colour matching.
+
 ## [0.4.4] - 2026-10-31
 
 ### Fixed

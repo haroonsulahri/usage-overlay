@@ -577,6 +577,11 @@
                                              Style="{StaticResource SettingsRadioStyle}"
                                              Click="ThemeRadio_OnClick" />
                             </StackPanel>
+                            <RadioButton x:Name="CodexThemeRadio"
+                                         GroupName="ThemeMode"
+                                         Content="Match Codex colours"
+                                         Style="{StaticResource SettingsRadioStyle}"
+                                         Click="ThemeRadio_OnClick" />
                             <TextBlock Margin="0,5,0,0"
                                        Text="Follow app matches the light or dark look of the app in front and falls back to Windows otherwise."
                                        Foreground="{DynamicResource OverlayMutedBrush}"

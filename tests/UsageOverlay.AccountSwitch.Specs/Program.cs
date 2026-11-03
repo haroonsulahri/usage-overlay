@@ -34,6 +34,16 @@ if (args.Contains("--fake"))
 }
 
 SettingsPersistenceSpecs.Run();
+var paletteFile = Path.GetTempFileName();
+try
+{
+    File.WriteAllText(paletteFile, "[desktop.appearanceDarkChromeTheme]\nsurface = \"#0d1117\"\nink = \"#e6edf3\"\n[desktop.appearanceLightChromeTheme]\nsurface = \"#ffffff\"\nink = \"#111111\"\n");
+    Assert(ThemeManager.ReadCodexPalette(paletteFile, true)?.Surface == System.Windows.Media.Color.FromRgb(13, 17, 23), "Reads the dark Codex palette");
+    Assert(ThemeManager.ReadCodexPalette(paletteFile, false)?.Ink == System.Windows.Media.Color.FromRgb(17, 17, 17), "Reads the light Codex palette");
+    File.WriteAllText(paletteFile, "[desktop.appearanceDarkChromeTheme]\nsurface = \"#000000\"\nink = \"#111111\"\n");
+    Assert(ThemeManager.ReadCodexPalette(paletteFile, true) is null, "Rejects low-contrast theme colours");
+}
+finally { File.Delete(paletteFile); }
 ClaudeIntegrationSpecs.Run();
 await ClaudeSignInSpecs.RunAsync();
 await ClaudeRenewalSpecs.RunAsync();
