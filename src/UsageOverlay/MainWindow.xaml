@@ -62,7 +62,7 @@
 
         <Border x:Name="DetailsPanel"
                 Grid.Column="0"
-                Margin="0,12,12,12"
+                Margin="0,12,4,12"
                 Padding="14"
                 VerticalAlignment="Center"
                 Background="{DynamicResource OverlaySurfaceBrush}"
