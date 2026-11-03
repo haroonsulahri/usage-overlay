@@ -161,6 +161,9 @@
                                 Style="{StaticResource UsageActionLinkStyle}" Click="RetryUsageButton_OnClick" />
                     </StackPanel>
                     <StackPanel x:Name="OtherAppsPanel" Visibility="Collapsed" />
+                    <TextBlock x:Name="ProjectGitText" Visibility="Collapsed" Margin="0,10,0,0"
+                               Foreground="{DynamicResource OverlayMutedBrush}" FontSize="{StaticResource OverlayTextSmall}"
+                               TextWrapping="Wrap" />
                     <Border Margin="0,10,0,0"
                             Padding="0,9,0,0"
                             BorderBrush="{DynamicResource OverlayBorderBrush}"

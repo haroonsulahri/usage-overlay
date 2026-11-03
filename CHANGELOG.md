@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Optional Git details for the selected Codex desktop project root.
+
 ## [0.4.4] - 2026-10-31
 
 ### Fixed
