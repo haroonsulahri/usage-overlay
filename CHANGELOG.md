@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Open Settings directly from the detail card.
+
 ## [0.4.4] - 2026-10-31
 
 ### Fixed

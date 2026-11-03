@@ -165,7 +165,16 @@
                             Padding="0,9,0,0"
                             BorderBrush="{DynamicResource OverlayBorderBrush}"
                             BorderThickness="0,1,0,0">
-                        <Button x:Name="ViewUsageButton" Style="{StaticResource UsageActionLinkStyle}" HorizontalAlignment="Right" AutomationProperties.Name="View full Codex usage" ToolTip="Open full Codex usage" Click="ViewUsageLink_OnClick">View usage</Button>
+                        <Grid>
+                            <Button x:Name="SettingsButton" HorizontalAlignment="Left"
+                                    Style="{StaticResource OverlayIconButtonStyle}"
+                                    AutomationProperties.Name="Open settings" ToolTip="Open settings"
+                                    Click="SettingsMenuItem_OnClick">
+                                <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                           Foreground="{DynamicResource OverlayMutedBrush}" Text="&#xE713;" />
+                            </Button>
+                            <Button x:Name="ViewUsageButton" Style="{StaticResource UsageActionLinkStyle}" HorizontalAlignment="Right" AutomationProperties.Name="View full Codex usage" ToolTip="Open full Codex usage" Click="ViewUsageLink_OnClick">View usage</Button>
+                        </Grid>
                     </Border>
                 </StackPanel>
 

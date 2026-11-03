@@ -128,6 +128,7 @@ Remove either shortcut without touching the application files:
 | Action | Result |
 | --- | --- |
 | Hover over the rail | Temporarily opens usage details |
+| Click the settings gear in the detail card | Opens Settings |
 | Move the pointer away | Closes an unpinned detail card |
 | Click the rail | Pins or unpins usage details |
 | Click the card's close button | Closes only the detail card |
