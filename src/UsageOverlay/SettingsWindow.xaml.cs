@@ -63,6 +63,7 @@ public partial class SettingsWindow : Window
         StartAutomaticallyCheckBox.IsEnabled = _startupSupported;
         CodexEnabledCheckBox.IsChecked = _settings.CodexEnabled;
         ClaudeEnabledCheckBox.IsChecked = _settings.ClaudeEnabled;
+        ClaudeWeeklyPrimaryCheckBox.IsChecked = _settings.ClaudeWeeklyPrimary;
         ClaudeStatusLineCheckBox.IsChecked = _settings.ClaudeStatusLineEnabled;
         ClaudeAccountUsageCheckBox.IsChecked = _settings.ClaudeAccountUsageEnabled;
         ClaudeAutomaticRenewalCheckBox.IsChecked = _settings.ClaudeAutomaticRenewalEnabled;
@@ -258,6 +259,7 @@ public partial class SettingsWindow : Window
             ShowOnlyWhenCodexActive = CodexOnlyVisibilityRadio.IsChecked == true,
             CodexEnabled = CodexEnabledCheckBox.IsChecked == true,
             ClaudeEnabled = ClaudeEnabledCheckBox.IsChecked == true,
+            ClaudeWeeklyPrimary = ClaudeWeeklyPrimaryCheckBox.IsChecked == true,
             ClaudeStatusLineEnabled = ClaudeStatusLineCheckBox.IsChecked == true,
             ClaudeAccountUsageEnabled = ClaudeAccountUsageCheckBox.IsChecked == true,
             ClaudeAutomaticRenewalEnabled = ClaudeAutomaticRenewalCheckBox.IsChecked == true,

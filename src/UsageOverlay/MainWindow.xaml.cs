@@ -805,7 +805,8 @@ public partial class MainWindow : Window
     }
 
     private ProviderUsageState CurrentState =>
-        _states.TryGetValue(_displayedProvider, out var state) ? state : ProviderUsageState.Off(_displayedProvider);
+        (_states.TryGetValue(_displayedProvider, out var state) ? state : ProviderUsageState.Off(_displayedProvider))
+            .WithClaudeWeeklyPrimary(_settings.ClaudeWeeklyPrimary);
 
     private void ShowProvider(UsageProviderKind provider)
     {
@@ -960,7 +961,8 @@ public partial class MainWindow : Window
         foreach (var provider in others)
         {
             content.Children.Add(CreateOtherAppRow(
-                _states.TryGetValue(provider, out var state) ? state : ProviderUsageState.Off(provider)));
+                (_states.TryGetValue(provider, out var state) ? state : ProviderUsageState.Off(provider))
+                    .WithClaudeWeeklyPrimary(_settings.ClaudeWeeklyPrimary)));
         }
 
         OtherAppsPanel.Children.Add(new Border
@@ -1183,7 +1185,8 @@ public partial class MainWindow : Window
         var showingUsed = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used;
         var parts = UsageProviderCatalog.All
             .Where(IsProviderEnabled)
-            .Select(provider => _states.TryGetValue(provider, out var state) ? state : null)
+            .Select(provider => _states.TryGetValue(provider, out var state)
+                ? state.WithClaudeWeeklyPrimary(_settings.ClaudeWeeklyPrimary) : null)
             .Where(state => state?.Lead is not null)
             .Select(state =>
             {
