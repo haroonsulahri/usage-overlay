@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Option to show Claude’s weekly limit as the main usage number.
+
 ## [0.4.4] - 2026-10-31
 
 ### Fixed

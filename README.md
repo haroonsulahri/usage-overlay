@@ -128,6 +128,7 @@ Remove either shortcut without touching the application files:
 | Action | Result |
 | --- | --- |
 | Hover over the rail | Temporarily opens usage details |
+| Enable Claude’s weekly main number in Settings | Show its weekly usage on the rail and in other-app summaries |
 | Move the pointer away | Closes an unpinned detail card |
 | Click the rail | Pins or unpins usage details |
 | Click the card's close button | Closes only the detail card |

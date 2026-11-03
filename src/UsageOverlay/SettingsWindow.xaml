@@ -370,9 +370,12 @@
                                       Style="{StaticResource SettingsCheckStyle}"
                                       Checked="ProviderCheckBox_OnChanged"
                                       Unchecked="ProviderCheckBox_OnChanged" />
-                            <TextBlock Text="Shows your Pro or Max plan’s 5-hour limit on the rail, with weekly usage in the detail card, beside Claude desktop and terminals running Claude Code."
+                            <TextBlock Text="Shows your Pro or Max plan’s limits beside Claude desktop and terminals running Claude Code."
                                        Style="{StaticResource HelpTextStyle}" />
                             <StackPanel x:Name="ClaudeOptionsPanel" Margin="22,0,0,0" Visibility="Collapsed">
+                                <CheckBox x:Name="ClaudeWeeklyPrimaryCheckBox"
+                                          Content="Show Claude’s weekly limit as the main number"
+                                          Style="{StaticResource SettingsCheckStyle}" />
                                 <CheckBox x:Name="ClaudeStatusLineCheckBox"
                                           Content="Connect Claude Code’s status line (official)"
                                           Style="{StaticResource SettingsCheckStyle}" />

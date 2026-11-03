@@ -83,6 +83,13 @@ internal static class ProviderSpecs
         AssertEqual(ProviderConnection.Live, live.Connection);
         AssertEqual("claude:five_hour", live.Lead!.Key);
         AssertEqual("claude:seven_day", live.Windows[1].Key);
+        var weeklyFirst = live.WithClaudeWeeklyPrimary(true);
+        AssertEqual("claude:seven_day", weeklyFirst.Lead!.Key);
+        AssertEqual("claude:five_hour", weeklyFirst.Windows[1].Key);
+        AssertEqual("claude:five_hour", live.WithClaudeWeeklyPrimary(false).Lead!.Key);
+        AssertEqual("claude:five_hour", (live with { Windows = [live.Windows[0]] }).WithClaudeWeeklyPrimary(true).Lead!.Key);
+        AssertEqual("claude:five_hour", (live with { Provider = UsageProviderKind.Codex }).WithClaudeWeeklyPrimary(true).Lead!.Key);
+        AssertEqual("claude:five_hour", live.Lead!.Key);
         var weeklyOnly = (snapshot with { FiveHour = null }).ToState(Now);
         AssertEqual("claude:seven_day", weeklyOnly.Lead!.Key);
         AssertEqual("Updated 3m ago", live.StatusText);

@@ -33,6 +33,13 @@ public sealed record ProviderUsageState(
 
     public string DisplayName => UsageProviderCatalog.DisplayName(Provider);
 
+    public ProviderUsageState WithClaudeWeeklyPrimary(bool enabled)
+    {
+        if (!enabled || Provider != UsageProviderKind.Claude || !Windows.Any(window => window.Key == "claude:seven_day"))
+            return this;
+        return this with { Windows = Windows.OrderByDescending(window => window.Key == "claude:seven_day").ToArray() };
+    }
+
     public static ProviderUsageState Off(UsageProviderKind provider) =>
         Unavailable(provider, ProviderConnection.Off, "Off", "Turn this app on in Settings.");
 

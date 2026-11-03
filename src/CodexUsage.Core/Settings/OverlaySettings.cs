@@ -75,6 +75,8 @@ public sealed record OverlaySettings
     /// <summary>Tracks Claude usage. The sources below decide where readings come from.</summary>
     public bool ClaudeEnabled { get; init; }
 
+    public bool ClaudeWeeklyPrimary { get; init; }
+
     /// <summary>Official source: Claude Code's status line reports plan limits after each reply.</summary>
     public bool ClaudeStatusLineEnabled { get; init; } = true;
 
