@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Option to follow Codex windows while still tracking other apps.
+
 ## [0.4.4] - 2026-10-31
 
 ### Fixed

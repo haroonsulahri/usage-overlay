@@ -70,6 +70,8 @@ public sealed record OverlaySettings
     /// <summary>Shows the rail only while a supported app (Codex, Claude or Cursor) is active.</summary>
     public bool ShowOnlyWhenCodexActive { get; init; } = true;
 
+    public bool OverlayOnlyOnCodex { get; init; }
+
     public bool CodexEnabled { get; init; } = true;
 
     /// <summary>Tracks Claude usage. The sources below decide where readings come from.</summary>
