@@ -463,6 +463,13 @@
                                        Text="Across Windows keeps the rail in its last position when you switch apps."
                                        Foreground="{DynamicResource OverlayMutedBrush}"
                                        FontSize="{StaticResource OverlayTextSmall}" />
+                            <CheckBox x:Name="OverlayOnlyOnCodexCheckBox"
+                                      Content="Only follow Codex windows"
+                                      IsEnabled="{Binding IsChecked, ElementName=CodexOnlyVisibilityRadio}"
+                                      Style="{StaticResource SettingsCheckStyle}" />
+                            <TextBlock Margin="22,3,0,0"
+                                       Text="Claude and Cursor usage can still appear in the Codex detail card."
+                                       Style="{StaticResource HelpTextStyle}" />
                             <CheckBox x:Name="HideFullscreenCheckBox"
                                       Content="Hide while the app is fullscreen"
                                       Style="{StaticResource SettingsCheckStyle}" />

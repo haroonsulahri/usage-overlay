@@ -73,6 +73,7 @@ public partial class SettingsWindow : Window
         _removeCursorKeyPending = false;
         UpdateCursorControls();
         CodexOnlyVisibilityRadio.IsChecked = _settings.ShowOnlyWhenCodexActive;
+        OverlayOnlyOnCodexCheckBox.IsChecked = _settings.OverlayOnlyOnCodex;
         AcrossWindowsVisibilityRadio.IsChecked = !_settings.ShowOnlyWhenCodexActive;
         FollowMonitorsCheckBox.IsChecked = _settings.FollowCodexAcrossMonitors;
         HideFullscreenCheckBox.IsChecked = _settings.HideInFullscreen;
@@ -256,6 +257,7 @@ public partial class SettingsWindow : Window
             VerticalOffset = _pendingVerticalOffset,
             HideInFullscreen = HideFullscreenCheckBox.IsChecked == true,
             ShowOnlyWhenCodexActive = CodexOnlyVisibilityRadio.IsChecked == true,
+            OverlayOnlyOnCodex = OverlayOnlyOnCodexCheckBox.IsChecked == true,
             CodexEnabled = CodexEnabledCheckBox.IsChecked == true,
             ClaudeEnabled = ClaudeEnabledCheckBox.IsChecked == true,
             ClaudeStatusLineEnabled = ClaudeStatusLineCheckBox.IsChecked == true,

@@ -384,7 +384,10 @@ public partial class MainWindow : Window
             return;
         }
 
-        var hasActiveCodex = HostWindowLocator.TryGetActiveHost(IsProviderEnabled, _claude.IsClaudeCodeHost, out var host);
+        var hasActiveCodex = HostWindowLocator.TryGetActiveHost(
+            provider => IsProviderEnabled(provider) &&
+                (!_settings.ShowOnlyWhenCodexActive || !_settings.OverlayOnlyOnCodex || provider == UsageProviderKind.Codex),
+            _claude.IsClaudeCodeHost, out var host);
         var bounds = host.Bounds;
         if (hasActiveCodex)
         {
