@@ -6,7 +6,8 @@ public enum AppTheme
 {
     System,
     Dark,
-    Light
+    Light,
+    Codex
 }
 
 public enum HorizontalPlacement
