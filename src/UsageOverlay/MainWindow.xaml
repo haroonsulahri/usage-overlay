@@ -85,6 +85,7 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <Grid VerticalAlignment="Center">
                         <Grid.ColumnDefinitions>
@@ -102,7 +103,7 @@
                                    FontWeight="Medium" />
                     </Grid>
                     <StackPanel Grid.Column="1"
-                                Margin="0,0,10,0"
+                                Margin="0,0,4,0"
                                 Orientation="Horizontal"
                                 VerticalAlignment="Center">
                         <Ellipse x:Name="LiveDot" Width="6" Height="6" Margin="0,0,5,0" Fill="{DynamicResource OverlayNormalBrush}" />
@@ -111,7 +112,14 @@
                                    Foreground="{DynamicResource OverlayMutedBrush}"
                                    FontSize="{StaticResource OverlayTextSmall}" />
                     </StackPanel>
-                    <Button Grid.Column="2"
+                    <Button x:Name="SettingsButton" Grid.Column="2"
+                            Style="{StaticResource OverlayIconButtonStyle}"
+                            AutomationProperties.Name="Open settings" ToolTip="Open settings"
+                            Click="SettingsMenuItem_OnClick">
+                        <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                   Foreground="{DynamicResource OverlayMutedBrush}" Text="&#xE713;" />
+                    </Button>
+                    <Button Grid.Column="3"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center"
                             Style="{StaticResource OverlayIconButtonStyle}"
@@ -165,16 +173,7 @@
                             Padding="0,9,0,0"
                             BorderBrush="{DynamicResource OverlayBorderBrush}"
                             BorderThickness="0,1,0,0">
-                        <Grid>
-                            <Button x:Name="SettingsButton" HorizontalAlignment="Left"
-                                    Style="{StaticResource OverlayIconButtonStyle}"
-                                    AutomationProperties.Name="Open settings" ToolTip="Open settings"
-                                    Click="SettingsMenuItem_OnClick">
-                                <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14"
-                                           Foreground="{DynamicResource OverlayMutedBrush}" Text="&#xE713;" />
-                            </Button>
-                            <Button x:Name="ViewUsageButton" Style="{StaticResource UsageActionLinkStyle}" HorizontalAlignment="Right" AutomationProperties.Name="View full Codex usage" ToolTip="Open full Codex usage" Click="ViewUsageLink_OnClick">View usage</Button>
-                        </Grid>
+                        <Button x:Name="ViewUsageButton" Style="{StaticResource UsageActionLinkStyle}" HorizontalAlignment="Right" AutomationProperties.Name="View full Codex usage" ToolTip="Open full Codex usage" Click="ViewUsageLink_OnClick">View usage</Button>
                     </Border>
                 </StackPanel>
 
