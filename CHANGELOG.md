@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Move the usage detail card closer to the rail.
+
 ## [0.4.4] - 2026-10-31
 
 ### Fixed
