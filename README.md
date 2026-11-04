@@ -147,6 +147,8 @@ Choosing **Hide usage rail** does not stop usage updates. Use the tray icon to s
 
 Open Settings from **Open settings…** in the rail or tray menu. Opening **Usage Overlay** from Windows Search also goes straight to this window.
 
+Choose English or Russian under **General → Language**. English is the default for existing and new installations. Save and restart Usage Overlay to apply a different language. Unrecognised messages from external services fall back to their original text.
+
 ![Native Usage Overlay Settings window](docs/images/settings.png)
 
 ### Saving and closing
