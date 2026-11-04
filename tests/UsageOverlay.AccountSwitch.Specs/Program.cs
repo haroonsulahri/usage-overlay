@@ -34,6 +34,7 @@ if (args.Contains("--fake"))
 }
 
 SettingsPersistenceSpecs.Run();
+LanguageSpecs.Run();
 ClaudeIntegrationSpecs.Run();
 await ClaudeSignInSpecs.RunAsync();
 await ClaudeRenewalSpecs.RunAsync();

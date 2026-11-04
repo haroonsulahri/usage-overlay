@@ -1,0 +1,700 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+  <data name="#left" xml:space="preserve">
+    <value>left</value>
+  </data>
+  <data name="#used" xml:space="preserve">
+    <value>used</value>
+  </data>
+  <data name="5-hour limit" xml:space="preserve">
+    <value>5-hour limit</value>
+  </data>
+  <data name="A Cursor team admin can create one in the Cursor team dashboard. It’s stored encrypted for your Windows account." xml:space="preserve">
+    <value>A Cursor team admin can create one in the Cursor team dashboard. It’s stored encrypted for your Windows account.</value>
+  </data>
+  <data name="A key is saved, encrypted for your Windows account. Paste a new one to replace it." xml:space="preserve">
+    <value>A key is saved, encrypted for your Windows account. Paste a new one to replace it.</value>
+  </data>
+  <data name="Access denied" xml:space="preserve">
+    <value>Access denied</value>
+  </data>
+  <data name="Across Windows" xml:space="preserve">
+    <value>Across Windows</value>
+  </data>
+  <data name="Across Windows keeps the rail in its last position when you switch apps." xml:space="preserve">
+    <value>Across Windows keeps the rail in its last position when you switch apps.</value>
+  </data>
+  <data name="Add your Cursor email and a team Admin API key in Settings." xml:space="preserve">
+    <value>Add your Cursor email and a team Admin API key in Settings.</value>
+  </data>
+  <data name="Alerts appear only when a limit crosses a colour threshold." xml:space="preserve">
+    <value>Alerts appear only when a limit crosses a colour threshold.</value>
+  </data>
+  <data name="Amber threshold percent used" xml:space="preserve">
+    <value>Amber threshold percent used</value>
+  </data>
+  <data name="Animate changes" xml:space="preserve">
+    <value>Animate changes</value>
+  </data>
+  <data name="Anywhere" xml:space="preserve">
+    <value>Anywhere</value>
+  </data>
+  <data name="Appearance" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="Apps" xml:space="preserve">
+    <value>Apps</value>
+  </data>
+  <data name="Automatically renew my Claude sign-in" xml:space="preserve">
+    <value>Automatically renew my Claude sign-in</value>
+  </data>
+  <data name="CLI disconnected" xml:space="preserve">
+    <value>CLI disconnected</value>
+  </data>
+  <data name="CLI not found" xml:space="preserve">
+    <value>CLI not found</value>
+  </data>
+  <data name="CLI not found. Check Settings." xml:space="preserve">
+    <value>CLI not found. Check Settings.</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Check for updates" xml:space="preserve">
+    <value>Check for updates</value>
+  </data>
+  <data name="Checking Claude usage…" xml:space="preserve">
+    <value>Checking Claude usage…</value>
+  </data>
+  <data name="Checking for updates…" xml:space="preserve">
+    <value>Checking for updates…</value>
+  </data>
+  <data name="Choose a refresh time between 15 and 3600 seconds." xml:space="preserve">
+    <value>Choose a refresh time between 15 and 3600 seconds.</value>
+  </data>
+  <data name="Choose at least one way to read Claude usage." xml:space="preserve">
+    <value>Choose at least one way to read Claude usage.</value>
+  </data>
+  <data name="Choose the AI apps the rail tracks. It follows whichever one is in front." xml:space="preserve">
+    <value>Choose the AI apps the rail tracks. It follows whichever one is in front.</value>
+  </data>
+  <data name="Choose when the usage rail appears." xml:space="preserve">
+    <value>Choose when the usage rail appears.</value>
+  </data>
+  <data name="Claude Code is connected but isn’t reporting plan limits. Update Claude Code and check /status shows a Pro or Max plan." xml:space="preserve">
+    <value>Claude Code is connected but isn’t reporting plan limits. Update Claude Code and check /status shows a Pro or Max plan.</value>
+  </data>
+  <data name="Claude denied access to usage (HTTP 403). Check your account’s usage page and the enabled usage source in Settings." xml:space="preserve">
+    <value>Claude denied access to usage (HTTP 403). Check your account’s usage page and the enabled usage source in Settings.</value>
+  </data>
+  <data name="Claude is limiting usage checks. The rail will retry automatically with a longer delay." xml:space="preserve">
+    <value>Claude is limiting usage checks. The rail will retry automatically with a longer delay.</value>
+  </data>
+  <data name="Claude rejected the rail’s saved sign-in. Run claude auth login, finish in your browser, then retry." xml:space="preserve">
+    <value>Claude rejected the rail’s saved sign-in. Run claude auth login, finish in your browser, then retry.</value>
+  </data>
+  <data name="Claude returned no readable usage limits. This unofficial source may need an update. You can still check Claude’s usage page." xml:space="preserve">
+    <value>Claude returned no readable usage limits. This unofficial source may need an update. You can still check Claude’s usage page.</value>
+  </data>
+  <data name="Close Settings" xml:space="preserve">
+    <value>Close Settings</value>
+  </data>
+  <data name="Close usage details" xml:space="preserve">
+    <value>Close usage details</value>
+  </data>
+  <data name="Codex CLI is ready. {0}" xml:space="preserve">
+    <value>Codex CLI is ready. {0}</value>
+  </data>
+  <data name="Codex CLI path" xml:space="preserve">
+    <value>Codex CLI path</value>
+  </data>
+  <data name="Codex CLI path (optional)" xml:space="preserve">
+    <value>Codex CLI path (optional)</value>
+  </data>
+  <data name="Codex CLI wasn’t found. {0}" xml:space="preserve">
+    <value>Codex CLI wasn’t found. {0}</value>
+  </data>
+  <data name="Codex usage" xml:space="preserve">
+    <value>Codex usage</value>
+  </data>
+  <data name="Codex, Claude and Cursor usage at a glance. Built by " xml:space="preserve">
+    <value>Codex, Claude and Cursor usage at a glance. Built by </value>
+  </data>
+  <data name="Command copied" xml:space="preserve">
+    <value>Command copied</value>
+  </data>
+  <data name="Connect Claude Code’s status line (official)" xml:space="preserve">
+    <value>Connect Claude Code’s status line (official)</value>
+  </data>
+  <data name="Connecting to Codex…" xml:space="preserve">
+    <value>Connecting to Codex…</value>
+  </data>
+  <data name="Connecting…" xml:space="preserve">
+    <value>Connecting…</value>
+  </data>
+  <data name="Connection &amp; diagnostics" xml:space="preserve">
+    <value>Connection &amp; diagnostics</value>
+  </data>
+  <data name="Connection failed" xml:space="preserve">
+    <value>Connection failed</value>
+  </data>
+  <data name="Copy claude auth login. Run it in your terminal, then complete sign-in in your browser." xml:space="preserve">
+    <value>Copy claude auth login. Run it in your terminal, then complete sign-in in your browser.</value>
+  </data>
+  <data name="Copy failed. Try again" xml:space="preserve">
+    <value>Copy failed. Try again</value>
+  </data>
+  <data name="Copy sign-in command" xml:space="preserve">
+    <value>Copy sign-in command</value>
+  </data>
+  <data name="Couldn’t check for updates" xml:space="preserve">
+    <value>Couldn’t check for updates</value>
+  </data>
+  <data name="Couldn’t connect" xml:space="preserve">
+    <value>Couldn’t connect</value>
+  </data>
+  <data name="Couldn’t load Cursor usage. Retrying…" xml:space="preserve">
+    <value>Couldn’t load Cursor usage. Retrying…</value>
+  </data>
+  <data name="Couldn’t load limits. Retrying…" xml:space="preserve">
+    <value>Couldn’t load limits. Retrying…</value>
+  </data>
+  <data name="Couldn’t refresh. Showing the last reading." xml:space="preserve">
+    <value>Couldn’t refresh. Showing the last reading.</value>
+  </data>
+  <data name="Cursor (experimental)" xml:space="preserve">
+    <value>Cursor (experimental)</value>
+  </data>
+  <data name="Cursor Admin API key" xml:space="preserve">
+    <value>Cursor Admin API key</value>
+  </data>
+  <data name="Cursor account email" xml:space="preserve">
+    <value>Cursor account email</value>
+  </data>
+  <data name="Cursor didn’t accept the saved sign-in. Open Cursor to refresh it." xml:space="preserve">
+    <value>Cursor didn’t accept the saved sign-in. Open Cursor to refresh it.</value>
+  </data>
+  <data name="Cursor rejected the Admin API key. Check it in Settings." xml:space="preserve">
+    <value>Cursor rejected the Admin API key. Check it in Settings.</value>
+  </data>
+  <data name="Cursor’s saved sign-in has expired. Open Cursor to refresh it." xml:space="preserve">
+    <value>Cursor’s saved sign-in has expired. Open Cursor to refresh it.</value>
+  </data>
+  <data name="Cursor’s saved sign-in isn’t readable. Sign in to Cursor again." xml:space="preserve">
+    <value>Cursor’s saved sign-in isn’t readable. Sign in to Cursor again.</value>
+  </data>
+  <data name="Dark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="Defaults are ready. Select Save to use them." xml:space="preserve">
+    <value>Defaults are ready. Select Save to use them.</value>
+  </data>
+  <data name="Demo" xml:space="preserve">
+    <value>Demo</value>
+  </data>
+  <data name="Detecting the saved Claude sign-in…" xml:space="preserve">
+    <value>Detecting the saved Claude sign-in…</value>
+  </data>
+  <data name="Disconnect Codex CLI" xml:space="preserve">
+    <value>Disconnect Codex CLI</value>
+  </data>
+  <data name="Disconnected" xml:space="preserve">
+    <value>Disconnected</value>
+  </data>
+  <data name="Drag the rail where you want it, or snap it to an edge." xml:space="preserve">
+    <value>Drag the rail where you want it, or snap it to an edge.</value>
+  </data>
+  <data name="English" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Enter numbers for both colour thresholds." xml:space="preserve">
+    <value>Enter numbers for both colour thresholds.</value>
+  </data>
+  <data name="Enter the email address of your Cursor account." xml:space="preserve">
+    <value>Enter the email address of your Cursor account.</value>
+  </data>
+  <data name="Follow app" xml:space="preserve">
+    <value>Follow app</value>
+  </data>
+  <data name="Follow app matches the light or dark look of the app in front and falls back to Windows otherwise." xml:space="preserve">
+    <value>Follow app matches the light or dark look of the app in front and falls back to Windows otherwise.</value>
+  </data>
+  <data name="Follow the app between monitors" xml:space="preserve">
+    <value>Follow the app between monitors</value>
+  </data>
+  <data name="General" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Hide Settings" xml:space="preserve">
+    <value>Hide Settings</value>
+  </data>
+  <data name="Hide connection and diagnostics" xml:space="preserve">
+    <value>Hide connection and diagnostics</value>
+  </data>
+  <data name="Hide details" xml:space="preserve">
+    <value>Hide details</value>
+  </data>
+  <data name="Hide usage rail" xml:space="preserve">
+    <value>Hide usage rail</value>
+  </data>
+  <data name="Hide while the app is fullscreen" xml:space="preserve">
+    <value>Hide while the app is fullscreen</value>
+  </data>
+  <data name="Included usage" xml:space="preserve">
+    <value>Included usage</value>
+  </data>
+  <data name="Key rejected" xml:space="preserve">
+    <value>Key rejected</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Left" xml:space="preserve">
+    <value>Left</value>
+  </data>
+  <data name="Left edge" xml:space="preserve">
+    <value>Left edge</value>
+  </data>
+  <data name="Light" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="List my other apps in the detail card" xml:space="preserve">
+    <value>List my other apps in the detail card</value>
+  </data>
+  <data name="Live" xml:space="preserve">
+    <value>Live</value>
+  </data>
+  <data name="Loading usage…" xml:space="preserve">
+    <value>Loading usage…</value>
+  </data>
+  <data name="Main number" xml:space="preserve">
+    <value>Main number</value>
+  </data>
+  <data name="Monthly spend limit" xml:space="preserve">
+    <value>Monthly spend limit</value>
+  </data>
+  <data name="Move down" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="Move left" xml:space="preserve">
+    <value>Move left</value>
+  </data>
+  <data name="Move right" xml:space="preserve">
+    <value>Move right</value>
+  </data>
+  <data name="Move up" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="No plan limits" xml:space="preserve">
+    <value>No plan limits</value>
+  </data>
+  <data name="No readable limits" xml:space="preserve">
+    <value>No readable limits</value>
+  </data>
+  <data name="Not connected" xml:space="preserve">
+    <value>Not connected</value>
+  </data>
+  <data name="Not found" xml:space="preserve">
+    <value>Not found</value>
+  </data>
+  <data name="Notify me when usage turns amber or red" xml:space="preserve">
+    <value>Notify me when usage turns amber or red</value>
+  </data>
+  <data name="Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Off by default. Sends a random installation ID and app version to haroone.com at most once per UTC day while running. No account, conversation, quota or log data. Haroone records the reporting date and keeps reports for 90 days. Turn off and Save to stop future reports; previously received reports expire automatically." xml:space="preserve">
+    <value>Off by default. Sends a random installation ID and app version to haroone.com at most once per UTC day while running. No account, conversation, quota or log data. Haroone records the reporting date and keeps reports for 90 days. Turn off and Save to stop future reports; previously received reports expire automatically.</value>
+  </data>
+  <data name="Off." xml:space="preserve">
+    <value>Off.</value>
+  </data>
+  <data name="Off: the card shows only the app in front." xml:space="preserve">
+    <value>Off: the card shows only the app in front.</value>
+  </data>
+  <data name="Only in these apps" xml:space="preserve">
+    <value>Only in these apps</value>
+  </data>
+  <data name="Only needed if Usage Overlay cannot connect to Codex or update." xml:space="preserve">
+    <value>Only needed if Usage Overlay cannot connect to Codex or update.</value>
+  </data>
+  <data name="Open Haroone.com" xml:space="preserve">
+    <value>Open Haroone.com</value>
+  </data>
+  <data name="Open full Codex usage" xml:space="preserve">
+    <value>Open full Codex usage</value>
+  </data>
+  <data name="Open full {0} usage" xml:space="preserve">
+    <value>Open full {0} usage</value>
+  </data>
+  <data name="Open log file" xml:space="preserve">
+    <value>Open log file</value>
+  </data>
+  <data name="Open logs" xml:space="preserve">
+    <value>Open logs</value>
+  </data>
+  <data name="Open settings" xml:space="preserve">
+    <value>Open settings</value>
+  </data>
+  <data name="Open settings…" xml:space="preserve">
+    <value>Open settings…</value>
+  </data>
+  <data name="Open the GitHub Releases page or try again later." xml:space="preserve">
+    <value>Open the GitHub Releases page or try again later.</value>
+  </data>
+  <data name="Open usage source and connection settings" xml:space="preserve">
+    <value>Open usage source and connection settings</value>
+  </data>
+  <data name="Open when Windows starts" xml:space="preserve">
+    <value>Open when Windows starts</value>
+  </data>
+  <data name="Optional. When the access token expires, renew it with Anthropic and update Claude Code’s saved sign-in on this PC. This avoids repeated logins while the renewal token remains valid. No browser, terminal, or model request is launched." xml:space="preserve">
+    <value>Optional. When the access token expires, renew it with Anthropic and update Claude Code’s saved sign-in on this PC. This avoids repeated logins while the renewal token remains valid. No browser, terminal, or model request is launched.</value>
+  </data>
+  <data name="Or use a team Admin API key (official, for team admins). Your Cursor account email:" xml:space="preserve">
+    <value>Or use a team Admin API key (official, for team admins). Your Cursor account email:</value>
+  </data>
+  <data name="Other apps" xml:space="preserve">
+    <value>Other apps</value>
+  </data>
+  <data name="Pause 15 min" xml:space="preserve">
+    <value>Pause 15 min</value>
+  </data>
+  <data name="Pause the overlay" xml:space="preserve">
+    <value>Pause the overlay</value>
+  </data>
+  <data name="Paused until {0}" xml:space="preserve">
+    <value>Paused until {0}</value>
+  </data>
+  <data name="Position" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="Position offset: X {0}px, Y {1}px" xml:space="preserve">
+    <value>Position offset: X {0}px, Y {1}px</value>
+  </data>
+  <data name="Quit Usage Overlay" xml:space="preserve">
+    <value>Quit Usage Overlay</value>
+  </data>
+  <data name="Read usage from my Claude sign-in (unofficial)" xml:space="preserve">
+    <value>Read usage from my Claude sign-in (unofficial)</value>
+  </data>
+  <data name="Read usage from my Cursor sign-in (unofficial)" xml:space="preserve">
+    <value>Read usage from my Cursor sign-in (unofficial)</value>
+  </data>
+  <data name="Reading Cursor team spend…" xml:space="preserve">
+    <value>Reading Cursor team spend…</value>
+  </data>
+  <data name="Reading Cursor usage…" xml:space="preserve">
+    <value>Reading Cursor usage…</value>
+  </data>
+  <data name="Reading usage from your Claude sign-in." xml:space="preserve">
+    <value>Reading usage from your Claude sign-in.</value>
+  </data>
+  <data name="Reads limits from the Codex CLI already signed in on this PC." xml:space="preserve">
+    <value>Reads limits from the Codex CLI already signed in on this PC.</value>
+  </data>
+  <data name="Reconnect Codex CLI" xml:space="preserve">
+    <value>Reconnect Codex CLI</value>
+  </data>
+  <data name="Reconnect when the CLI update is finished." xml:space="preserve">
+    <value>Reconnect when the CLI update is finished.</value>
+  </data>
+  <data name="Red threshold percent used" xml:space="preserve">
+    <value>Red threshold percent used</value>
+  </data>
+  <data name="Refresh every (15–3600 seconds)" xml:space="preserve">
+    <value>Refresh every (15–3600 seconds)</value>
+  </data>
+  <data name="Refresh interval seconds" xml:space="preserve">
+    <value>Refresh interval seconds</value>
+  </data>
+  <data name="Refresh usage" xml:space="preserve">
+    <value>Refresh usage</value>
+  </data>
+  <data name="Remove key" xml:space="preserve">
+    <value>Remove key</value>
+  </data>
+  <data name="Renewal pending" xml:space="preserve">
+    <value>Renewal pending</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="Reset position" xml:space="preserve">
+    <value>Reset position</value>
+  </data>
+  <data name="Reset time isn’t available" xml:space="preserve">
+    <value>Reset time isn’t available</value>
+  </data>
+  <data name="Resets in {0}d {1}h" xml:space="preserve">
+    <value>Resets in {0}d {1}h</value>
+  </data>
+  <data name="Resets in {0}h {1}m" xml:space="preserve">
+    <value>Resets in {0}h {1}m</value>
+  </data>
+  <data name="Resets in {0}m" xml:space="preserve">
+    <value>Resets in {0}m</value>
+  </data>
+  <data name="Resets now" xml:space="preserve">
+    <value>Resets now</value>
+  </data>
+  <data name="Restart Usage Overlay to apply a language change." xml:space="preserve">
+    <value>Restart Usage Overlay to apply a language change.</value>
+  </data>
+  <data name="Restore defaults" xml:space="preserve">
+    <value>Restore defaults</value>
+  </data>
+  <data name="Resume now" xml:space="preserve">
+    <value>Resume now</value>
+  </data>
+  <data name="Retry now" xml:space="preserve">
+    <value>Retry now</value>
+  </data>
+  <data name="Retry {0} usage now" xml:space="preserve">
+    <value>Retry {0} usage now</value>
+  </data>
+  <data name="Right edge" xml:space="preserve">
+    <value>Right edge</value>
+  </data>
+  <data name="Russian" xml:space="preserve">
+    <value>Russian</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Saved at {0}." xml:space="preserve">
+    <value>Saved at {0}.</value>
+  </data>
+  <data name="Saved. Restart Usage Overlay to apply changes." xml:space="preserve">
+    <value>Saved. Restart Usage Overlay to apply changes.</value>
+  </data>
+  <data name="Saved. Restart Usage Overlay to use the new CLI path or refresh time." xml:space="preserve">
+    <value>Saved. Restart Usage Overlay to use the new CLI path or refresh time.</value>
+  </data>
+  <data name="Saving…" xml:space="preserve">
+    <value>Saving…</value>
+  </data>
+  <data name="Select this notification to open the verified GitHub release." xml:space="preserve">
+    <value>Select this notification to open the verified GitHub release.</value>
+  </data>
+  <data name="Send a message in Claude Code in a terminal. Limits appear after its reply and need a Pro or Max sign-in." xml:space="preserve">
+    <value>Send a message in Claude Code in a terminal. Limits appear after its reply and need a Pro or Max sign-in.</value>
+  </data>
+  <data name="Service error" xml:space="preserve">
+    <value>Service error</value>
+  </data>
+  <data name="Set amber below red. Both values must be between 0 and 100." xml:space="preserve">
+    <value>Set amber below red. Both values must be between 0 and 100.</value>
+  </data>
+  <data name="Set up" xml:space="preserve">
+    <value>Set up</value>
+  </data>
+  <data name="Share optional installation and activity reports" xml:space="preserve">
+    <value>Share optional installation and activity reports</value>
+  </data>
+  <data name="Show connection and diagnostics" xml:space="preserve">
+    <value>Show connection and diagnostics</value>
+  </data>
+  <data name="Show details" xml:space="preserve">
+    <value>Show details</value>
+  </data>
+  <data name="Show the percentage below the rail" xml:space="preserve">
+    <value>Show the percentage below the rail</value>
+  </data>
+  <data name="Show the rail" xml:space="preserve">
+    <value>Show the rail</value>
+  </data>
+  <data name="Show usage rail" xml:space="preserve">
+    <value>Show usage rail</value>
+  </data>
+  <data name="Show {0} usage" xml:space="preserve">
+    <value>Show {0} usage</value>
+  </data>
+  <data name="Show {0} usage: {1}" xml:space="preserve">
+    <value>Show {0} usage: {1}</value>
+  </data>
+  <data name="Shows how much of your Cursor plan you’ve used this billing cycle." xml:space="preserve">
+    <value>Shows how much of your Cursor plan you’ve used this billing cycle.</value>
+  </data>
+  <data name="Shows your Pro or Max plan’s 5-hour limit on the rail, with weekly usage in the detail card, beside Claude desktop and terminals running Claude Code." xml:space="preserve">
+    <value>Shows your Pro or Max plan’s 5-hour limit on the rail, with weekly usage in the detail card, beside Claude desktop and terminals running Claude Code.</value>
+  </data>
+  <data name="Sign in" xml:space="preserve">
+    <value>Sign in</value>
+  </data>
+  <data name="Sign in to Codex. Usage will refresh automatically." xml:space="preserve">
+    <value>Sign in to Codex. Usage will refresh automatically.</value>
+  </data>
+  <data name="Sign-in changed" xml:space="preserve">
+    <value>Sign-in changed</value>
+  </data>
+  <data name="Sign-in expired" xml:space="preserve">
+    <value>Sign-in expired</value>
+  </data>
+  <data name="Sign-in rejected" xml:space="preserve">
+    <value>Sign-in rejected</value>
+  </data>
+  <data name="Sign-in required" xml:space="preserve">
+    <value>Sign-in required</value>
+  </data>
+  <data name="Sign-in unreadable" xml:space="preserve">
+    <value>Sign-in unreadable</value>
+  </data>
+  <data name="Signed out" xml:space="preserve">
+    <value>Signed out</value>
+  </data>
+  <data name="Stale" xml:space="preserve">
+    <value>Stale</value>
+  </data>
+  <data name="Team Admin API key" xml:space="preserve">
+    <value>Team Admin API key</value>
+  </data>
+  <data name="The Cursor key couldn’t be saved." xml:space="preserve">
+    <value>The Cursor key couldn’t be saved.</value>
+  </data>
+  <data name="The rail couldn’t reach Claude. Check your internet or VPN connection, then retry. It also retries automatically." xml:space="preserve">
+    <value>The rail couldn’t reach Claude. Check your internet or VPN connection, then retry. It also retries automatically.</value>
+  </data>
+  <data name="The rail couldn’t read Claude Code’s saved sign-in. Check file access, then retry." xml:space="preserve">
+    <value>The rail couldn’t read Claude Code’s saved sign-in. Check file access, then retry.</value>
+  </data>
+  <data name="The rail needs a Claude Code sign-in on this PC. Run claude auth login, finish in your browser, then retry." xml:space="preserve">
+    <value>The rail needs a Claude Code sign-in on this PC. Run claude auth login, finish in your browser, then retry.</value>
+  </data>
+  <data name="The renewed sign-in is not usable yet. The rail will retry automatically." xml:space="preserve">
+    <value>The renewed sign-in is not usable yet. The rail will retry automatically.</value>
+  </data>
+  <data name="The saved Claude account changed during the request. Detecting its current usage…" xml:space="preserve">
+    <value>The saved Claude account changed during the request. Detecting its current usage…</value>
+  </data>
+  <data name="The saved access token has expired. Open Claude Code to renew it, or enable automatic renewal in Settings. A browser login is only needed if renewal fails." xml:space="preserve">
+    <value>The saved access token has expired. Open Claude Code to renew it, or enable automatic renewal in Settings. A browser login is only needed if renewal fails.</value>
+  </data>
+  <data name="The saved key will be removed when you save." xml:space="preserve">
+    <value>The saved key will be removed when you save.</value>
+  </data>
+  <data name="Theme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="Too many requests" xml:space="preserve">
+    <value>Too many requests</value>
+  </data>
+  <data name="Trying again…" xml:space="preserve">
+    <value>Trying again…</value>
+  </data>
+  <data name="Turn amber at (% used)" xml:space="preserve">
+    <value>Turn amber at (% used)</value>
+  </data>
+  <data name="Turn red at (% used)" xml:space="preserve">
+    <value>Turn red at (% used)</value>
+  </data>
+  <data name="Unavailable" xml:space="preserve">
+    <value>Unavailable</value>
+  </data>
+  <data name="Updated just now" xml:space="preserve">
+    <value>Updated just now</value>
+  </data>
+  <data name="Updated {0}d ago" xml:space="preserve">
+    <value>Updated {0}d ago</value>
+  </data>
+  <data name="Updated {0}h ago" xml:space="preserve">
+    <value>Updated {0}h ago</value>
+  </data>
+  <data name="Updated {0}m ago" xml:space="preserve">
+    <value>Updated {0}m ago</value>
+  </data>
+  <data name="Updates Claude Code’s status line in {0} after each reply. An existing status line keeps working, and turning this off restores it." xml:space="preserve">
+    <value>Updates Claude Code’s status line in {0} after each reply. An existing status line keeps working, and turning this off restores it.</value>
+  </data>
+  <data name="Updates when Claude Code replies again." xml:space="preserve">
+    <value>Updates when Claude Code replies again.</value>
+  </data>
+  <data name="Usage Overlay Settings" xml:space="preserve">
+    <value>Usage Overlay Settings</value>
+  </data>
+  <data name="Usage Overlay is running." xml:space="preserve">
+    <value>Usage Overlay is running.</value>
+  </data>
+  <data name="Usage Overlay is up to date" xml:space="preserve">
+    <value>Usage Overlay is up to date</value>
+  </data>
+  <data name="Usage Overlay meter" xml:space="preserve">
+    <value>Usage Overlay meter</value>
+  </data>
+  <data name="Usage Overlay {0} is available" xml:space="preserve">
+    <value>Usage Overlay {0} is available</value>
+  </data>
+  <data name="Usage unavailable" xml:space="preserve">
+    <value>Usage unavailable</value>
+  </data>
+  <data name="Used" xml:space="preserve">
+    <value>Used</value>
+  </data>
+  <data name="View full Codex usage" xml:space="preserve">
+    <value>View full Codex usage</value>
+  </data>
+  <data name="View full {0} usage" xml:space="preserve">
+    <value>View full {0} usage</value>
+  </data>
+  <data name="View usage" xml:space="preserve">
+    <value>View usage</value>
+  </data>
+  <data name="Visibility" xml:space="preserve">
+    <value>Visibility</value>
+  </data>
+  <data name="Waiting" xml:space="preserve">
+    <value>Waiting</value>
+  </data>
+  <data name="Waiting for Claude Code" xml:space="preserve">
+    <value>Waiting for Claude Code</value>
+  </data>
+  <data name="We couldn’t find the Codex CLI at that path." xml:space="preserve">
+    <value>We couldn’t find the Codex CLI at that path.</value>
+  </data>
+  <data name="We couldn’t open Haroone.com in your browser." xml:space="preserve">
+    <value>We couldn’t open Haroone.com in your browser.</value>
+  </data>
+  <data name="Weekly limit" xml:space="preserve">
+    <value>Weekly limit</value>
+  </data>
+  <data name="Windows may reduce motion for accessibility." xml:space="preserve">
+    <value>Windows may reduce motion for accessibility.</value>
+  </data>
+  <data name="Works when you only use the Claude desktop app. Every 5 minutes it uses the sign-in Claude Code saved on this PC to call the private endpoint behind Claude’s usage page. Anthropic may change or restrict this, and its terms limit how that sign-in may be used." xml:space="preserve">
+    <value>Works when you only use the Claude desktop app. Every 5 minutes it uses the sign-in Claude Code saved on this PC to call the private endpoint behind Claude’s usage page. Anthropic may change or restrict this, and its terms limit how that sign-in may be used.</value>
+  </data>
+  <data name="Works with individual plans. Every 5 minutes it reads the sign-in the Cursor editor saved on this PC and calls the private endpoint behind Cursor’s usage dashboard. Cursor may change this without notice." xml:space="preserve">
+    <value>Works with individual plans. Every 5 minutes it reads the sign-in the Cursor editor saved on this PC and calls the private endpoint behind Cursor’s usage dashboard. Cursor may change this without notice.</value>
+  </data>
+  <data name="You are running version {0}." xml:space="preserve">
+    <value>You are running version {0}.</value>
+  </data>
+  <data name="{0} is off" xml:space="preserve">
+    <value>{0} is off</value>
+  </data>
+  <data name="{0} usage is nearly exhausted" xml:space="preserve">
+    <value>{0} usage is nearly exhausted</value>
+  </data>
+  <data name="{0} usage is running low" xml:space="preserve">
+    <value>{0} usage is running low</value>
+  </data>
+  <data name="{0} · secondary limit" xml:space="preserve">
+    <value>{0} · secondary limit</value>
+  </data>
+  <data name="{0}% {1}&#10;{2}" xml:space="preserve">
+    <value>{0}% {1}
+{2}</value>
+  </data>
+</root>

@@ -22,6 +22,12 @@ public enum PrimaryUsageDisplay
     Used
 }
 
+public enum AppLanguage
+{
+    English,
+    Russian
+}
+
 public sealed record OverlaySettings
 {
     /// <summary>Preserves opt-ins from earlier settings without overriding an explicit current choice.</summary>
@@ -54,6 +60,8 @@ public sealed record OverlaySettings
     }
 
     public AppTheme Theme { get; init; } = AppTheme.System;
+
+    public AppLanguage Language { get; init; } = AppLanguage.English;
 
     public HorizontalPlacement Placement { get; init; } = HorizontalPlacement.RightEdge;
 
@@ -147,6 +155,7 @@ public sealed record OverlaySettings
         return this with
         {
             Theme = theme,
+            Language = Enum.IsDefined(Language) ? Language : AppLanguage.English,
             Placement = placement,
             HorizontalOffset = Math.Clamp(HorizontalOffset, -600, 600),
             VerticalOffset = Math.Clamp(VerticalOffset, -300, 600),

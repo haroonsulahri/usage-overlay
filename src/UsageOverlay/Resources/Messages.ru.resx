@@ -1,0 +1,700 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+  <data name="#left" xml:space="preserve">
+    <value>осталось</value>
+  </data>
+  <data name="#used" xml:space="preserve">
+    <value>использовано</value>
+  </data>
+  <data name="5-hour limit" xml:space="preserve">
+    <value>Лимит 5 ч</value>
+  </data>
+  <data name="A Cursor team admin can create one in the Cursor team dashboard. It’s stored encrypted for your Windows account." xml:space="preserve">
+    <value>Администратор команды может создать ключ в Cursor. Он будет зашифрован для вашей учётной записи Windows.</value>
+  </data>
+  <data name="A key is saved, encrypted for your Windows account. Paste a new one to replace it." xml:space="preserve">
+    <value>Ключ зашифрован для вашей учётной записи Windows. Вставьте новый, чтобы заменить его.</value>
+  </data>
+  <data name="Access denied" xml:space="preserve">
+    <value>Доступ запрещён</value>
+  </data>
+  <data name="Across Windows" xml:space="preserve">
+    <value>Поверх всех окон</value>
+  </data>
+  <data name="Across Windows keeps the rail in its last position when you switch apps." xml:space="preserve">
+    <value>Поверх всех окон: индикатор остаётся на месте при переключении приложений.</value>
+  </data>
+  <data name="Add your Cursor email and a team Admin API key in Settings." xml:space="preserve">
+    <value>Укажите почту Cursor и ключ Admin API команды в настройках.</value>
+  </data>
+  <data name="Alerts appear only when a limit crosses a colour threshold." xml:space="preserve">
+    <value>Уведомления появляются при пересечении порога.</value>
+  </data>
+  <data name="Amber threshold percent used" xml:space="preserve">
+    <value>Жёлтый порог использования в процентах</value>
+  </data>
+  <data name="Animate changes" xml:space="preserve">
+    <value>Анимировать изменения</value>
+  </data>
+  <data name="Anywhere" xml:space="preserve">
+    <value>Произвольно</value>
+  </data>
+  <data name="Appearance" xml:space="preserve">
+    <value>Внешний вид</value>
+  </data>
+  <data name="Apps" xml:space="preserve">
+    <value>Приложения</value>
+  </data>
+  <data name="Automatically renew my Claude sign-in" xml:space="preserve">
+    <value>Автоматически обновлять вход в Claude</value>
+  </data>
+  <data name="CLI disconnected" xml:space="preserve">
+    <value>CLI отключён</value>
+  </data>
+  <data name="CLI not found" xml:space="preserve">
+    <value>CLI не найден</value>
+  </data>
+  <data name="CLI not found. Check Settings." xml:space="preserve">
+    <value>CLI не найден. Проверьте настройки.</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
+  <data name="Check for updates" xml:space="preserve">
+    <value>Проверить обновления</value>
+  </data>
+  <data name="Checking Claude usage…" xml:space="preserve">
+    <value>Проверка лимитов Claude…</value>
+  </data>
+  <data name="Checking for updates…" xml:space="preserve">
+    <value>Проверка обновлений…</value>
+  </data>
+  <data name="Choose a refresh time between 15 and 3600 seconds." xml:space="preserve">
+    <value>Выберите интервал от 15 до 3600 секунд.</value>
+  </data>
+  <data name="Choose at least one way to read Claude usage." xml:space="preserve">
+    <value>Выберите хотя бы один способ получения лимитов Claude.</value>
+  </data>
+  <data name="Choose the AI apps the rail tracks. It follows whichever one is in front." xml:space="preserve">
+    <value>Выберите приложения для отслеживания. Индикатор следует за активным приложением.</value>
+  </data>
+  <data name="Choose when the usage rail appears." xml:space="preserve">
+    <value>Выберите, когда показывать индикатор.</value>
+  </data>
+  <data name="Claude Code is connected but isn’t reporting plan limits. Update Claude Code and check /status shows a Pro or Max plan." xml:space="preserve">
+    <value>Claude Code подключён, но не сообщает лимиты. Обновите его и проверьте подписку Pro или Max через /status.</value>
+  </data>
+  <data name="Claude denied access to usage (HTTP 403). Check your account’s usage page and the enabled usage source in Settings." xml:space="preserve">
+    <value>Claude запретил доступ к лимитам (HTTP 403). Проверьте страницу лимитов и выбранный источник в настройках.</value>
+  </data>
+  <data name="Claude is limiting usage checks. The rail will retry automatically with a longer delay." xml:space="preserve">
+    <value>Claude ограничивает проверку лимитов. Повторная попытка произойдёт с большей задержкой.</value>
+  </data>
+  <data name="Claude rejected the rail’s saved sign-in. Run claude auth login, finish in your browser, then retry." xml:space="preserve">
+    <value>Claude отклонил сохранённый вход. Выполните claude auth login, завершите вход в браузере и повторите попытку.</value>
+  </data>
+  <data name="Claude returned no readable usage limits. This unofficial source may need an update. You can still check Claude’s usage page." xml:space="preserve">
+    <value>Claude не вернул читаемые лимиты. Неофициальный источник может требовать обновления; проверьте страницу лимитов Claude.</value>
+  </data>
+  <data name="Close Settings" xml:space="preserve">
+    <value>Закрыть настройки</value>
+  </data>
+  <data name="Close usage details" xml:space="preserve">
+    <value>Закрыть карточку лимитов</value>
+  </data>
+  <data name="Codex CLI is ready. {0}" xml:space="preserve">
+    <value>Codex CLI готов. {0}</value>
+  </data>
+  <data name="Codex CLI path" xml:space="preserve">
+    <value>Путь к Codex CLI</value>
+  </data>
+  <data name="Codex CLI path (optional)" xml:space="preserve">
+    <value>Путь к Codex CLI (необязательно)</value>
+  </data>
+  <data name="Codex CLI wasn’t found. {0}" xml:space="preserve">
+    <value>Codex CLI не найден. {0}</value>
+  </data>
+  <data name="Codex usage" xml:space="preserve">
+    <value>Лимиты Codex</value>
+  </data>
+  <data name="Codex, Claude and Cursor usage at a glance. Built by " xml:space="preserve">
+    <value>Лимиты Codex, Claude и Cursor. Разработчик: </value>
+  </data>
+  <data name="Command copied" xml:space="preserve">
+    <value>Команда скопирована</value>
+  </data>
+  <data name="Connect Claude Code’s status line (official)" xml:space="preserve">
+    <value>Подключить строку состояния Claude Code (официально)</value>
+  </data>
+  <data name="Connecting to Codex…" xml:space="preserve">
+    <value>Подключение к Codex…</value>
+  </data>
+  <data name="Connecting…" xml:space="preserve">
+    <value>Подключение…</value>
+  </data>
+  <data name="Connection &amp; diagnostics" xml:space="preserve">
+    <value>Подключение и диагностика</value>
+  </data>
+  <data name="Connection failed" xml:space="preserve">
+    <value>Ошибка подключения</value>
+  </data>
+  <data name="Copy claude auth login. Run it in your terminal, then complete sign-in in your browser." xml:space="preserve">
+    <value>Скопируйте claude auth login, выполните в терминале и завершите вход в браузере.</value>
+  </data>
+  <data name="Copy failed. Try again" xml:space="preserve">
+    <value>Не удалось скопировать. Повторите попытку</value>
+  </data>
+  <data name="Copy sign-in command" xml:space="preserve">
+    <value>Скопировать команду входа</value>
+  </data>
+  <data name="Couldn’t check for updates" xml:space="preserve">
+    <value>Не удалось проверить обновления</value>
+  </data>
+  <data name="Couldn’t connect" xml:space="preserve">
+    <value>Нет подключения</value>
+  </data>
+  <data name="Couldn’t load Cursor usage. Retrying…" xml:space="preserve">
+    <value>Не удалось загрузить лимиты Cursor. Повторная попытка…</value>
+  </data>
+  <data name="Couldn’t load limits. Retrying…" xml:space="preserve">
+    <value>Не удалось загрузить лимиты. Повторная попытка…</value>
+  </data>
+  <data name="Couldn’t refresh. Showing the last reading." xml:space="preserve">
+    <value>Не удалось обновить. Показаны последние данные.</value>
+  </data>
+  <data name="Cursor (experimental)" xml:space="preserve">
+    <value>Cursor (экспериментально)</value>
+  </data>
+  <data name="Cursor Admin API key" xml:space="preserve">
+    <value>Ключ Admin API Cursor</value>
+  </data>
+  <data name="Cursor account email" xml:space="preserve">
+    <value>Почта аккаунта Cursor</value>
+  </data>
+  <data name="Cursor didn’t accept the saved sign-in. Open Cursor to refresh it." xml:space="preserve">
+    <value>Cursor отклонил сохранённый вход. Откройте Cursor, чтобы обновить его.</value>
+  </data>
+  <data name="Cursor rejected the Admin API key. Check it in Settings." xml:space="preserve">
+    <value>Cursor отклонил ключ Admin API. Проверьте его в настройках.</value>
+  </data>
+  <data name="Cursor’s saved sign-in has expired. Open Cursor to refresh it." xml:space="preserve">
+    <value>Сохранённый вход в Cursor истёк. Откройте Cursor, чтобы обновить его.</value>
+  </data>
+  <data name="Cursor’s saved sign-in isn’t readable. Sign in to Cursor again." xml:space="preserve">
+    <value>Не удалось прочитать сохранённый вход в Cursor. Войдите заново.</value>
+  </data>
+  <data name="Dark" xml:space="preserve">
+    <value>Тёмная</value>
+  </data>
+  <data name="Defaults are ready. Select Save to use them." xml:space="preserve">
+    <value>Настройки по умолчанию готовы. Нажмите «Сохранить».</value>
+  </data>
+  <data name="Demo" xml:space="preserve">
+    <value>Демо</value>
+  </data>
+  <data name="Detecting the saved Claude sign-in…" xml:space="preserve">
+    <value>Поиск сохранённого входа в Claude…</value>
+  </data>
+  <data name="Disconnect Codex CLI" xml:space="preserve">
+    <value>Отключить Codex CLI</value>
+  </data>
+  <data name="Disconnected" xml:space="preserve">
+    <value>Отключено</value>
+  </data>
+  <data name="Drag the rail where you want it, or snap it to an edge." xml:space="preserve">
+    <value>Перетащите индикатор или закрепите его у края.</value>
+  </data>
+  <data name="English" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Enter numbers for both colour thresholds." xml:space="preserve">
+    <value>Введите числа для обоих цветовых порогов.</value>
+  </data>
+  <data name="Enter the email address of your Cursor account." xml:space="preserve">
+    <value>Введите почту аккаунта Cursor.</value>
+  </data>
+  <data name="Follow app" xml:space="preserve">
+    <value>Как в приложении</value>
+  </data>
+  <data name="Follow app matches the light or dark look of the app in front and falls back to Windows otherwise." xml:space="preserve">
+    <value>Тема берётся из активного приложения; иначе используется тема Windows.</value>
+  </data>
+  <data name="Follow the app between monitors" xml:space="preserve">
+    <value>Следовать за приложением между мониторами</value>
+  </data>
+  <data name="General" xml:space="preserve">
+    <value>Общие</value>
+  </data>
+  <data name="Hide Settings" xml:space="preserve">
+    <value>Скрыть настройки</value>
+  </data>
+  <data name="Hide connection and diagnostics" xml:space="preserve">
+    <value>Скрыть подключение и диагностику</value>
+  </data>
+  <data name="Hide details" xml:space="preserve">
+    <value>Скрыть подробности</value>
+  </data>
+  <data name="Hide usage rail" xml:space="preserve">
+    <value>Скрыть индикатор</value>
+  </data>
+  <data name="Hide while the app is fullscreen" xml:space="preserve">
+    <value>Скрывать в полноэкранном режиме</value>
+  </data>
+  <data name="Included usage" xml:space="preserve">
+    <value>Включённое использование</value>
+  </data>
+  <data name="Key rejected" xml:space="preserve">
+    <value>Ключ отклонён</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Язык</value>
+  </data>
+  <data name="Left" xml:space="preserve">
+    <value>Осталось</value>
+  </data>
+  <data name="Left edge" xml:space="preserve">
+    <value>Слева</value>
+  </data>
+  <data name="Light" xml:space="preserve">
+    <value>Светлая</value>
+  </data>
+  <data name="List my other apps in the detail card" xml:space="preserve">
+    <value>Показывать другие приложения в карточке</value>
+  </data>
+  <data name="Live" xml:space="preserve">
+    <value>На связи</value>
+  </data>
+  <data name="Loading usage…" xml:space="preserve">
+    <value>Загрузка лимитов…</value>
+  </data>
+  <data name="Main number" xml:space="preserve">
+    <value>Основной показатель</value>
+  </data>
+  <data name="Monthly spend limit" xml:space="preserve">
+    <value>Месячный лимит расходов</value>
+  </data>
+  <data name="Move down" xml:space="preserve">
+    <value>Сдвинуть вниз</value>
+  </data>
+  <data name="Move left" xml:space="preserve">
+    <value>Сдвинуть влево</value>
+  </data>
+  <data name="Move right" xml:space="preserve">
+    <value>Сдвинуть вправо</value>
+  </data>
+  <data name="Move up" xml:space="preserve">
+    <value>Сдвинуть вверх</value>
+  </data>
+  <data name="No plan limits" xml:space="preserve">
+    <value>Нет лимитов подписки</value>
+  </data>
+  <data name="No readable limits" xml:space="preserve">
+    <value>Лимиты недоступны</value>
+  </data>
+  <data name="Not connected" xml:space="preserve">
+    <value>Не подключено</value>
+  </data>
+  <data name="Not found" xml:space="preserve">
+    <value>Не найдено</value>
+  </data>
+  <data name="Notify me when usage turns amber or red" xml:space="preserve">
+    <value>Уведомлять о жёлтом или красном пороге</value>
+  </data>
+  <data name="Off" xml:space="preserve">
+    <value>Выключено</value>
+  </data>
+  <data name="Off by default. Sends a random installation ID and app version to haroone.com at most once per UTC day while running. No account, conversation, quota or log data. Haroone records the reporting date and keeps reports for 90 days. Turn off and Save to stop future reports; previously received reports expire automatically." xml:space="preserve">
+    <value>По умолчанию выключено. Не чаще раза в сутки по UTC отправляет на haroone.com случайный идентификатор установки и версию приложения — без данных аккаунта, чатов, лимитов и журналов. Отчёты хранятся 90 дней. Выключите и сохраните, чтобы прекратить отправку.</value>
+  </data>
+  <data name="Off." xml:space="preserve">
+    <value>Выключено.</value>
+  </data>
+  <data name="Off: the card shows only the app in front." xml:space="preserve">
+    <value>Если выключено, карточка показывает только активное приложение.</value>
+  </data>
+  <data name="Only in these apps" xml:space="preserve">
+    <value>В этих приложениях</value>
+  </data>
+  <data name="Only needed if Usage Overlay cannot connect to Codex or update." xml:space="preserve">
+    <value>Нужно, только если не удаётся подключиться к Codex или обновить приложение.</value>
+  </data>
+  <data name="Open Haroone.com" xml:space="preserve">
+    <value>Открыть Haroone.com</value>
+  </data>
+  <data name="Open full Codex usage" xml:space="preserve">
+    <value>Открыть все лимиты Codex</value>
+  </data>
+  <data name="Open full {0} usage" xml:space="preserve">
+    <value>Открыть все лимиты {0}</value>
+  </data>
+  <data name="Open log file" xml:space="preserve">
+    <value>Открыть журнал</value>
+  </data>
+  <data name="Open logs" xml:space="preserve">
+    <value>Открыть журнал</value>
+  </data>
+  <data name="Open settings" xml:space="preserve">
+    <value>Открыть настройки</value>
+  </data>
+  <data name="Open settings…" xml:space="preserve">
+    <value>Открыть настройки…</value>
+  </data>
+  <data name="Open the GitHub Releases page or try again later." xml:space="preserve">
+    <value>Откройте страницу релизов GitHub или повторите попытку позже.</value>
+  </data>
+  <data name="Open usage source and connection settings" xml:space="preserve">
+    <value>Открыть настройки источников лимитов и подключения</value>
+  </data>
+  <data name="Open when Windows starts" xml:space="preserve">
+    <value>Запускать вместе с Windows</value>
+  </data>
+  <data name="Optional. When the access token expires, renew it with Anthropic and update Claude Code’s saved sign-in on this PC. This avoids repeated logins while the renewal token remains valid. No browser, terminal, or model request is launched." xml:space="preserve">
+    <value>Необязательно. При истечении токена обновляет его через Anthropic и сохраняет новый вход Claude Code на этом ПК. Браузер, терминал и запрос к модели не запускаются.</value>
+  </data>
+  <data name="Or use a team Admin API key (official, for team admins). Your Cursor account email:" xml:space="preserve">
+    <value>Или используйте Admin API key команды (официально, для администраторов). Почта аккаунта Cursor:</value>
+  </data>
+  <data name="Other apps" xml:space="preserve">
+    <value>Другие приложения</value>
+  </data>
+  <data name="Pause 15 min" xml:space="preserve">
+    <value>Пауза на 15 мин</value>
+  </data>
+  <data name="Pause the overlay" xml:space="preserve">
+    <value>Приостановить индикатор</value>
+  </data>
+  <data name="Paused until {0}" xml:space="preserve">
+    <value>Пауза до {0}</value>
+  </data>
+  <data name="Position" xml:space="preserve">
+    <value>Расположение</value>
+  </data>
+  <data name="Position offset: X {0}px, Y {1}px" xml:space="preserve">
+    <value>Смещение: X {0} пикс., Y {1} пикс.</value>
+  </data>
+  <data name="Quit Usage Overlay" xml:space="preserve">
+    <value>Выйти из Usage Overlay</value>
+  </data>
+  <data name="Read usage from my Claude sign-in (unofficial)" xml:space="preserve">
+    <value>Читать лимиты из входа в Claude (неофициально)</value>
+  </data>
+  <data name="Read usage from my Cursor sign-in (unofficial)" xml:space="preserve">
+    <value>Читать лимиты из входа в Cursor (неофициально)</value>
+  </data>
+  <data name="Reading Cursor team spend…" xml:space="preserve">
+    <value>Получение расходов команды Cursor…</value>
+  </data>
+  <data name="Reading Cursor usage…" xml:space="preserve">
+    <value>Получение лимитов Cursor…</value>
+  </data>
+  <data name="Reading usage from your Claude sign-in." xml:space="preserve">
+    <value>Получение лимитов из входа в Claude.</value>
+  </data>
+  <data name="Reads limits from the Codex CLI already signed in on this PC." xml:space="preserve">
+    <value>Получает лимиты из Codex CLI, в который уже выполнен вход на этом ПК.</value>
+  </data>
+  <data name="Reconnect Codex CLI" xml:space="preserve">
+    <value>Подключить Codex CLI</value>
+  </data>
+  <data name="Reconnect when the CLI update is finished." xml:space="preserve">
+    <value>Подключите CLI после завершения обновления.</value>
+  </data>
+  <data name="Red threshold percent used" xml:space="preserve">
+    <value>Красный порог использования в процентах</value>
+  </data>
+  <data name="Refresh every (15–3600 seconds)" xml:space="preserve">
+    <value>Интервал обновления (15–3600 секунд)</value>
+  </data>
+  <data name="Refresh interval seconds" xml:space="preserve">
+    <value>Интервал обновления в секундах</value>
+  </data>
+  <data name="Refresh usage" xml:space="preserve">
+    <value>Обновить лимиты</value>
+  </data>
+  <data name="Remove key" xml:space="preserve">
+    <value>Удалить ключ</value>
+  </data>
+  <data name="Renewal pending" xml:space="preserve">
+    <value>Ожидание обновления входа</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>Сбросить</value>
+  </data>
+  <data name="Reset position" xml:space="preserve">
+    <value>Сбросить положение</value>
+  </data>
+  <data name="Reset time isn’t available" xml:space="preserve">
+    <value>Время сброса неизвестно</value>
+  </data>
+  <data name="Resets in {0}d {1}h" xml:space="preserve">
+    <value>Сброс через {0} д {1} ч</value>
+  </data>
+  <data name="Resets in {0}h {1}m" xml:space="preserve">
+    <value>Сброс через {0} ч {1} мин</value>
+  </data>
+  <data name="Resets in {0}m" xml:space="preserve">
+    <value>Сброс через {0} мин</value>
+  </data>
+  <data name="Resets now" xml:space="preserve">
+    <value>Сброс сейчас</value>
+  </data>
+  <data name="Restart Usage Overlay to apply a language change." xml:space="preserve">
+    <value>Для смены языка перезапустите Usage Overlay.</value>
+  </data>
+  <data name="Restore defaults" xml:space="preserve">
+    <value>Вернуть настройки по умолчанию</value>
+  </data>
+  <data name="Resume now" xml:space="preserve">
+    <value>Возобновить</value>
+  </data>
+  <data name="Retry now" xml:space="preserve">
+    <value>Повторить сейчас</value>
+  </data>
+  <data name="Retry {0} usage now" xml:space="preserve">
+    <value>Повторить загрузку лимитов {0}</value>
+  </data>
+  <data name="Right edge" xml:space="preserve">
+    <value>Справа</value>
+  </data>
+  <data name="Russian" xml:space="preserve">
+    <value>Русский</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Сохранить</value>
+  </data>
+  <data name="Saved at {0}." xml:space="preserve">
+    <value>Сохранено в {0}.</value>
+  </data>
+  <data name="Saved. Restart Usage Overlay to apply changes." xml:space="preserve">
+    <value>Сохранено. Перезапустите Usage Overlay для применения изменений.</value>
+  </data>
+  <data name="Saved. Restart Usage Overlay to use the new CLI path or refresh time." xml:space="preserve">
+    <value>Сохранено. Перезапустите Usage Overlay для применения пути CLI или интервала обновления.</value>
+  </data>
+  <data name="Saving…" xml:space="preserve">
+    <value>Сохранение…</value>
+  </data>
+  <data name="Select this notification to open the verified GitHub release." xml:space="preserve">
+    <value>Нажмите уведомление, чтобы открыть проверенный релиз на GitHub.</value>
+  </data>
+  <data name="Send a message in Claude Code in a terminal. Limits appear after its reply and need a Pro or Max sign-in." xml:space="preserve">
+    <value>Отправьте сообщение в Claude Code. Лимиты появятся после ответа при наличии подписки Pro или Max.</value>
+  </data>
+  <data name="Service error" xml:space="preserve">
+    <value>Ошибка сервиса</value>
+  </data>
+  <data name="Set amber below red. Both values must be between 0 and 100." xml:space="preserve">
+    <value>Жёлтый порог должен быть ниже красного. Значения должны быть от 0 до 100.</value>
+  </data>
+  <data name="Set up" xml:space="preserve">
+    <value>Настройте подключение</value>
+  </data>
+  <data name="Share optional installation and activity reports" xml:space="preserve">
+    <value>Отправлять необязательные отчёты об установке и активности</value>
+  </data>
+  <data name="Show connection and diagnostics" xml:space="preserve">
+    <value>Показать подключение и диагностику</value>
+  </data>
+  <data name="Show details" xml:space="preserve">
+    <value>Показать подробности</value>
+  </data>
+  <data name="Show the percentage below the rail" xml:space="preserve">
+    <value>Показывать процент под индикатором</value>
+  </data>
+  <data name="Show the rail" xml:space="preserve">
+    <value>Показывать индикатор</value>
+  </data>
+  <data name="Show usage rail" xml:space="preserve">
+    <value>Показать индикатор</value>
+  </data>
+  <data name="Show {0} usage" xml:space="preserve">
+    <value>Показать лимиты {0}</value>
+  </data>
+  <data name="Show {0} usage: {1}" xml:space="preserve">
+    <value>Показать лимиты {0}: {1}</value>
+  </data>
+  <data name="Shows how much of your Cursor plan you’ve used this billing cycle." xml:space="preserve">
+    <value>Показывает использование подписки Cursor за расчётный период.</value>
+  </data>
+  <data name="Shows your Pro or Max plan’s 5-hour limit on the rail, with weekly usage in the detail card, beside Claude desktop and terminals running Claude Code." xml:space="preserve">
+    <value>Показывает лимиты подписки Pro или Max рядом с Claude и терминалами Claude Code.</value>
+  </data>
+  <data name="Sign in" xml:space="preserve">
+    <value>Войдите</value>
+  </data>
+  <data name="Sign in to Codex. Usage will refresh automatically." xml:space="preserve">
+    <value>Войдите в Codex. Лимиты обновятся автоматически.</value>
+  </data>
+  <data name="Sign-in changed" xml:space="preserve">
+    <value>Аккаунт изменился</value>
+  </data>
+  <data name="Sign-in expired" xml:space="preserve">
+    <value>Вход истёк</value>
+  </data>
+  <data name="Sign-in rejected" xml:space="preserve">
+    <value>Вход отклонён</value>
+  </data>
+  <data name="Sign-in required" xml:space="preserve">
+    <value>Требуется вход</value>
+  </data>
+  <data name="Sign-in unreadable" xml:space="preserve">
+    <value>Не удалось прочитать вход</value>
+  </data>
+  <data name="Signed out" xml:space="preserve">
+    <value>Вход не выполнен</value>
+  </data>
+  <data name="Stale" xml:space="preserve">
+    <value>Не обновлено</value>
+  </data>
+  <data name="Team Admin API key" xml:space="preserve">
+    <value>Ключ Admin API команды</value>
+  </data>
+  <data name="The Cursor key couldn’t be saved." xml:space="preserve">
+    <value>Не удалось сохранить ключ Cursor.</value>
+  </data>
+  <data name="The rail couldn’t reach Claude. Check your internet or VPN connection, then retry. It also retries automatically." xml:space="preserve">
+    <value>Не удалось подключиться к Claude. Проверьте интернет или VPN и повторите попытку; программа также повторит её автоматически.</value>
+  </data>
+  <data name="The rail couldn’t read Claude Code’s saved sign-in. Check file access, then retry." xml:space="preserve">
+    <value>Не удалось прочитать сохранённый вход Claude Code. Проверьте доступ к файлу и повторите попытку.</value>
+  </data>
+  <data name="The rail needs a Claude Code sign-in on this PC. Run claude auth login, finish in your browser, then retry." xml:space="preserve">
+    <value>Требуется вход в Claude Code на этом ПК. Выполните claude auth login, завершите вход в браузере и повторите попытку.</value>
+  </data>
+  <data name="The renewed sign-in is not usable yet. The rail will retry automatically." xml:space="preserve">
+    <value>Обновлённый вход ещё недоступен. Повторная попытка произойдёт автоматически.</value>
+  </data>
+  <data name="The saved Claude account changed during the request. Detecting its current usage…" xml:space="preserve">
+    <value>Аккаунт Claude изменился во время запроса. Получение текущих лимитов…</value>
+  </data>
+  <data name="The saved access token has expired. Open Claude Code to renew it, or enable automatic renewal in Settings. A browser login is only needed if renewal fails." xml:space="preserve">
+    <value>Сохранённый токен истёк. Откройте Claude Code или включите автоматическое обновление в настройках. Вход в браузере нужен только при неудаче обновления.</value>
+  </data>
+  <data name="The saved key will be removed when you save." xml:space="preserve">
+    <value>Ключ будет удалён после сохранения настроек.</value>
+  </data>
+  <data name="Theme" xml:space="preserve">
+    <value>Тема</value>
+  </data>
+  <data name="Too many requests" xml:space="preserve">
+    <value>Слишком много запросов</value>
+  </data>
+  <data name="Trying again…" xml:space="preserve">
+    <value>Повторное подключение…</value>
+  </data>
+  <data name="Turn amber at (% used)" xml:space="preserve">
+    <value>Жёлтый порог (% использовано)</value>
+  </data>
+  <data name="Turn red at (% used)" xml:space="preserve">
+    <value>Красный порог (% использовано)</value>
+  </data>
+  <data name="Unavailable" xml:space="preserve">
+    <value>Недоступно</value>
+  </data>
+  <data name="Updated just now" xml:space="preserve">
+    <value>Только что</value>
+  </data>
+  <data name="Updated {0}d ago" xml:space="preserve">
+    <value>{0} д назад</value>
+  </data>
+  <data name="Updated {0}h ago" xml:space="preserve">
+    <value>{0} ч назад</value>
+  </data>
+  <data name="Updated {0}m ago" xml:space="preserve">
+    <value>{0} мин назад</value>
+  </data>
+  <data name="Updates Claude Code’s status line in {0} after each reply. An existing status line keeps working, and turning this off restores it." xml:space="preserve">
+    <value>После каждого ответа обновляет строку состояния Claude Code в {0}. Существующая строка продолжит работать и будет восстановлена при отключении.</value>
+  </data>
+  <data name="Updates when Claude Code replies again." xml:space="preserve">
+    <value>Обновится после следующего ответа Claude Code.</value>
+  </data>
+  <data name="Usage Overlay Settings" xml:space="preserve">
+    <value>Настройки Usage Overlay</value>
+  </data>
+  <data name="Usage Overlay is running." xml:space="preserve">
+    <value>Usage Overlay работает.</value>
+  </data>
+  <data name="Usage Overlay is up to date" xml:space="preserve">
+    <value>Usage Overlay обновлён</value>
+  </data>
+  <data name="Usage Overlay meter" xml:space="preserve">
+    <value>Индикатор лимитов</value>
+  </data>
+  <data name="Usage Overlay {0} is available" xml:space="preserve">
+    <value>Доступна Usage Overlay {0}</value>
+  </data>
+  <data name="Usage unavailable" xml:space="preserve">
+    <value>Лимиты недоступны</value>
+  </data>
+  <data name="Used" xml:space="preserve">
+    <value>Использовано</value>
+  </data>
+  <data name="View full Codex usage" xml:space="preserve">
+    <value>Показать все лимиты Codex</value>
+  </data>
+  <data name="View full {0} usage" xml:space="preserve">
+    <value>Показать все лимиты {0}</value>
+  </data>
+  <data name="View usage" xml:space="preserve">
+    <value>Все лимиты</value>
+  </data>
+  <data name="Visibility" xml:space="preserve">
+    <value>Видимость</value>
+  </data>
+  <data name="Waiting" xml:space="preserve">
+    <value>Ожидание</value>
+  </data>
+  <data name="Waiting for Claude Code" xml:space="preserve">
+    <value>Ожидание Claude Code</value>
+  </data>
+  <data name="We couldn’t find the Codex CLI at that path." xml:space="preserve">
+    <value>По указанному пути Codex CLI не найден.</value>
+  </data>
+  <data name="We couldn’t open Haroone.com in your browser." xml:space="preserve">
+    <value>Не удалось открыть Haroone.com в браузере.</value>
+  </data>
+  <data name="Weekly limit" xml:space="preserve">
+    <value>Недельный лимит</value>
+  </data>
+  <data name="Windows may reduce motion for accessibility." xml:space="preserve">
+    <value>Windows может уменьшить анимацию согласно настройкам доступности.</value>
+  </data>
+  <data name="Works when you only use the Claude desktop app. Every 5 minutes it uses the sign-in Claude Code saved on this PC to call the private endpoint behind Claude’s usage page. Anthropic may change or restrict this, and its terms limit how that sign-in may be used." xml:space="preserve">
+    <value>Работает и без открытого Claude Code. Раз в 5 минут использует сохранённый вход для запроса к закрытому API страницы лимитов Claude. Anthropic может изменить или ограничить этот способ; действуют условия использования.</value>
+  </data>
+  <data name="Works with individual plans. Every 5 minutes it reads the sign-in the Cursor editor saved on this PC and calls the private endpoint behind Cursor’s usage dashboard. Cursor may change this without notice." xml:space="preserve">
+    <value>Для личных подписок: раз в 5 минут использует сохранённый вход в Cursor для запроса к закрытому API. Cursor может изменить его без уведомления.</value>
+  </data>
+  <data name="You are running version {0}." xml:space="preserve">
+    <value>Установлена версия {0}.</value>
+  </data>
+  <data name="{0} is off" xml:space="preserve">
+    <value>{0} выключен</value>
+  </data>
+  <data name="{0} usage is nearly exhausted" xml:space="preserve">
+    <value>Лимит {0} почти исчерпан</value>
+  </data>
+  <data name="{0} usage is running low" xml:space="preserve">
+    <value>Лимит {0} заканчивается</value>
+  </data>
+  <data name="{0} · secondary limit" xml:space="preserve">
+    <value>{0} · доп. лимит</value>
+  </data>
+  <data name="{0}% {1}&#10;{2}" xml:space="preserve">
+    <value>{0}% {1}
+{2}</value>
+  </data>
+</root>

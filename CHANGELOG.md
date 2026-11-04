@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- English and Russian interface selection in Settings; language changes apply after restart.
+
 ## [0.4.4] - 2026-10-31
 
 ### Fixed

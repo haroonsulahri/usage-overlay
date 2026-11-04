@@ -344,6 +344,12 @@
                             <CheckBox x:Name="StartAutomaticallyCheckBox"
                                       Content="Open when Windows starts"
                                       Style="{StaticResource SettingsCheckStyle}" />
+                            <TextBlock Text="Language" Style="{StaticResource FieldLabelStyle}" />
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="EnglishLanguageRadio" GroupName="LanguageMode" Content="English" Style="{StaticResource SettingsRadioStyle}" />
+                                <RadioButton x:Name="RussianLanguageRadio" GroupName="LanguageMode" Content="Russian" Margin="18,7,0,0" Style="{StaticResource SettingsRadioStyle}" />
+                            </StackPanel>
+                            <TextBlock Text="Restart Usage Overlay to apply a language change." Style="{StaticResource HelpTextStyle}" />
                         </StackPanel>
                     </Border>
                 </Border>
@@ -727,7 +733,7 @@
                             IsCancel="True"
                             Style="{StaticResource SettingsButtonStyle}"
                             Click="CancelButton_OnClick" />
-                    <Button Margin="8,0,0,0"
+                    <Button x:Name="SaveButton" Margin="8,0,0,0"
                             Content="Save"
                             IsDefault="True"
                             Style="{StaticResource SettingsPrimaryButtonStyle}"

@@ -17,6 +17,7 @@ using CodexUsage.Core.Settings;
 using CodexUsage.Core.Reporting;
 using UsageOverlay.Infrastructure;
 using UsageOverlay.Services;
+using Localization = UsageOverlay.Infrastructure.Localization;
 
 namespace UsageOverlay;
 
@@ -100,11 +101,13 @@ public partial class MainWindow : Window
 
     public MainWindow(OverlayOptions options, AppLogger logger)
     {
-        InitializeComponent();
         _options = options;
         _logger = logger;
         _settingsStore = new OverlaySettingsStore(logger);
         _settings = _settingsStore.Load();
+        Localization.Language = _settings.Language;
+        InitializeComponent();
+        Localization.Apply(this);
         _usageReporter = new UsageReporter(_reportingClient,
             new Uri("https://haroone.com/api/usage-overlay.php"),
             System.IO.Path.Combine(AppPaths.DataDirectory, "reporting.json"), AppVersion.Current);
@@ -824,12 +827,12 @@ public partial class MainWindow : Window
         var state = CurrentState;
         HeaderText.Text = state.DisplayName;
         HeaderBadgeHost.Child = ProviderBadge.Create(state.Provider, 18);
-        StatusText.Text = _options.DemoPercent is not null ? "Demo" : state.Connection switch
+        StatusText.Text = _options.DemoPercent is not null ? Localization.Text("Demo") : state.Connection switch
         {
-            ProviderConnection.SignedOut => "Sign in",
-            ProviderConnection.Unavailable => "Unavailable",
-            ProviderConnection.Stale => "Stale",
-            _ => state.StatusText
+            ProviderConnection.SignedOut => Localization.Text("Sign in"),
+            ProviderConnection.Unavailable => Localization.Text("Unavailable"),
+            ProviderConnection.Stale => Localization.Text("Stale"),
+            _ => Localization.Status(state.StatusText)
         };
         LiveDot.Fill = new SolidColorBrush((System.Windows.Media.Color)FindResource(state.Connection switch
         {
@@ -840,8 +843,8 @@ public partial class MainWindow : Window
         RailRemainingText.Visibility = _settings.ShowCompactPercentage
             ? Visibility.Visible
             : Visibility.Collapsed;
-        AutomationProperties.SetName(ViewUsageButton, $"View full {state.DisplayName} usage");
-        ViewUsageButton.ToolTip = $"Open full {state.DisplayName} usage";
+        AutomationProperties.SetName(ViewUsageButton, Localization.Format("View full {0} usage", state.DisplayName));
+        ViewUsageButton.ToolTip = Localization.Format("Open full {0} usage", state.DisplayName);
 
         if (state.HasUsage)
         {
@@ -857,13 +860,13 @@ public partial class MainWindow : Window
             or ProviderConnection.Disconnected or ProviderConnection.Off or ProviderConnection.Stale;
         RecoveryActionsPanel.Visibility = needsHelp ? Visibility.Visible : Visibility.Collapsed;
         RecoveryActionButton.Content = NeedsClaudeLogin(state)
-            ? "Copy sign-in command" : "Open settings";
-        AutomationProperties.SetName(RecoveryActionButton, $"{RecoveryActionButton.Content} for {state.DisplayName}");
+            ? Localization.Text("Copy sign-in command") : Localization.Text("Open settings");
+        AutomationProperties.SetName(RecoveryActionButton, $"{RecoveryActionButton.Content}: {state.DisplayName}");
         RecoveryActionButton.ToolTip = NeedsClaudeLogin(state)
-            ? "Copy claude auth login. Run it in your terminal, then complete sign-in in your browser." : "Open usage source and connection settings";
+            ? Localization.Text("Copy claude auth login. Run it in your terminal, then complete sign-in in your browser.") : Localization.Text("Open usage source and connection settings");
         RetryUsageButton.Visibility = state.Connection is ProviderConnection.Off or ProviderConnection.Disconnected
             ? Visibility.Collapsed : Visibility.Visible;
-        AutomationProperties.SetName(RetryUsageButton, $"Retry {state.DisplayName} usage now");
+        AutomationProperties.SetName(RetryUsageButton, Localization.Format("Retry {0} usage now", state.DisplayName));
         UpdateExpandedHeight();
     }
 
@@ -886,15 +889,15 @@ public partial class MainWindow : Window
 
         UsagePercentText.Text = state.Connection switch
         {
-            ProviderConnection.Live or ProviderConnection.Stale when state.Summary is not null => state.Summary,
-            ProviderConnection.Off => $"{state.DisplayName} is off",
-            ProviderConnection.SignedOut => state.StatusText,
-            ProviderConnection.Disconnected => "CLI disconnected",
-            ProviderConnection.Unavailable => state.StatusText,
-            _ when state.Provider == UsageProviderKind.Claude && state.StatusText == "Waiting" => "Waiting for Claude Code",
-            _ => "Loading usage…"
+            ProviderConnection.Live or ProviderConnection.Stale when state.Summary is not null => Localization.Status(state.Summary),
+            ProviderConnection.Off => Localization.Format("{0} is off", state.DisplayName),
+            ProviderConnection.SignedOut => Localization.Status(state.StatusText),
+            ProviderConnection.Disconnected => Localization.Text("CLI disconnected"),
+            ProviderConnection.Unavailable => Localization.Status(state.StatusText),
+            _ when state.Provider == UsageProviderKind.Claude && state.StatusText == "Waiting" => Localization.Text("Waiting for Claude Code"),
+            _ => Localization.Text("Loading usage…")
         };
-        ResetText.Text = state.Detail;
+        ResetText.Text = Localization.Status(state.Detail);
         ResetText.Visibility = state.Detail.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         var summary = $"{state.DisplayName}: {UsagePercentText.Text}. {state.Detail}".Trim();
@@ -905,20 +908,20 @@ public partial class MainWindow : Window
     private void ApplyUsage(ProviderUsageState state)
     {
         RailRemainingText.Foreground = (System.Windows.Media.Brush)FindResource("OverlayMutedBrush");
-        RailHitTarget.ToolTip = state.Connection == ProviderConnection.Stale ? state.Detail : null;
+        RailHitTarget.ToolTip = state.Connection == ProviderConnection.Stale ? Localization.Status(state.Detail) : null;
         var lead = state.Windows[0];
         var usedPercent = UsageLevelResolver.Normalize(lead.Window.UsedPercent);
         var remainingPercent = UsageLevelResolver.RemainingFromUsed(usedPercent);
         var showingUsed = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used;
         var primaryPercent = showingUsed ? usedPercent : remainingPercent;
-        var primaryLabel = showingUsed ? "used" : "left";
-        BucketNameText.Text = lead.Label;
+        var primaryLabel = Localization.Text(showingUsed ? "#used" : "#left");
+        BucketNameText.Text = Localization.Limit(lead.Label);
         BucketNameText.Visibility = Visibility.Visible;
         ResetText.Text = FormatSecondaryLine(lead.Window);
         ResetText.Visibility = Visibility.Visible;
 
         var notes = new[] { state.Summary, state.Detail }
-            .Where(note => !string.IsNullOrWhiteSpace(note))
+            .Where(note => !string.IsNullOrWhiteSpace(note)).Select(note => Localization.Status(note!))
             .ToArray();
         SummaryText.Text = string.Join(Environment.NewLine, notes);
         SummaryText.Visibility = notes.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -931,7 +934,7 @@ public partial class MainWindow : Window
 
         AnimateUsageValue(primaryPercent, usedPercent);
         var summary =
-            $"{state.DisplayName} {lead.Label.ToLowerInvariant()}: {Math.Round(primaryPercent)} percent {primaryLabel}. {ResetText.Text}";
+            $"{state.DisplayName} {Localization.Limit(lead.Label).ToLowerInvariant()}: {Math.Round(primaryPercent)}% {primaryLabel}. {ResetText.Text}";
         AutomationProperties.SetName(RailHitTarget, summary);
     }
 
@@ -951,7 +954,7 @@ public partial class MainWindow : Window
         var content = new StackPanel();
         content.Children.Add(new TextBlock
         {
-            Text = "Other apps",
+            Text = Localization.Text("Other apps"),
             Foreground = (System.Windows.Media.Brush)FindResource("OverlayMutedBrush"),
             FontSize = (double)FindResource("OverlayTextSmall"),
             Margin = new Thickness(0, 0, 0, 2)
@@ -999,12 +1002,12 @@ public partial class MainWindow : Window
             var used = UsageLevelResolver.Normalize(lead.Window.UsedPercent);
             var showingUsed = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used;
             valueText = $"{Math.Round(showingUsed ? used : UsageLevelResolver.RemainingFromUsed(used))}% " +
-                        (showingUsed ? "used" : "left");
+                        Localization.Text(showingUsed ? "#used" : "#left");
             valueBrush = new SolidColorBrush(LevelColor(used));
         }
         else
         {
-            valueText = state.Summary ?? state.StatusText;
+            valueText = Localization.Status(state.Summary ?? state.StatusText);
             valueBrush = (System.Windows.Media.Brush)FindResource("OverlayMutedBrush");
         }
 
@@ -1029,10 +1032,10 @@ public partial class MainWindow : Window
             HorizontalContentAlignment = System.Windows.HorizontalAlignment.Stretch,
             Cursor = System.Windows.Input.Cursors.Hand,
             Focusable = false,
-            ToolTip = $"Show {state.DisplayName} usage",
+            ToolTip = Localization.Format("Show {0} usage", state.DisplayName),
             Template = CreateFlatButtonTemplate()
         };
-        AutomationProperties.SetName(button, $"Show {state.DisplayName} usage: {valueText}");
+        AutomationProperties.SetName(button, Localization.Format("Show {0} usage: {1}", state.DisplayName, valueText));
         var provider = state.Provider;
         button.Click += (_, eventArgs) =>
         {
@@ -1093,14 +1096,14 @@ public partial class MainWindow : Window
         var displayed = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used
             ? used
             : UsageLevelResolver.RemainingFromUsed(used);
-        var suffix = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used ? "used" : "left";
+        var suffix = Localization.Text(_settings.PrimaryDisplay == PrimaryUsageDisplay.Used ? "#used" : "#left");
 
         var header = new Grid();
         header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         header.Children.Add(new TextBlock
         {
-            Text = row.Label,
+            Text = Localization.Limit(row.Label),
             Foreground = (System.Windows.Media.Brush)FindResource("OverlayMutedBrush"),
             FontSize = (double)FindResource("OverlayTextSmall"),
             TextTrimming = TextTrimming.CharacterEllipsis
@@ -1120,7 +1123,7 @@ public partial class MainWindow : Window
         content.Children.Add(header);
         content.Children.Add(new TextBlock
         {
-            Text = ResetTimeFormatter.Format(row.Window.ResetsAt, DateTimeOffset.Now),
+            Text = Localization.Reset(row.Window.ResetsAt, DateTimeOffset.Now),
             Foreground = (System.Windows.Media.Brush)FindResource("OverlayMutedBrush"),
             FontSize = (double)FindResource("OverlayTextSmall"),
             Margin = new Thickness(0, 3, 0, 0)
@@ -1142,9 +1145,9 @@ public partial class MainWindow : Window
         var secondaryPercent = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used
             ? UsageLevelResolver.RemainingFromUsed(used)
             : used;
-        var secondaryLabel = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used ? "left" : "used";
-        return $"{Math.Round(secondaryPercent)}% {secondaryLabel}  ·  " +
-               ResetTimeFormatter.Format(window.ResetsAt, DateTimeOffset.Now);
+        var secondaryLabel = Localization.Text(_settings.PrimaryDisplay == PrimaryUsageDisplay.Used ? "#left" : "#used");
+        var separator = Localization.Language == AppLanguage.Russian ? "\n" : "  ·  ";
+        return $"{Math.Round(secondaryPercent)}% {secondaryLabel}{separator}" + Localization.Reset(window.ResetsAt, DateTimeOffset.Now);
     }
 
     private void EvaluateNotifications(ProviderUsageState state)
@@ -1166,12 +1169,11 @@ public partial class MainWindow : Window
         foreach (var alert in alerts)
         {
             var remaining = Math.Round(UsageLevelResolver.RemainingFromUsed(alert.Window.Window.UsedPercent));
-            _notifyIcon.BalloonTipTitle = alert.Level == UsageLevel.Critical
-                ? $"{state.DisplayName} usage is nearly exhausted"
-                : $"{state.DisplayName} usage is running low";
+            _notifyIcon.BalloonTipTitle = Localization.Format(alert.Level == UsageLevel.Critical
+                ? "{0} usage is nearly exhausted" : "{0} usage is running low", state.DisplayName);
             _notifyIcon.BalloonTipText =
-                $"{alert.Window.Label}: {remaining}% left. " +
-                ResetTimeFormatter.Format(alert.Window.Window.ResetsAt, DateTimeOffset.Now);
+                $"{Localization.Limit(alert.Window.Label)}: {remaining}% {Localization.Text("#left")}. " +
+                Localization.Reset(alert.Window.Window.ResetsAt, DateTimeOffset.Now);
             _notifyIcon.ShowBalloonTip(6000);
             _logger.Info(
                 $"Displayed a {alert.Level.ToString().ToLowerInvariant()} usage alert for {alert.Window.Key}.");
@@ -1189,7 +1191,7 @@ public partial class MainWindow : Window
             {
                 var used = UsageLevelResolver.Normalize(state!.Lead!.Window.UsedPercent);
                 var value = showingUsed ? used : UsageLevelResolver.RemainingFromUsed(used);
-                return $"{state.DisplayName} {Math.Round(value)}% {(showingUsed ? "used" : "left")}";
+                return $"{state.DisplayName} {Math.Round(value)}% {Localization.Text(showingUsed ? "#used" : "#left")}";
             })
             .ToArray();
         var text = parts.Length == 0 ? "Usage Overlay" : "Usage Overlay" + Environment.NewLine + string.Join(" · ", parts);
@@ -1271,7 +1273,7 @@ public partial class MainWindow : Window
         }
 
         var normalized = UsageLevelResolver.Normalize(displayPercentage);
-        var suffix = _settings.PrimaryDisplay == PrimaryUsageDisplay.Used ? "used" : "left";
+        var suffix = Localization.Text(_settings.PrimaryDisplay == PrimaryUsageDisplay.Used ? "#used" : "#left");
         UsagePercentText.Text = $"{Math.Round(normalized)}% {suffix}";
         RailRemainingText.Text = $"{Math.Round(normalized)}%";
     }
@@ -1319,23 +1321,23 @@ public partial class MainWindow : Window
             Padding = new System.Windows.Forms.Padding(6),
             Renderer = new System.Windows.Forms.ToolStripProfessionalRenderer(new OverlayMenuColorTable())
         };
-        _trayVisibilityMenuItem = new System.Windows.Forms.ToolStripMenuItem("Hide usage rail");
+        _trayVisibilityMenuItem = new System.Windows.Forms.ToolStripMenuItem(Localization.Text("Hide usage rail"));
         _trayVisibilityMenuItem.Click += (_, _) => Dispatcher.Invoke(ToggleManualVisibility);
         menu.Items.Add(_trayVisibilityMenuItem);
-        menu.Items.Add("Open settings…", null, (_, _) => Dispatcher.Invoke(ShowSettings));
+        menu.Items.Add(Localization.Text("Open settings…"), null, (_, _) => Dispatcher.Invoke(ShowSettings));
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
-        menu.Items.Add("Refresh usage", null, (_, _) => Dispatcher.Invoke(RefreshAllProviders));
-        _trayConnectionMenuItem = new System.Windows.Forms.ToolStripMenuItem("Disconnect Codex CLI");
+        menu.Items.Add(Localization.Text("Refresh usage"), null, (_, _) => Dispatcher.Invoke(RefreshAllProviders));
+        _trayConnectionMenuItem = new System.Windows.Forms.ToolStripMenuItem(Localization.Text("Disconnect Codex CLI"));
         _trayConnectionMenuItem.Click += async (_, _) =>
             await Dispatcher.InvokeAsync(ToggleCodexConnectionAsync).Task.Unwrap();
         menu.Items.Add(_trayConnectionMenuItem);
-        _trayUpdateMenuItem = new System.Windows.Forms.ToolStripMenuItem("Check for updates");
+        _trayUpdateMenuItem = new System.Windows.Forms.ToolStripMenuItem(Localization.Text("Check for updates"));
         _trayUpdateMenuItem.Click += async (_, _) => await CheckForUpdatesAsync();
         menu.Items.Add(_trayUpdateMenuItem);
-        menu.Items.Add("Open log file", null, (_, _) => OpenLog());
+        menu.Items.Add(Localization.Text("Open log file"), null, (_, _) => OpenLog());
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         var exitItem = menu.Items.Add(
-            "Quit Usage Overlay",
+            Localization.Text("Quit Usage Overlay"),
             null,
             (_, _) => Dispatcher.Invoke(System.Windows.Application.Current.Shutdown));
         exitItem.ForeColor = System.Drawing.Color.FromArgb(229, 90, 90);
@@ -1372,7 +1374,7 @@ public partial class MainWindow : Window
 
     private void UpdateConnectionMenuLabels()
     {
-        var label = _codex.IsSuspended ? "Reconnect Codex CLI" : "Disconnect Codex CLI";
+        var label = Localization.Text(_codex.IsSuspended ? "Reconnect Codex CLI" : "Disconnect Codex CLI");
         var visible = _settings.CodexEnabled && _options.DemoPercent is null;
         if (_trayConnectionMenuItem is not null)
         {
@@ -1411,7 +1413,7 @@ public partial class MainWindow : Window
         }
 
         _trayUpdateMenuItem.Enabled = false;
-        _trayUpdateMenuItem.Text = "Checking for updates…";
+        _trayUpdateMenuItem.Text = Localization.Text("Checking for updates…");
         _pendingUpdateUri = null;
 
         try
@@ -1424,15 +1426,15 @@ public partial class MainWindow : Window
             if (result.IsUpdateAvailable)
             {
                 _pendingUpdateUri = result.ReleaseUri;
-                _notifyIcon.BalloonTipTitle = $"Usage Overlay {result.LatestVersion} is available";
-                _notifyIcon.BalloonTipText = "Select this notification to open the verified GitHub release.";
+                _notifyIcon.BalloonTipTitle = Localization.Format("Usage Overlay {0} is available", result.LatestVersion);
+                _notifyIcon.BalloonTipText = Localization.Text("Select this notification to open the verified GitHub release.");
                 _notifyIcon.ShowBalloonTip(8000);
                 _logger.Info($"Update available: {result.LatestVersion}.");
             }
             else
             {
-                _notifyIcon.BalloonTipTitle = "Usage Overlay is up to date";
-                _notifyIcon.BalloonTipText = $"You are running version {result.CurrentVersion}.";
+                _notifyIcon.BalloonTipTitle = Localization.Text("Usage Overlay is up to date");
+                _notifyIcon.BalloonTipText = Localization.Format("You are running version {0}.", result.CurrentVersion);
                 _notifyIcon.ShowBalloonTip(5000);
                 _logger.Info("Manual update check found no newer release.");
             }
@@ -1444,8 +1446,8 @@ public partial class MainWindow : Window
         catch (Exception exception) when (
             exception is HttpRequestException or TaskCanceledException or InvalidOperationException or JsonException)
         {
-            _notifyIcon.BalloonTipTitle = "Couldn’t check for updates";
-            _notifyIcon.BalloonTipText = "Open the GitHub Releases page or try again later.";
+            _notifyIcon.BalloonTipTitle = Localization.Text("Couldn’t check for updates");
+            _notifyIcon.BalloonTipText = Localization.Text("Open the GitHub Releases page or try again later.");
             _notifyIcon.ShowBalloonTip(6000);
             _logger.Error($"Update check failed: {exception.Message}");
         }
@@ -1453,7 +1455,7 @@ public partial class MainWindow : Window
         {
             if (!_isClosing)
             {
-                _trayUpdateMenuItem.Text = "Check for updates";
+                _trayUpdateMenuItem.Text = Localization.Text("Check for updates");
                 _trayUpdateMenuItem.Enabled = true;
             }
         }
@@ -1624,16 +1626,16 @@ public partial class MainWindow : Window
         {
             if (!IsProviderEnabled(provider))
             {
-                return "Off.";
+                return Localization.Text("Off.");
             }
 
             var state = _states.TryGetValue(provider, out var value) ? value : ProviderUsageState.Off(provider);
-            return state.Detail.Length > 0 ? $"{state.StatusText}. {state.Detail}" : $"{state.StatusText}.";
+            return state.Detail.Length > 0 ? $"{Localization.Status(state.StatusText)}. {Localization.Status(state.Detail)}" : $"{Localization.Status(state.StatusText)}.";
         }
 
         var codexStatus = _codex.ResolvedCliPath is null
-            ? $"Codex CLI wasn’t found. {Describe(UsageProviderKind.Codex)}"
-            : $"Codex CLI is ready. {Describe(UsageProviderKind.Codex)}";
+            ? Localization.Format("Codex CLI wasn’t found. {0}", Describe(UsageProviderKind.Codex))
+            : Localization.Format("Codex CLI is ready. {0}", Describe(UsageProviderKind.Codex));
         // Setup failures matter more than the usage state; otherwise show the state alone.
         var claudeStatus = _settings.ClaudeEnabled && !_claude.IsRunning && _claude.IntegrationMessage.Length > 0
             ? _claude.IntegrationMessage
@@ -1676,7 +1678,7 @@ public partial class MainWindow : Window
             exception is System.IO.IOException or UnauthorizedAccessException or
                 System.Security.Cryptography.CryptographicException)
         {
-            messages.Add("The Cursor key couldn’t be saved.");
+            messages.Add(Localization.Text("The Cursor key couldn’t be saved."));
             _logger.Error($"Could not update the Cursor key: {exception.Message}");
         }
 
@@ -1764,7 +1766,7 @@ public partial class MainWindow : Window
 
     private void UpdateVisibilityMenuLabels()
     {
-        var label = _isManuallyHidden ? "Show usage rail" : "Hide usage rail";
+        var label = Localization.Text(_isManuallyHidden ? "Show usage rail" : "Hide usage rail");
         _trayVisibilityMenuItem.Text = label;
         RailVisibilityMenuItem.Header = label;
     }
@@ -1836,11 +1838,11 @@ public partial class MainWindow : Window
         try
         {
             System.Windows.Clipboard.SetText("claude auth login");
-            RecoveryActionButton.Content = "Command copied";
+            RecoveryActionButton.Content = Localization.Text("Command copied");
         }
         catch (System.Runtime.InteropServices.ExternalException)
         {
-            RecoveryActionButton.Content = "Copy failed. Try again";
+            RecoveryActionButton.Content = Localization.Text("Copy failed. Try again");
         }
     }
 
